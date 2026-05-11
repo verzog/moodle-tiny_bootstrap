@@ -18,7 +18,7 @@
  *
  * @module     tiny_bootstrap/common
  * @copyright  2025 Skin Cancer College of Australasia <admin@skincancercollege.org>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /** Frankenstyle component name — must match $plugin->component in version.php */

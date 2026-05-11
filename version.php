@@ -19,13 +19,14 @@
  *
  * @package    tiny_bootstrap
  * @copyright  2025 Skin Cancer College of Australasia <admin@skincancercollege.org>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tiny_bootstrap';
 $plugin->version   = 2025051000;
-$plugin->requires  = 2022041900; // Moodle 4.0+
+$plugin->requires  = 2025041400; // Moodle 5.0+.
+$plugin->supported = [500, 501];
 $plugin->maturity  = MATURITY_STABLE;
 $plugin->release   = '1.0.0';

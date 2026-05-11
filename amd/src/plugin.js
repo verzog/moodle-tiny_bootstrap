@@ -23,7 +23,7 @@
  *
  * @module     tiny_bootstrap/plugin
  * @copyright  2025 Skin Cancer College of Australasia <admin@skincancercollege.org>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 import {getButtonImage} from 'editor_tiny/utils';
@@ -73,7 +73,10 @@ ${allRows}
  * @returns {string} HTML string
  */
 const buildHeading = (level, text) => {
-    const safe = text.replace(/</g, '&lt;').replace(/>/g, '&gt;') || `Heading ${level}`;
+    const safe = (text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;') || `Heading ${level}`;
     return `<h${level}>${safe}</h${level}>`;
 };
 
@@ -85,13 +88,18 @@ const buildHeading = (level, text) => {
  * @returns {string} HTML string
  */
 const buildCardGroup = (cards) => {
-    const escape = (s) => (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const escape = (s) => (s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 
     const cardsHtml = cards.map((card, i) => {
-        const imgSrc  = card.imageUrl  || 'https://placehold.co/600x300?text=Image';
-        const imgAlt  = escape(card.imageAlt)  || `Card ${i + 1} image`;
-        const title   = escape(card.title)     || `Card ${i + 1}`;
-        const body    = escape(card.body)      || 'Add your card content here.';
+        const imgSrc  = escape(card.imageUrl) || 'https://placehold.co/600x300?text=Image';
+        const imgAlt  = escape(card.imageAlt) || `Card ${i + 1} image`;
+        const title   = escape(card.title)    || `Card ${i + 1}`;
+        const body    = escape(card.body)     || 'Add your card content here.';
 
         return `  <div class="card">
     <img src="${imgSrc}" class="card-img-top" alt="${imgAlt}">
@@ -121,10 +129,15 @@ ${cardsHtml}
  * @returns {string} HTML string
  */
 const buildImageModal = (imageUrl, imageAlt, caption) => {
-    const escape  = (s) => (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const escape  = (s) => (s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     const uid     = 'bsModal' + Math.random().toString(36).slice(2, 9);
-    const src     = imageUrl  || 'https://placehold.co/800x500?text=Image';
-    const alt     = escape(imageAlt)  || 'Image';
+    const src     = escape(imageUrl) || 'https://placehold.co/800x500?text=Image';
+    const alt     = escape(imageAlt) || 'Image';
     const capHtml = caption
         ? `\n      <p class="mt-2 text-muted">${escape(caption)}</p>`
         : '';
