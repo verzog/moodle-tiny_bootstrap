@@ -15,26 +15,29 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * TinyMCE Bootstrap Scaffolding plugin lib.
+ * TinyMCE Bootstrap Scaffolding plugin class.
  *
  * @package    tiny_bootstrap
  * @copyright  2025 Skin Cancer College of Australasia <admin@skincancercollege.org>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace tiny_bootstrap;
+
+use context;
 use editor_tiny\editor;
-use editor_tiny\plugin;
+use editor_tiny\plugin as tiny_plugin;
 use editor_tiny\plugin_with_buttons;
 use editor_tiny\plugin_with_menuitems;
 
 /**
- * Plugin class for tiny_bootstrap.
+ * TinyMCE Bootstrap Scaffolding plugin.
  */
-class tiny_bootstrap extends plugin implements plugin_with_buttons, plugin_with_menuitems {
+class plugin extends tiny_plugin implements plugin_with_buttons, plugin_with_menuitems {
     /**
      * Returns the buttons provided by this plugin.
      *
-     * @return array
+     * @return string[]
      */
     public static function get_available_buttons(): array {
         return [
@@ -45,7 +48,7 @@ class tiny_bootstrap extends plugin implements plugin_with_buttons, plugin_with_
     /**
      * Returns the menu items provided by this plugin.
      *
-     * @return array
+     * @return string[]
      */
     public static function get_available_menuitems(): array {
         return [
@@ -63,10 +66,10 @@ class tiny_bootstrap extends plugin implements plugin_with_buttons, plugin_with_
      * @return array
      */
     public static function get_plugin_configuration_for_context(
-        \context $context,
+        context $context,
         array $options,
         array $fpoptions,
-        ?editor $editor = null
+        ?editor $editor = null,
     ): array {
         return [];
     }
