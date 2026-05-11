@@ -19,10 +19,8 @@
  *
  * @package    tiny_bootstrap
  * @copyright  2025 Skin Cancer College of Australasia <admin@skincancercollege.org>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
 
 use editor_tiny\editor;
 use editor_tiny\plugin;
@@ -33,7 +31,6 @@ use editor_tiny\plugin_with_menuitems;
  * Plugin class for tiny_bootstrap.
  */
 class tiny_bootstrap extends plugin implements plugin_with_buttons, plugin_with_menuitems {
-
     /**
      * Returns the buttons provided by this plugin.
      *
@@ -69,7 +66,7 @@ class tiny_bootstrap extends plugin implements plugin_with_buttons, plugin_with_
         \context $context,
         array $options,
         array $fpoptions,
-        ?\editor_tiny\editor $editor = null
+        ?editor $editor = null
     ): array {
         return [];
     }

@@ -1,6 +1,6 @@
-# tiny_bootstrap — Bootstrap 5 Scaffolding for TinyMCE 6
+# tiny_bootstrap — Bootstrap 5 Scaffolding for TinyMCE
 
-A TinyMCE 6 plugin for Moodle 4.0+ that lets content authors insert
+A TinyMCE plugin for Moodle 5.0+ that lets content authors insert
 ready-made Bootstrap 5 HTML components without writing any code.
 
 ## Components
@@ -14,9 +14,9 @@ ready-made Bootstrap 5 HTML components without writing any code.
 
 ## Requirements
 
-- Moodle 4.0 or higher (TinyMCE 6 editor)
-- A Bootstrap 5 theme (e.g. Boost or any child theme on Moodle 4.x)
-- PHP 8.1+
+- Moodle 5.0 or higher (TinyMCE editor)
+- A Bootstrap 5 theme (e.g. Boost or any child theme)
+- PHP 8.2+
 
 ## Installation
 

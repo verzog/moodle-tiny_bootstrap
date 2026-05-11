@@ -21,12 +21,10 @@
  *
  * @package    tiny_bootstrap
  * @copyright  2025 Skin Cancer College of Australasia <admin@skincancercollege.org>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace tiny_bootstrap\privacy;
-
-defined('MOODLE_INTERNAL') || die();
 
 use core_privacy\local\metadata\null_provider;
 
@@ -34,7 +32,6 @@ use core_privacy\local\metadata\null_provider;
  * Privacy provider — this plugin stores no personal data.
  */
 class provider implements null_provider {
-
     /**
      * Returns the reason this plugin stores no data.
      *
