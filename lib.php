@@ -22,8 +22,6 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 use editor_tiny\editor;
 use editor_tiny\plugin;
 use editor_tiny\plugin_with_buttons;
@@ -33,7 +31,6 @@ use editor_tiny\plugin_with_menuitems;
  * Plugin class for tiny_bootstrap.
  */
 class tiny_bootstrap extends plugin implements plugin_with_buttons, plugin_with_menuitems {
-
     /**
      * Returns the buttons provided by this plugin.
      *

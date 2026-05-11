@@ -24,56 +24,37 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-// Plugin name.
-$string['pluginname'] = 'Bootstrap Scaffolding';
-
-// Toolbar button tooltip.
 $string['bootstrap:use'] = 'Use Bootstrap Scaffolding';
 $string['button_bootstrap'] = 'Bootstrap Scaffolding';
-$string['menuitem_bootstrap'] = 'Bootstrap Scaffolding';
-
-// Dialog titles.
-$string['dialog_title']         = 'Insert Bootstrap Component';
-$string['dialog_grid_title']    = 'Insert Grid Layout';
-$string['dialog_heading_title'] = 'Insert Heading';
-$string['dialog_card_title']    = 'Insert Card Group';
-$string['dialog_image_title']   = 'Insert Image with Zoom';
-
-// Component picker labels.
-$string['component_grid']    = 'Page Grid Layout';
+$string['cancel'] = 'Cancel';
+$string['card_body'] = 'Card body text';
+$string['card_count'] = 'Number of cards';
+$string['card_image_alt'] = 'Image alt text';
+$string['card_image_url'] = 'Card image URL';
+$string['card_placeholder_body'] = 'Add your card content here.';
+$string['card_placeholder_title'] = 'Card Title';
+$string['card_title'] = 'Card title';
+$string['component_cards'] = 'Card Group';
+$string['component_grid'] = 'Page Grid Layout';
 $string['component_heading'] = 'Heading';
-$string['component_cards']   = 'Card Group';
-$string['component_image']   = 'Image with Zoom Modal';
-
-// Grid options.
+$string['component_image'] = 'Image with Zoom Modal';
+$string['dialog_card_title'] = 'Insert Card Group';
+$string['dialog_grid_title'] = 'Insert Grid Layout';
+$string['dialog_heading_title'] = 'Insert Heading';
+$string['dialog_image_title'] = 'Insert Image with Zoom';
+$string['dialog_title'] = 'Insert Bootstrap Component';
 $string['grid_1col'] = '1 Column (full width)';
 $string['grid_2col'] = '2 Columns (equal)';
 $string['grid_3col'] = '3 Columns (equal)';
 $string['grid_4col'] = '4 Columns (equal)';
+$string['grid_addrow'] = 'Add another row';
 $string['grid_columns'] = 'Number of columns';
-$string['grid_addrow']  = 'Add another row';
-
-// Heading options.
 $string['heading_level'] = 'Heading level';
-$string['heading_text']  = 'Heading text';
-
-// Card options.
-$string['card_count']       = 'Number of cards';
-$string['card_title']       = 'Card title';
-$string['card_body']        = 'Card body text';
-$string['card_image_url']   = 'Card image URL';
-$string['card_image_alt']   = 'Image alt text';
-$string['card_placeholder_title'] = 'Card Title';
-$string['card_placeholder_body']  = 'Add your card content here.';
-
-// Image modal options.
-$string['image_url']         = 'Image URL';
-$string['image_alt']         = 'Image alt text';
-$string['image_caption']     = 'Caption (optional)';
-
-// Buttons.
+$string['heading_text'] = 'Heading text';
+$string['image_alt'] = 'Image alt text';
+$string['image_caption'] = 'Caption (optional)';
+$string['image_url'] = 'Image URL';
 $string['insert'] = 'Insert';
-$string['cancel'] = 'Cancel';
-
-// Privacy.
+$string['menuitem_bootstrap'] = 'Bootstrap Scaffolding';
+$string['pluginname'] = 'Bootstrap Scaffolding';
 $string['privacy:metadata'] = 'The Bootstrap Scaffolding plugin for TinyMCE does not store any personal data.';
