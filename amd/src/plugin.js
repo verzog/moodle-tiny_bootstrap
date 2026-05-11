@@ -30,19 +30,18 @@ import {getButtonImage} from 'editor_tiny/utils';
 import {get_string as getString} from 'core/str';
 import {component, buttonName, icon} from './common';
 
-// ---------------------------------------------------------------------------
-// HTML generators
-// ---------------------------------------------------------------------------
+const escapeHtml = (s) => (s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 
 /**
  * Build a Bootstrap 5 responsive grid with the requested number of columns.
- * Each column is pre-populated with a placeholder paragraph so the author
- * can see the layout immediately.  An "Add row" button is injected after the
- * grid so the author can duplicate the row pattern with one click via a small
- * inline script (no external dependency required inside the saved HTML).
  *
- * @param {number} cols  1 – 4
- * @param {number} rows  How many rows to pre-generate (default 1)
+ * @param {number} cols 1 – 4
+ * @param {number} rows How many rows to pre-generate (default 1)
  * @returns {string} HTML string
  */
 const buildGrid = (cols, rows = 1) => {
@@ -68,7 +67,7 @@ ${allRows}
 /**
  * Build a heading tag h1–h6.
  *
- * @param {number} level   1 – 6
+ * @param {number} level 1 – 6
  * @param {string} text
  * @returns {string} HTML string
  */
@@ -82,24 +81,16 @@ const buildHeading = (level, text) => {
 
 /**
  * Build a Bootstrap 5 card group (2–4 equal-width cards).
- * Each card has an image, title, and body text.
  *
  * @param {Array<{title: string, body: string, imageUrl: string, imageAlt: string}>} cards
  * @returns {string} HTML string
  */
 const buildCardGroup = (cards) => {
-    const escape = (s) => (s || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-
     const cardsHtml = cards.map((card, i) => {
-        const imgSrc  = escape(card.imageUrl) || 'https://placehold.co/600x300?text=Image';
-        const imgAlt  = escape(card.imageAlt) || `Card ${i + 1} image`;
-        const title   = escape(card.title)    || `Card ${i + 1}`;
-        const body    = escape(card.body)     || 'Add your card content here.';
+        const imgSrc = escapeHtml(card.imageUrl) || 'https://placehold.co/600x300?text=Image';
+        const imgAlt = escapeHtml(card.imageAlt) || `Card ${i + 1} image`;
+        const title = escapeHtml(card.title) || `Card ${i + 1}`;
+        const body = escapeHtml(card.body) || 'Add your card content here.';
 
         return `  <div class="card">
     <img src="${imgSrc}" class="card-img-top" alt="${imgAlt}">
@@ -117,11 +108,7 @@ ${cardsHtml}
 };
 
 /**
- * Build an image thumbnail that opens a Bootstrap 5 modal with a larger
- * version of the same image and an optional caption below it.
- *
- * A unique ID is generated so multiple image modals on the same page do
- * not conflict with each other.
+ * Build an image thumbnail that opens a Bootstrap 5 modal.
  *
  * @param {string} imageUrl
  * @param {string} imageAlt
@@ -129,24 +116,21 @@ ${cardsHtml}
  * @returns {string} HTML string
  */
 const buildImageModal = (imageUrl, imageAlt, caption) => {
-    const escape  = (s) => (s || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    const uid     = 'bsModal' + Math.random().toString(36).slice(2, 9);
-    const src     = escape(imageUrl) || 'https://placehold.co/800x500?text=Image';
-    const alt     = escape(imageAlt) || 'Image';
+    const uid = 'bsModal' + Math.random().toString(36).slice(2, 9);
+    const src = escapeHtml(imageUrl) || 'https://placehold.co/800x500?text=Image';
+    const alt = escapeHtml(imageAlt) || 'Image';
     const capHtml = caption
-        ? `\n      <p class="mt-2 text-muted">${escape(caption)}</p>`
+        ? `\n      <p class="mt-2 text-muted">${escapeHtml(caption)}</p>`
+        : '';
+    const figcaption = caption
+        ? `\n  <figcaption class="mt-1 text-muted small">${escapeHtml(caption)}</figcaption>`
         : '';
 
     return `<!-- Bootstrap 5 image with zoom modal -->
 <figure class="text-center">
   <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="Click to enlarge">
     <img src="${src}" class="img-fluid img-thumbnail" style="max-height:250px;cursor:zoom-in;" alt="${alt}">
-  </a>${capHtml ? `\n  <figcaption class="mt-1 text-muted small">${escape(caption)}</figcaption>` : ''}
+  </a>${figcaption}
 </figure>
 
 <!-- Zoom modal for the image above -->
@@ -165,15 +149,11 @@ const buildImageModal = (imageUrl, imageAlt, caption) => {
 </div>`;
 };
 
-// ---------------------------------------------------------------------------
-// Dialog builders
-// ---------------------------------------------------------------------------
-
 /**
  * Open the component-picker dialog then chain to the appropriate
  * component-specific dialog.
  *
- * @param {object} editor  TinyMCE editor instance
+ * @param {object} editor TinyMCE editor instance
  */
 const openPicker = async(editor) => {
     const [
@@ -182,7 +162,6 @@ const openPicker = async(editor) => {
         headingLabel,
         cardsLabel,
         imageLabel,
-        insertLabel,
         cancelLabel,
     ] = await Promise.all([
         getString('dialog_title', component),
@@ -190,7 +169,6 @@ const openPicker = async(editor) => {
         getString('component_heading', component),
         getString('component_cards', component),
         getString('component_image', component),
-        getString('insert', component),
         getString('cancel', component),
     ]);
 
@@ -203,25 +181,33 @@ const openPicker = async(editor) => {
                 name: 'component',
                 label: 'Component',
                 items: [
-                    {value: 'grid',    text: gridLabel},
+                    {value: 'grid', text: gridLabel},
                     {value: 'heading', text: headingLabel},
-                    {value: 'cards',   text: cardsLabel},
-                    {value: 'image',   text: imageLabel},
+                    {value: 'cards', text: cardsLabel},
+                    {value: 'image', text: imageLabel},
                 ],
             }],
         },
         buttons: [
-            {type: 'cancel',  text: cancelLabel},
-            {type: 'submit',  text: 'Next →', buttonType: 'primary'},
+            {type: 'cancel', text: cancelLabel},
+            {type: 'submit', text: 'Next →', buttonType: 'primary'},
         ],
         onSubmit: (api) => {
             const {component: chosen} = api.getData();
             api.close();
             switch (chosen) {
-                case 'grid':    openGridDialog(editor);    break;
-                case 'heading': openHeadingDialog(editor); break;
-                case 'cards':   openCardDialog(editor);    break;
-                case 'image':   openImageDialog(editor);   break;
+                case 'grid':
+                    openGridDialog(editor);
+                    break;
+                case 'heading':
+                    openHeadingDialog(editor);
+                    break;
+                case 'cards':
+                    openCardDialog(editor);
+                    break;
+                case 'image':
+                    openImageDialog(editor);
+                    break;
             }
         },
     });
@@ -229,8 +215,6 @@ const openPicker = async(editor) => {
 
 /**
  * Grid layout dialog — choose columns (1–4).
- * Rows are always started at 1; more can be added via the "Add row" button
- * that is embedded in the inserted HTML.
  *
  * @param {object} editor
  */
@@ -259,8 +243,8 @@ const openGridDialog = async(editor) => {
             }],
         },
         buttons: [
-            {type: 'cancel',  text: cancelLabel},
-            {type: 'submit',  text: insertLabel, buttonType: 'primary'},
+            {type: 'cancel', text: cancelLabel},
+            {type: 'submit', text: insertLabel, buttonType: 'primary'},
         ],
         onSubmit: (api) => {
             const {cols} = api.getData();
@@ -293,7 +277,7 @@ const openHeadingDialog = async(editor) => {
                     type: 'selectbox',
                     name: 'level',
                     label: levelLabel,
-                    items: ['1','2','3','4','5','6'].map(n => ({
+                    items: ['1', '2', '3', '4', '5', '6'].map(n => ({
                         value: n,
                         text: `H${n}`,
                     })),
@@ -307,8 +291,8 @@ const openHeadingDialog = async(editor) => {
             ],
         },
         buttons: [
-            {type: 'cancel',  text: cancelLabel},
-            {type: 'submit',  text: insertLabel, buttonType: 'primary'},
+            {type: 'cancel', text: cancelLabel},
+            {type: 'submit', text: insertLabel, buttonType: 'primary'},
         ],
         onSubmit: (api) => {
             const {level, text} = api.getData();
@@ -320,7 +304,6 @@ const openHeadingDialog = async(editor) => {
 
 /**
  * Card group dialog — choose 2–4 cards and fill in details for each.
- * The dialog is rebuilt reactively when the card count changes.
  *
  * @param {object} editor
  */
@@ -334,26 +317,27 @@ const openCardDialog = async(editor) => {
 
     /**
      * Build the TinyMCE panel items for N cards.
-     * Each card gets an image URL field, alt text, title, and body textarea.
      *
      * @param {number} n
      * @returns {Array}
      */
     const cardFields = (n) => {
         const fields = [];
+        const headingStyle = 'margin:12px 0 4px;font-size:13px;font-weight:600;color:#666;';
         for (let i = 1; i <= n; i++) {
             fields.push(
-                {type: 'htmlpanel', html: `<h4 style="margin:12px 0 4px;font-size:13px;font-weight:600;color:#666;">CARD ${i}</h4>`},
-                {type: 'input',    name: `img_url_${i}`,  label: 'Image URL',    placeholder: 'https://…'},
-                {type: 'input',    name: `img_alt_${i}`,  label: 'Alt text',     placeholder: 'Describe the image'},
-                {type: 'input',    name: `title_${i}`,    label: 'Card title',   placeholder: `Card ${i}`},
-                {type: 'textarea', name: `body_${i}`,     label: 'Body text',    placeholder: 'Add your card content here.'},
+                {type: 'htmlpanel', html: `<h4 style="${headingStyle}">CARD ${i}</h4>`},
+                {type: 'input', name: `img_url_${i}`, label: 'Image URL', placeholder: 'https://…'},
+                {type: 'input', name: `img_alt_${i}`, label: 'Alt text', placeholder: 'Describe the image'},
+                {type: 'input', name: `title_${i}`, label: 'Card title', placeholder: `Card ${i}`},
+                {type: 'textarea', name: `body_${i}`, label: 'Body text', placeholder: 'Add your card content here.'},
             );
         }
         return fields;
     };
 
-    let cardCount = 3; // default
+    // Default card count shown when the dialog first opens.
+    let cardCount = 3;
 
     editor.windowManager.open({
         title,
@@ -371,30 +355,26 @@ const openCardDialog = async(editor) => {
                         {value: '4', text: '4 Cards'},
                     ],
                 },
-                // Card fields for initial default (3)
                 ...cardFields(cardCount),
             ],
         },
         buttons: [
-            {type: 'cancel',  text: cancelLabel},
-            {type: 'submit',  text: insertLabel, buttonType: 'primary'},
+            {type: 'cancel', text: cancelLabel},
+            {type: 'submit', text: insertLabel, buttonType: 'primary'},
         ],
         onChange: (api, detail) => {
-            // Rebuild card fields when count selectbox changes.
             if (detail.name === 'count') {
                 cardCount = parseInt(api.getData().count, 10);
-                // TinyMCE 6 doesn't support true panel rebinding; we capture the
-                // count from the selectbox value at submit time and use that.
             }
         },
         onSubmit: (api) => {
             const data = api.getData();
-            const n    = parseInt(data.count, 10);
+            const n = parseInt(data.count, 10);
             const cards = Array.from({length: n}, (_, i) => ({
                 imageUrl: data[`img_url_${i + 1}`] || '',
                 imageAlt: data[`img_alt_${i + 1}`] || '',
-                title:    data[`title_${i + 1}`]   || '',
-                body:     data[`body_${i + 1}`]    || '',
+                title: data[`title_${i + 1}`] || '',
+                body: data[`body_${i + 1}`] || '',
             }));
             api.close();
             editor.insertContent(buildCardGroup(cards));
@@ -443,8 +423,8 @@ const openImageDialog = async(editor) => {
             ],
         },
         buttons: [
-            {type: 'cancel',  text: cancelLabel},
-            {type: 'submit',  text: insertLabel, buttonType: 'primary'},
+            {type: 'cancel', text: cancelLabel},
+            {type: 'submit', text: insertLabel, buttonType: 'primary'},
         ],
         onSubmit: (api) => {
             const {url, alt, caption} = api.getData();
@@ -453,10 +433,6 @@ const openImageDialog = async(editor) => {
         },
     });
 };
-
-// ---------------------------------------------------------------------------
-// Plugin registration
-// ---------------------------------------------------------------------------
 
 export default {
     /**
@@ -470,17 +446,14 @@ export default {
             getString('button_bootstrap', component),
         ]);
 
-        // Register the SVG icon.
         editor.ui.registry.addIcon(icon, buttonImage.html);
 
-        // Toolbar button.
         editor.ui.registry.addButton(buttonName, {
             icon,
             tooltip: buttonTitle,
             onAction: () => openPicker(editor),
         });
 
-        // Menu item (Insert menu).
         editor.ui.registry.addMenuItem(buttonName, {
             icon,
             text: buttonTitle,

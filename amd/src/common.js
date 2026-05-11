@@ -22,10 +22,10 @@
  */
 
 /** Frankenstyle component name — must match $plugin->component in version.php */
-export const component  = 'tiny_bootstrap';
+export const component = 'tiny_bootstrap';
 
 /** Name used to register the TinyMCE button and menu item */
 export const buttonName = 'tiny_bootstrap/bootstrap';
 
 /** Icon key registered in the TinyMCE icon registry */
-export const icon       = 'bootstrap-icon';
+export const icon = 'bootstrap-icon';
