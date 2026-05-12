@@ -43,5 +43,6 @@ const filePickerCallback = async function(cb, value, meta) {
 export const configure = (instanceConfig) => ({
     toolbar: addToolbarButtons(instanceConfig.toolbar, 'content', [buttonName]),
     menu: addMenubarItem(instanceConfig.menu, 'insert', buttonName),
+    // eslint-disable-next-line camelcase
     file_picker_callback: filePickerCallback,
 });

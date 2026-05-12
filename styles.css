@@ -28,5 +28,6 @@ body .moodle-dialogue-base.moodle-dialogue-fullscreen,
 body .moodle-dialogue-lightbox,
 body .yui3-widget-mask,
 body .yui3-overlay-mask {
+    /* stylelint-disable-next-line declaration-no-important */
     z-index: 100000 !important;
 }
