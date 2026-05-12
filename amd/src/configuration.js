@@ -21,10 +21,28 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {addMenubarItem, addToolbarButtons} from 'editor_tiny/utils';
+import {addMenubarItem, addToolbarButtons, displayFilepicker} from 'editor_tiny/utils';
 import {buttonName} from './common';
+
+const filePickerCallback = async function(cb, value, meta) {
+    if (meta.filetype !== 'image') {
+        return;
+    }
+    // TinyMCE invokes file_picker_callback bound to the editor instance.
+    const editor = this;
+    let params;
+    try {
+        params = await displayFilepicker(editor, 'image');
+    } catch (e) {
+        window.console.warn('tiny_bootstrap filepicker cancelled or failed', e);
+        return;
+    }
+    cb(params.url, {alt: params.file || ''});
+};
 
 export const configure = (instanceConfig) => ({
     toolbar: addToolbarButtons(instanceConfig.toolbar, 'content', [buttonName]),
     menu: addMenubarItem(instanceConfig.menu, 'insert', buttonName),
+    // eslint-disable-next-line camelcase
+    file_picker_callback: filePickerCallback,
 });
