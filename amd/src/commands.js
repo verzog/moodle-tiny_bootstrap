@@ -354,14 +354,18 @@ export const getSetup = async() => {
     ]);
 
     return (editor) => {
-        editor.options.set('file_picker_callback', (cb, value, meta) => {
+        editor.options.set('file_picker_callback', async(cb, value, meta) => {
             if (meta.filetype !== 'image') {
                 return;
             }
-            displayFilepicker(editor, 'image').then((params) => {
-                cb(params.url, {alt: params.file || ''});
-                return params;
-            }).catch(() => {});
+            let params;
+            try {
+                params = await displayFilepicker(editor, 'image');
+            } catch (e) {
+                window.console.warn('tiny_bootstrap filepicker cancelled or failed', e);
+                return;
+            }
+            cb(params.url, {alt: params.file || ''});
         });
 
         editor.ui.registry.addIcon(icon, buttonImage.html);
