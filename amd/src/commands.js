@@ -261,7 +261,7 @@ const openCardDialog = async(editor) => {
         for (let i = 1; i <= n; i++) {
             fields.push(
                 {type: 'htmlpanel', html: `<h4 style="${headingStyle}">CARD ${i}</h4>`},
-                {type: 'input', name: `img_url_${i}`, label: 'Image URL', placeholder: 'https://…'},
+                {type: 'urlinput', name: `img_url_${i}`, label: 'Image URL', filetype: 'image'},
                 {type: 'input', name: `img_alt_${i}`, label: 'Alt text', placeholder: 'Describe the image'},
                 {type: 'input', name: `title_${i}`, label: 'Card title', placeholder: `Card ${i}`},
                 {type: 'textarea', name: `body_${i}`, label: 'Body text', placeholder: 'Add your card content here.'},
@@ -304,7 +304,7 @@ const openCardDialog = async(editor) => {
             const data = api.getData();
             const n = parseInt(data.count, 10);
             const cards = Array.from({length: n}, (_, i) => ({
-                imageUrl: data[`img_url_${i + 1}`] || '',
+                imageUrl: (data[`img_url_${i + 1}`] && data[`img_url_${i + 1}`].value) || '',
                 imageAlt: data[`img_alt_${i + 1}`] || '',
                 title: data[`title_${i + 1}`] || '',
                 body: data[`body_${i + 1}`] || '',
@@ -330,7 +330,7 @@ const openImageDialog = async(editor) => {
         body: {
             type: 'panel',
             items: [
-                {type: 'input', name: 'url', label: urlLabel, placeholder: 'https://…'},
+                {type: 'urlinput', name: 'url', label: urlLabel, filetype: 'image'},
                 {type: 'input', name: 'alt', label: altLabel, placeholder: 'Describe the image for screen readers'},
                 {type: 'textarea', name: 'caption', label: captionLabel, placeholder: 'Optional caption shown below the image…'},
             ],
@@ -342,7 +342,7 @@ const openImageDialog = async(editor) => {
         onSubmit: (api) => {
             const {url, alt, caption} = api.getData();
             api.close();
-            editor.insertContent(buildImageModal(url, alt, caption));
+            editor.insertContent(buildImageModal((url && url.value) || '', alt, caption));
         },
     });
 };
