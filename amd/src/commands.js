@@ -21,7 +21,7 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {getButtonImage} from 'editor_tiny/utils';
+import {displayFilepicker, getButtonImage} from 'editor_tiny/utils';
 import {get_string as getString} from 'core/str';
 import {buttonName, component, icon} from './common';
 
@@ -354,6 +354,16 @@ export const getSetup = async() => {
     ]);
 
     return (editor) => {
+        editor.options.set('file_picker_callback', (cb, value, meta) => {
+            if (meta.filetype !== 'image') {
+                return;
+            }
+            displayFilepicker(editor, 'image').then((params) => {
+                cb(params.url, {alt: params.file || ''});
+                return params;
+            }).catch(() => {});
+        });
+
         editor.ui.registry.addIcon(icon, buttonImage.html);
 
         editor.ui.registry.addButton(buttonName, {
