@@ -22,8 +22,6 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Adds the tiny_bootstrap button and menu item to the editor_tiny toolbar and
  * menubar so they appear by default after installation.
