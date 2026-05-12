@@ -15,18 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * TinyMCE Bootstrap Scaffolding plugin version info.
+ * Upgrade steps for tiny_bootstrap.
  *
  * @package    tiny_bootstrap
  * @copyright  2025 Skin Cancer College of Australasia <admin@skincancercollege.org>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+/**
+ * Run tiny_bootstrap upgrade steps.
+ *
+ * @param int $oldversion
+ * @return bool
+ */
+function xmldb_tiny_bootstrap_upgrade($oldversion) {
+    if ($oldversion < 2025051100) {
+        \tiny_bootstrap\local\config::ensure_default_placement();
+        upgrade_plugin_savepoint(true, 2025051100, 'tiny', 'bootstrap');
+    }
 
-$plugin->component = 'tiny_bootstrap';
-$plugin->version   = 2025051100;
-$plugin->requires  = 2025041400; // Moodle 5.0+.
-$plugin->supported = [500, 501];
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.0.0';
+    return true;
+}
