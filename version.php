@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tiny_bootstrap';
-$plugin->version   = 2025051301;
+$plugin->version   = 2025051302;
 $plugin->requires  = 2025041400; // Moodle 5.0+.
 $plugin->supported = [500, 501];
 $plugin->maturity  = MATURITY_STABLE;
