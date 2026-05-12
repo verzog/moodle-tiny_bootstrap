@@ -28,7 +28,6 @@ namespace tiny_bootstrap\local;
  * Helpers for adjusting the editor_tiny toolbar and menubar configs.
  */
 class config {
-
     /** @var string Button/menu identifier registered by this plugin in JS. */
     public const BUTTON = 'tiny_bootstrap/bootstrap';
 
