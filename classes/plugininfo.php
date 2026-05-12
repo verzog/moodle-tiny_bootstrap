@@ -24,8 +24,6 @@
 
 namespace tiny_bootstrap;
 
-use context;
-use editor_tiny\editor;
 use editor_tiny\plugin;
 use editor_tiny\plugin_with_buttons;
 use editor_tiny\plugin_with_menuitems;
@@ -41,7 +39,7 @@ class plugininfo extends plugin implements plugin_with_buttons, plugin_with_menu
      */
     public static function get_available_buttons(): array {
         return [
-            'tiny_bootstrap/bootstrap',
+            'tiny_bootstrap/tiny_bootstrap_bootstrap',
         ];
     }
 
@@ -52,25 +50,7 @@ class plugininfo extends plugin implements plugin_with_buttons, plugin_with_menu
      */
     public static function get_available_menuitems(): array {
         return [
-            'tiny_bootstrap/bootstrap',
+            'tiny_bootstrap/tiny_bootstrap_bootstrap',
         ];
-    }
-
-    /**
-     * Returns plugin configuration for the TinyMCE editor.
-     *
-     * @param context $context
-     * @param array $options
-     * @param array $fpoptions
-     * @param editor|null $editor
-     * @return array
-     */
-    public static function get_plugin_configuration_for_context(
-        context $context,
-        array $options,
-        array $fpoptions,
-        ?editor $editor = null,
-    ): array {
-        return [];
     }
 }
