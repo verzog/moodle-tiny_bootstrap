@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * TinyMCE Bootstrap Scaffolding plugin version info.
+ * Post-install hook for tiny_bootstrap.
  *
  * @package    tiny_bootstrap
  * @copyright  2025 Skin Cancer College of Australasia <admin@skincancercollege.org>
@@ -24,9 +24,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'tiny_bootstrap';
-$plugin->version   = 2025051100;
-$plugin->requires  = 2025041400; // Moodle 5.0+.
-$plugin->supported = [500, 501];
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.0.0';
+/**
+ * Adds the tiny_bootstrap button and menu item to the editor_tiny toolbar and
+ * menubar so they appear by default after installation.
+ */
+function xmldb_tiny_bootstrap_install() {
+    \tiny_bootstrap\local\config::ensure_default_placement();
+}
