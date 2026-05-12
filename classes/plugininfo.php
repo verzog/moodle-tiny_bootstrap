@@ -26,14 +26,14 @@ namespace tiny_bootstrap;
 
 use context;
 use editor_tiny\editor;
-use editor_tiny\plugin as tiny_plugin;
+use editor_tiny\plugin;
 use editor_tiny\plugin_with_buttons;
 use editor_tiny\plugin_with_menuitems;
 
 /**
  * TinyMCE Bootstrap Scaffolding plugin.
  */
-class plugin extends tiny_plugin implements plugin_with_buttons, plugin_with_menuitems {
+class plugininfo extends plugin implements plugin_with_buttons, plugin_with_menuitems {
     /**
      * Returns the buttons provided by this plugin.
      *
