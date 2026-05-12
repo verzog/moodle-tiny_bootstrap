@@ -1,4 +1,3 @@
-<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,17 +14,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Post-install hook for tiny_bootstrap.
+ * Toolbar and menu placement for tiny_bootstrap.
  *
- * @package    tiny_bootstrap
+ * @module     tiny_bootstrap/configuration
  * @copyright  2025 Skin Cancer College of Australasia <admin@skincancercollege.org>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * Adds the tiny_bootstrap button and menu item to the editor_tiny toolbar and
- * menubar so they appear by default after installation.
- */
-function xmldb_tiny_bootstrap_install() {
-    \tiny_bootstrap\local\config::ensure_default_placement();
-}
+import {addMenubarItem, addToolbarButtons} from 'editor_tiny/utils';
+import {buttonName} from './common';
+
+export const configure = (instanceConfig) => ({
+    toolbar: addToolbarButtons(instanceConfig.toolbar, 'content', [buttonName]),
+    menu: addMenubarItem(instanceConfig.menu, 'insert', buttonName),
+});
