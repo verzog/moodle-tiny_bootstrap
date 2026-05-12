@@ -21,9 +21,12 @@
  * urlinput field. Lift it above the editor's modal so users can interact
  * with the picker normally.
  */
+body .moodle-dialogue-base,
 body .moodle-dialogue-base.filepicker,
 body .moodle-dialogue-base.file-picker,
 body .moodle-dialogue-base.moodle-dialogue-fullscreen,
+body .moodle-dialogue-lightbox,
+body .yui3-widget-mask,
 body .yui3-overlay-mask {
     z-index: 1400;
 }
