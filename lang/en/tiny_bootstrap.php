@@ -25,8 +25,10 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['bootstrap:use'] = 'Use Bootstrap Scaffolding';
+$string['browse'] = 'Browse repositories…';
 $string['button_bootstrap'] = 'Bootstrap Scaffolding';
 $string['cancel'] = 'Cancel';
+$string['component_label'] = 'Component';
 $string['card_body'] = 'Card body text';
 $string['card_count'] = 'Number of cards';
 $string['card_image_alt'] = 'Image alt text';
@@ -56,5 +58,6 @@ $string['image_caption'] = 'Caption (optional)';
 $string['image_url'] = 'Image URL';
 $string['insert'] = 'Insert';
 $string['menuitem_bootstrap'] = 'Bootstrap Scaffolding';
+$string['next'] = 'Next';
 $string['pluginname'] = 'Bootstrap Scaffolding';
 $string['privacy:metadata'] = 'The Bootstrap Scaffolding plugin for TinyMCE does not store any personal data.';

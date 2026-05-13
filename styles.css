@@ -15,22 +15,7 @@
  */
 
 /*
- * TinyMCE 6 dialogs render at z-index ~1300 in .tox-dialog-wrap. Moodle's
- * YUI filepicker (.moodle-dialogue-base) defaults below that and ends up
- * trapped underneath when our plugin opens it from a TinyMCE urlinput. Lift
- * the dialogue base above the editor's modal.
- *
- * Important: do NOT lift .yui3-widget-mask / .moodle-dialogue-lightbox here.
- * YUI widget-modality inserts the mask as a *child* of .moodle-dialogue-base
- * (sibling of the .moodle-dialogue wrap, which sits at the inline z-index
- * applyZIndex() assigns, typically ~1041). Forcing the mask to a higher
- * z-index than the wrap in that local stacking context makes the dim mask
- * render on top of the dialog's own body — covering the file upload form.
+ * Our dialogs now use core/modal (Bootstrap) instead of TinyMCE's tox-dialog,
+ * so they share the same z-index world as the Moodle filepicker — no overrides
+ * are required for the picker to render above us.
  */
-body .moodle-dialogue-base,
-body .moodle-dialogue-base.filepicker,
-body .moodle-dialogue-base.file-picker,
-body .moodle-dialogue-base.moodle-dialogue-fullscreen {
-    /* stylelint-disable-next-line declaration-no-important */
-    z-index: 100001 !important;
-}
