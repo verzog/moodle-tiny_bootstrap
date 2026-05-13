@@ -48,6 +48,7 @@
 
 /* Zoom modals start larger than the editing dialogs. */
 .modal-dialog.tiny-bs-resizable.tiny-bs-zoom-dialog {
-    width: min(900px, 90vw);
+    width: 90vw;
+    max-width: 900px;
     min-height: 400px;
 }
