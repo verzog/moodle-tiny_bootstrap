@@ -58,6 +58,35 @@ const SVG = {
         + '<circle cx="9" cy="10" r="1.6"/>'
         + '<path d="M21 17l-5-5-9 9"/>'
         + '</svg>',
+    jumbotron: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" '
+        + 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
+        + 'stroke-linejoin="round" aria-hidden="true">'
+        + '<rect x="2.5" y="5" width="19" height="14" rx="2"/>'
+        + '<path d="M6 10h12"/><path d="M6 13h8"/>'
+        + '<rect x="6" y="15.5" width="5" height="2" rx="0.5"/>'
+        + '</svg>',
+    carousel: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" '
+        + 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
+        + 'stroke-linejoin="round" aria-hidden="true">'
+        + '<rect x="5" y="6" width="14" height="12" rx="1.5"/>'
+        + '<path d="M3 8v8"/><path d="M21 8v8"/>'
+        + '<path d="M10 14l2.5-3 2 2.4L17 11"/>'
+        + '</svg>',
+    accordion: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" '
+        + 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
+        + 'stroke-linejoin="round" aria-hidden="true">'
+        + '<rect x="3" y="4" width="18" height="4" rx="1"/>'
+        + '<rect x="3" y="10" width="18" height="4" rx="1"/>'
+        + '<rect x="3" y="16" width="18" height="4" rx="1"/>'
+        + '<path d="M17 6l1.5 1.5M17 12l1.5-1.5M17 18l1.5 1.5"/>'
+        + '</svg>',
+    table: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" '
+        + 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
+        + 'stroke-linejoin="round" aria-hidden="true">'
+        + '<rect x="3" y="4" width="18" height="16" rx="1.5"/>'
+        + '<path d="M3 9h18"/><path d="M3 14h18"/>'
+        + '<path d="M9 4v16"/><path d="M15 4v16"/>'
+        + '</svg>',
 };
 
 const escapeHtml = (s) => (s || '')
@@ -160,6 +189,109 @@ const buildImageModal = (imageUrl, imageAlt, caption) => {
 ${buildZoomModal(uid, src, alt)}`;
 };
 
+const buildJumbotron = (title, lead, buttonText) => {
+    const titleSafe = escapeHtml(title) || 'Welcome';
+    const leadSafe = escapeHtml(lead) || 'A short, friendly description of what this section is about.';
+    const btn = buttonText
+        ? `\n  <hr class="my-4">\n  <a class="btn btn-primary btn-lg" href="#" role="button">${escapeHtml(buttonText)}</a>`
+        : '';
+    return `<!-- Bootstrap 5 jumbotron -->
+<div class="p-5 mb-4 bg-body-tertiary rounded-3 border">
+  <div class="container-fluid py-3">
+    <h1 class="display-5 fw-bold">${titleSafe}</h1>
+    <p class="col-md-9 fs-5">${leadSafe}</p>${btn}
+  </div>
+</div>`;
+};
+
+const buildCarousel = (slides) => {
+    const uid = 'bsCar' + Math.random().toString(36).slice(2, 9);
+    const indicators = slides.map((_, i) =>
+        `    <button type="button" data-bs-target="#${uid}" data-bs-slide-to="${i}"`
+        + `${i === 0 ? ' class="active" aria-current="true"' : ''}`
+        + ` aria-label="Slide ${i + 1}"></button>`
+    ).join('\n');
+    const inner = slides.map((s, i) => {
+        const src = escapeHtml(s.imageUrl) || `https://placehold.co/1200x500?text=Slide+${i + 1}`;
+        const alt = escapeHtml(s.imageAlt) || `Slide ${i + 1}`;
+        const caption = escapeHtml(s.captionTitle);
+        const text = escapeHtml(s.captionText);
+        const captionHtml = (caption || text)
+            ? `\n      <div class="carousel-caption d-none d-md-block">
+        ${caption ? `<h5>${caption}</h5>` : ''}
+        ${text ? `<p>${text}</p>` : ''}
+      </div>`
+            : '';
+        return `    <div class="carousel-item${i === 0 ? ' active' : ''}">
+      <img src="${src}" class="d-block w-100" alt="${alt}">${captionHtml}
+    </div>`;
+    }).join('\n');
+    return `<!-- Bootstrap 5 carousel -->
+<div id="${uid}" class="carousel slide" data-bs-ride="carousel">
+  <div class="carousel-indicators">
+${indicators}
+  </div>
+  <div class="carousel-inner">
+${inner}
+  </div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#${uid}" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#${uid}" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+  </button>
+</div>`;
+};
+
+const buildAccordion = (sections) => {
+    const uid = 'bsAcc' + Math.random().toString(36).slice(2, 9);
+    const items = sections.map((s, i) => {
+        const headingId = `${uid}-h${i}`;
+        const collapseId = `${uid}-c${i}`;
+        const title = escapeHtml(s.title) || `Section ${i + 1}`;
+        const body = escapeHtml(s.body) || 'Section content goes here.';
+        const expanded = i === 0;
+        return `  <div class="accordion-item">
+    <h2 class="accordion-header" id="${headingId}">
+      <button class="accordion-button${expanded ? '' : ' collapsed'}" type="button"
+              data-bs-toggle="collapse" data-bs-target="#${collapseId}"
+              aria-expanded="${expanded}" aria-controls="${collapseId}">
+        ${title}
+      </button>
+    </h2>
+    <div id="${collapseId}" class="accordion-collapse collapse${expanded ? ' show' : ''}"
+         aria-labelledby="${headingId}" data-bs-parent="#${uid}">
+      <div class="accordion-body">${body}</div>
+    </div>
+  </div>`;
+    }).join('\n');
+    return `<!-- Bootstrap 5 accordion -->
+<div class="accordion" id="${uid}">
+${items}
+</div>`;
+};
+
+const buildTable = (rows, cols, headerRow, caption) => {
+    const captionHtml = caption ? `\n  <caption>${escapeHtml(caption)}</caption>` : '';
+    const headerHtml = headerRow
+        ? `\n  <thead>\n    <tr>\n${Array.from({length: cols}, (_, c) =>
+            `      <th scope="col">Heading ${c + 1}</th>`).join('\n')}\n    </tr>\n  </thead>`
+        : '';
+    const bodyRows = Array.from({length: rows}, (_, r) =>
+        `    <tr>\n${Array.from({length: cols}, (_, c) =>
+            `      <td>Row ${r + 1}, Cell ${c + 1}</td>`).join('\n')}\n    </tr>`).join('\n');
+    return `<!-- Bootstrap 5 responsive table -->
+<div class="table-responsive">
+  <table class="table table-striped table-hover align-middle">${captionHtml}${headerHtml}
+  <tbody>
+${bodyRows}
+  </tbody>
+  </table>
+</div>`;
+};
+
 // Render a URL input + a Browse button that opens the Moodle filepicker
 // directly. We don't use TinyMCE urlinput / file_picker_callback at all so
 // the picker and our modal share Moodle's z-index world.
@@ -188,14 +320,23 @@ const textareaField = (name, label, placeholder = '') =>
                   placeholder="${escapeHtml(placeholder)}"></textarea>
     </div>`;
 
-const selectField = (name, label, options) => {
-    const opts = options.map(o =>
-        `<option value="${escapeHtml(o.value)}">${escapeHtml(o.text)}</option>`).join('');
+const selectField = (name, label, options, defaultValue = null) => {
+    const opts = options.map((o) => {
+        const selected = defaultValue !== null && String(o.value) === String(defaultValue)
+            ? ' selected' : '';
+        return `<option value="${escapeHtml(o.value)}"${selected}>${escapeHtml(o.text)}</option>`;
+    }).join('');
     return `<div class="form-group mb-3">
         <label for="${name}" class="form-label">${escapeHtml(label)}</label>
         <select id="${name}" name="${name}" class="form-control">${opts}</select>
     </div>`;
 };
+
+const checkboxField = (name, label, checked = false) =>
+    `<div class="form-check mb-3">
+        <input type="checkbox" id="${name}" name="${name}" class="form-check-input"${checked ? ' checked' : ''}>
+        <label for="${name}" class="form-check-label">${escapeHtml(label)}</label>
+    </div>`;
 
 const wireBrowseButtons = (editor, root) => {
     root.querySelectorAll('button[data-action="browse"]').forEach((btn) => {
@@ -249,7 +390,7 @@ const openModal = async(title, bodyHtml, saveLabel) => {
 };
 
 const componentTile = (value, label, svg) =>
-    `<div class="col-6">
+    `<div class="col-6 col-md-3">
         <button type="button" class="btn btn-outline-secondary w-100 h-100 p-3 d-flex flex-column
                 align-items-center justify-content-center gap-2"
                 data-component="${value}">
@@ -259,12 +400,19 @@ const componentTile = (value, label, svg) =>
     </div>`;
 
 const openPicker = async(editor) => {
-    const [dialogTitle, gridLabel, headingLabel, cardsLabel, imageLabel] = await Promise.all([
+    const [
+        dialogTitle, gridLabel, headingLabel, cardsLabel, imageLabel,
+        jumbotronLabel, carouselLabel, accordionLabel, tableLabel,
+    ] = await Promise.all([
         getString('dialog_title', component),
         getString('component_grid', component),
         getString('component_heading', component),
         getString('component_cards', component),
         getString('component_image', component),
+        getString('component_jumbotron', component),
+        getString('component_carousel', component),
+        getString('component_accordion', component),
+        getString('component_table', component),
     ]);
 
     const body = `<div class="row g-3">
@@ -272,11 +420,16 @@ const openPicker = async(editor) => {
         ${componentTile('heading', headingLabel, SVG.heading)}
         ${componentTile('cards', cardsLabel, SVG.cards)}
         ${componentTile('image', imageLabel, SVG.image)}
+        ${componentTile('jumbotron', jumbotronLabel, SVG.jumbotron)}
+        ${componentTile('carousel', carouselLabel, SVG.carousel)}
+        ${componentTile('accordion', accordionLabel, SVG.accordion)}
+        ${componentTile('table', tableLabel, SVG.table)}
     </div>`;
 
     const modal = enhanceModal(await ModalCancel.create({
         title: dialogTitle,
         body,
+        large: true,
         removeOnClose: true,
         show: true,
     }));
@@ -290,6 +443,10 @@ const openPicker = async(editor) => {
                 case 'heading': openHeadingDialog(editor); break;
                 case 'cards': openCardDialog(editor); break;
                 case 'image': openImageDialog(editor); break;
+                case 'jumbotron': openJumbotronDialog(editor); break;
+                case 'carousel': openCarouselDialog(editor); break;
+                case 'accordion': openAccordionDialog(editor); break;
+                case 'table': openTableDialog(editor); break;
             }
         });
     });
@@ -433,6 +590,152 @@ const openImageDialog = async(editor) => {
         const alt = root.querySelector('[name="alt"]').value;
         const caption = root.querySelector('[name="caption"]').value;
         editor.insertContent(buildImageModal(url, alt, caption));
+    });
+};
+
+const openJumbotronDialog = async(editor) => {
+    const [title, titleLabel, leadLabel, buttonLabel, insertLabel] = await Promise.all([
+        getString('dialog_jumbotron_title', component),
+        getString('jumbotron_title', component),
+        getString('jumbotron_lead', component),
+        getString('jumbotron_button', component),
+        getString('insert', component),
+    ]);
+
+    const body =
+        textField('jt_title', titleLabel, 'Welcome') +
+        textareaField('jt_lead', leadLabel, 'A short, friendly description of what this section is about.') +
+        textField('jt_button', buttonLabel, 'Learn more (leave blank for no button)');
+
+    const modal = await openModal(title, body, insertLabel);
+    modal.getRoot().on(ModalEvents.save, () => {
+        const root = modal.getRoot()[0];
+        editor.insertContent(buildJumbotron(
+            root.querySelector('[name="jt_title"]').value,
+            root.querySelector('[name="jt_lead"]').value,
+            root.querySelector('[name="jt_button"]').value,
+        ));
+    });
+};
+
+const carouselSlideSection = (i, browseLabel) =>
+    `<h6 class="mt-3 mb-2 text-muted text-uppercase small">Slide ${i}</h6>` +
+    urlField(`slide_url_${i}`, 'Image URL', browseLabel) +
+    textField(`slide_alt_${i}`, 'Alt text', 'Describe the image') +
+    textField(`slide_title_${i}`, 'Caption title', `Slide ${i}`) +
+    textareaField(`slide_text_${i}`, 'Caption text', 'Optional caption text shown on the slide.');
+
+const openCarouselDialog = async(editor) => {
+    const [title, insertLabel, browseLabel] = await Promise.all([
+        getString('dialog_carousel_title', component),
+        getString('insert', component),
+        getString('browse', component),
+    ]);
+
+    const slideCount = 3;
+    const body = Array.from({length: slideCount}, (_, i) => carouselSlideSection(i + 1, browseLabel)).join('');
+
+    const modal = await openModal(title, body, insertLabel);
+    const root = modal.getRoot()[0];
+    wireBrowseButtons(editor, root);
+    modal.getRoot().on(ModalEvents.save, () => {
+        const slides = Array.from({length: slideCount}, (_, i) => ({
+            imageUrl: root.querySelector(`[name="slide_url_${i + 1}"]`).value,
+            imageAlt: root.querySelector(`[name="slide_alt_${i + 1}"]`).value,
+            captionTitle: root.querySelector(`[name="slide_title_${i + 1}"]`).value,
+            captionText: root.querySelector(`[name="slide_text_${i + 1}"]`).value,
+        }));
+        editor.insertContent(buildCarousel(slides));
+    });
+};
+
+const accordionSection = (i) =>
+    `<h6 class="mt-3 mb-2 text-muted text-uppercase small">Section ${i}</h6>` +
+    textField(`acc_title_${i}`, 'Section title', `Section ${i}`) +
+    textareaField(`acc_body_${i}`, 'Section body', 'Section content goes here.');
+
+const openAccordionDialog = async(editor) => {
+    const [title, countLabel, insertLabel] = await Promise.all([
+        getString('dialog_accordion_title', component),
+        getString('accordion_count', component),
+        getString('insert', component),
+    ]);
+
+    let sectionCount = 3;
+    const renderSections = (n) => Array.from({length: n}, (_, i) => accordionSection(i + 1)).join('');
+    const body =
+        selectField('acc_count', countLabel, [
+            {value: '2', text: '2 Sections'},
+            {value: '3', text: '3 Sections'},
+            {value: '4', text: '4 Sections'},
+            {value: '5', text: '5 Sections'},
+        ], sectionCount) +
+        `<div data-region="sections">${renderSections(sectionCount)}</div>`;
+
+    const modal = await openModal(title, body, insertLabel);
+    const root = modal.getRoot()[0];
+    const region = root.querySelector('[data-region="sections"]');
+
+    const snapshot = () => {
+        const out = {};
+        region.querySelectorAll('input, textarea').forEach((el) => {
+            out[el.name] = el.value;
+        });
+        return out;
+    };
+    const restore = (data) => {
+        Object.entries(data).forEach(([name, value]) => {
+            const el = region.querySelector(`[name="${name}"]`);
+            if (el) {
+                el.value = value;
+            }
+        });
+    };
+
+    root.querySelector('[name="acc_count"]').addEventListener('change', (e) => {
+        const data = snapshot();
+        sectionCount = parseInt(e.target.value, 10);
+        region.innerHTML = renderSections(sectionCount);
+        restore(data);
+    });
+
+    modal.getRoot().on(ModalEvents.save, () => {
+        const sections = Array.from({length: sectionCount}, (_, i) => ({
+            title: region.querySelector(`[name="acc_title_${i + 1}"]`).value,
+            body: region.querySelector(`[name="acc_body_${i + 1}"]`).value,
+        }));
+        editor.insertContent(buildAccordion(sections));
+    });
+};
+
+const openTableDialog = async(editor) => {
+    const [title, rowsLabel, colsLabel, headerLabel, captionLabel, insertLabel] = await Promise.all([
+        getString('dialog_table_title', component),
+        getString('table_rows', component),
+        getString('table_columns', component),
+        getString('table_header', component),
+        getString('table_caption', component),
+        getString('insert', component),
+    ]);
+
+    const rowOpts = [2, 3, 4, 5, 6, 8, 10].map(n => ({value: String(n), text: `${n} rows`}));
+    const colOpts = [2, 3, 4, 5, 6].map(n => ({value: String(n), text: `${n} columns`}));
+
+    const body =
+        selectField('tbl_rows', rowsLabel, rowOpts, '3') +
+        selectField('tbl_cols', colsLabel, colOpts, '3') +
+        checkboxField('tbl_header', headerLabel, true) +
+        textField('tbl_caption', captionLabel, 'Optional caption shown above the table');
+
+    const modal = await openModal(title, body, insertLabel);
+    modal.getRoot().on(ModalEvents.save, () => {
+        const root = modal.getRoot()[0];
+        editor.insertContent(buildTable(
+            parseInt(root.querySelector('[name="tbl_rows"]').value, 10),
+            parseInt(root.querySelector('[name="tbl_cols"]').value, 10),
+            root.querySelector('[name="tbl_header"]').checked,
+            root.querySelector('[name="tbl_caption"]').value,
+        ));
     });
 };
 
