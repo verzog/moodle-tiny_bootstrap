@@ -131,15 +131,21 @@ const buildZoomModal = (uid, src, alt, caption = '') => {
     const capHtml = caption
         ? `\n        <p class="mt-2 mb-0 text-muted">${escapeHtml(caption)}</p>`
         : '';
+    // Use modal-xl + inline styles so the zoom works on regular view pages where
+    // the TinyMCE plugin CSS (styles.css) is not loaded.
+    // object-fit:contain lets the image scale up to fill the modal while keeping
+    // its aspect ratio; max-height:70vh prevents it overflowing the viewport.
     return `<div class="modal fade" id="${uid}" tabindex="-1" aria-label="${alt}" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered tiny-bs-resizable tiny-bs-zoom-dialog">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
+      <div class="modal-header py-2">
         <h5 class="modal-title">${alt}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body text-center">
-        <img src="${src}" class="img-fluid" alt="${alt}">${capHtml}
+      <div class="modal-body p-2 text-center"
+           style="min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <img src="${src}" alt="${alt}"
+             style="max-width:100%;max-height:70vh;object-fit:contain;">${capHtml}
       </div>
     </div>
   </div>
