@@ -296,19 +296,28 @@ ${bodyRows}
 </div>`;
 };
 
-// Render a URL input + a Browse button that opens the Moodle filepicker
-// directly. We don't use TinyMCE urlinput / file_picker_callback at all so
-// the picker and our modal share Moodle's z-index world.
-const urlField = (name, label, browseLabel) =>
-    `<div class="form-group mb-3">
+// Render a URL input + Browse button (and optional Placeholder button).
+// placeholderUrl, when provided, adds a third button that pre-fills the field
+// so authors can build layout now and swap in real images later.
+const urlField = (name, label, browseLabel, placeholderUrl = null) => {
+    const placeholderBtn = placeholderUrl
+        ? `<button type="button" class="btn btn-outline-secondary"
+                   data-action="placeholder" data-target="${name}"
+                   data-placeholder-url="${escapeHtml(placeholderUrl)}">
+                Placeholder
+            </button>`
+        : '';
+    return `<div class="form-group mb-3">
         <label for="${name}" class="form-label">${escapeHtml(label)}</label>
         <div class="input-group">
             <input type="text" id="${name}" name="${name}" class="form-control" autocomplete="off">
             <button type="button" class="btn btn-secondary" data-action="browse" data-target="${name}">
                 ${escapeHtml(browseLabel)}
             </button>
+            ${placeholderBtn}
         </div>
     </div>`;
+};
 
 const textField = (name, label, placeholder = '') =>
     `<div class="form-group mb-3">
@@ -373,6 +382,17 @@ const wireBrowseButtons = (editor, root) => {
                 // basename so we always populate something useful.
                 const fallback = params.url.split(/[?#]/)[0].split('/').pop() || '';
                 altField.value = params.file || fallback;
+            }
+        });
+    });
+
+    // Wire placeholder buttons — clicking one pre-fills the URL field with the
+    // placehold.co URL encoded in its data attribute.
+    root.querySelectorAll('button[data-action="placeholder"]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const target = root.querySelector(`[name="${btn.dataset.target}"]`);
+            if (target) {
+                target.value = btn.dataset.placeholderUrl;
             }
         });
     });
@@ -509,7 +529,7 @@ const openHeadingDialog = async(editor) => {
 
 const cardSection = (i, browseLabel) =>
     `<h6 class="mt-3 mb-2 text-muted text-uppercase small">Card ${i}</h6>` +
-    urlField(`img_url_${i}`, 'Image URL', browseLabel) +
+    urlField(`img_url_${i}`, 'Image URL', browseLabel, 'https://placehold.co/600x300?text=Card+Image') +
     textField(`img_alt_${i}`, 'Alt text', 'Describe the image') +
     textField(`title_${i}`, 'Card title', `Card ${i}`) +
     textareaField(`body_${i}`, 'Body text', 'Add your card content here.');
@@ -524,13 +544,14 @@ const openCardDialog = async(editor) => {
 
     const renderCards = (n) => Array.from({length: n}, (_, i) => cardSection(i + 1, browseLabel)).join('');
 
+    // Default to 3 cards; select default must match so the dialog is consistent.
     let cardCount = 3;
     const body =
         selectField('count', countLabel, [
             {value: '2', text: '2 Cards'},
             {value: '3', text: '3 Cards'},
             {value: '4', text: '4 Cards'},
-        ]) +
+        ], '3') +
         `<div data-region="cards">${renderCards(cardCount)}</div>`;
 
     const modal = await openModal(title, body, insertLabel);
@@ -591,7 +612,7 @@ const openImageDialog = async(editor) => {
     ]);
 
     const body =
-        urlField('url', urlLabel, browseLabel) +
+        urlField('url', urlLabel, browseLabel, 'https://placehold.co/800x500?text=Image') +
         textField('alt', altLabel, 'Describe the image for screen readers') +
         textareaField('caption', captionLabel, 'Optional caption shown below the image…');
 
@@ -633,7 +654,7 @@ const openJumbotronDialog = async(editor) => {
 
 const carouselSlideSection = (i, browseLabel) =>
     `<h6 class="mt-3 mb-2 text-muted text-uppercase small">Slide ${i}</h6>` +
-    urlField(`slide_url_${i}`, 'Image URL', browseLabel) +
+    urlField(`slide_url_${i}`, 'Image URL', browseLabel, 'https://placehold.co/1200x500?text=Slide+Image') +
     textField(`slide_alt_${i}`, 'Alt text', 'Describe the image') +
     textField(`slide_title_${i}`, 'Caption title', `Slide ${i}`) +
     textareaField(`slide_text_${i}`, 'Caption text', 'Optional caption text shown on the slide.');
