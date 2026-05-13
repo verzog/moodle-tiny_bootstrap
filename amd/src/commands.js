@@ -127,8 +127,11 @@ const buildHeading = (level, text) => {
     return `<h${level}>${safe}</h${level}>`;
 };
 
-const buildZoomModal = (uid, src, alt) =>
-    `<div class="modal fade" id="${uid}" tabindex="-1" aria-label="${alt}" aria-hidden="true">
+const buildZoomModal = (uid, src, alt, caption = '') => {
+    const capHtml = caption
+        ? `\n        <p class="mt-2 mb-0 text-muted">${escapeHtml(caption)}</p>`
+        : '';
+    return `<div class="modal fade" id="${uid}" tabindex="-1" aria-label="${alt}" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
@@ -136,11 +139,12 @@ const buildZoomModal = (uid, src, alt) =>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body text-center">
-        <img src="${src}" class="img-fluid" alt="${alt}">
+        <img src="${src}" class="img-fluid" alt="${alt}">${capHtml}
       </div>
     </div>
   </div>
 </div>`;
+};
 
 const buildCardGroup = (cards) => {
     const rendered = cards.map((card, i) => {
@@ -186,7 +190,7 @@ const buildImageModal = (imageUrl, imageAlt, caption) => {
   </a>${figcaption}
 </figure>
 
-${buildZoomModal(uid, src, alt)}`;
+${buildZoomModal(uid, src, alt, caption)}`;
 };
 
 const buildJumbotron = (title, lead, buttonText) => {
@@ -351,15 +355,24 @@ const wireBrowseButtons = (editor, root) => {
             const target = root.querySelector(`[name="${btn.dataset.target}"]`);
             if (target && params && params.url) {
                 target.value = params.url;
-                // Mirror alt text into the matching alt field if present.
-                const altName = btn.dataset.target.replace(/^img_url_/, 'img_alt_')
+                // Mirror alt text into the matching alt field if present. The
+                // single-image dialog uses url/alt; the card group uses
+                // img_url_N/img_alt_N; the carousel uses slide_url_N/slide_alt_N.
+                const altName = btn.dataset.target
+                    .replace(/^img_url_/, 'img_alt_')
+                    .replace(/^slide_url_/, 'slide_alt_')
                     .replace(/^url$/, 'alt');
-                const altField = altName !== btn.dataset.target
-                    ? root.querySelector(`[name="${altName}"]`)
-                    : null;
-                if (altField && !altField.value && params.file) {
-                    altField.value = params.file;
+                if (altName === btn.dataset.target) {
+                    return;
                 }
+                const altField = root.querySelector(`[name="${altName}"]`);
+                if (!altField) {
+                    return;
+                }
+                // Prefer the filepicker's file name; fall back to the URL's
+                // basename so we always populate something useful.
+                const fallback = params.url.split(/[?#]/)[0].split('/').pop() || '';
+                altField.value = params.file || fallback;
             }
         });
     });
