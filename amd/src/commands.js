@@ -368,7 +368,12 @@ const openImageDialog = async(editor) => {
                 items: [
                     {type: 'urlinput', name: 'url', label: urlLabel, filetype: 'image'},
                     {type: 'input', name: 'alt', label: altLabel, placeholder: 'Describe the image for screen readers'},
-                    {type: 'textarea', name: 'caption', label: captionLabel, placeholder: 'Optional caption shown below the image…'},
+                    {
+                        type: 'textarea',
+                        name: 'caption',
+                        label: captionLabel,
+                        placeholder: 'Optional caption shown below the image…',
+                    },
                 ],
             },
             buttons: [
