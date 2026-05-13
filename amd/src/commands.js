@@ -224,6 +224,19 @@ const wireBrowseButtons = (editor, root) => {
     });
 };
 
+// Tag the modal so styles.css can make it resizable, and make sure clicking
+// the backdrop always closes it (core/modal's hideIfNotForm short-circuits
+// when a <form> is present — none of ours have one today, but adding the
+// explicit listener keeps it predictable if we ever do).
+const enhanceModal = (modal) => {
+    const dialog = modal.getRoot()[0].querySelector('[data-region="modal"]');
+    if (dialog) {
+        dialog.classList.add('tiny-bs-resizable');
+    }
+    modal.getRoot().on(ModalEvents.outsideClick, () => modal.hide());
+    return modal;
+};
+
 const openModal = async(title, bodyHtml, saveLabel) => {
     const modal = await ModalSaveCancel.create({
         title,
@@ -232,7 +245,7 @@ const openModal = async(title, bodyHtml, saveLabel) => {
         removeOnClose: true,
         show: true,
     });
-    return modal;
+    return enhanceModal(modal);
 };
 
 const componentTile = (value, label, svg) =>
@@ -261,12 +274,12 @@ const openPicker = async(editor) => {
         ${componentTile('image', imageLabel, SVG.image)}
     </div>`;
 
-    const modal = await ModalCancel.create({
+    const modal = enhanceModal(await ModalCancel.create({
         title: dialogTitle,
         body,
         removeOnClose: true,
         show: true,
-    });
+    }));
 
     modal.getRoot()[0].querySelectorAll('button[data-component]').forEach((btn) => {
         btn.addEventListener('click', () => {

@@ -18,4 +18,26 @@
  * Our dialogs now use core/modal (Bootstrap) instead of TinyMCE's tox-dialog,
  * so they share the same z-index world as the Moodle filepicker — no overrides
  * are required for the picker to render above us.
+ *
+ * Make our dialogs user-resizable via the browser's native resize handle.
+ * The handle lives on .modal-dialog itself (it gets the CSS resize property),
+ * while .modal-content fills it. .modal-body scrolls when its contents exceed
+ * the available space.
  */
+.modal-dialog.tiny-bs-resizable {
+    resize: both;
+    overflow: hidden;
+    min-width: 320px;
+    min-height: 240px;
+    max-width: 95vw;
+    max-height: 95vh;
+}
+
+.modal-dialog.tiny-bs-resizable .modal-content {
+    height: 100%;
+    max-height: 100%;
+}
+
+.modal-dialog.tiny-bs-resizable .modal-body {
+    overflow: auto;
+}
