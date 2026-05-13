@@ -30,7 +30,7 @@
     pointer-events: auto;
     resize: both;
     overflow: hidden;
-    width: min(640px, 95vw);
+    width: 640px;
     max-width: 95vw;
     max-height: 95vh;
     min-width: 320px;
