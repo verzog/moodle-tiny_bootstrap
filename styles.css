@@ -45,3 +45,10 @@
 .modal-dialog.tiny-bs-resizable .modal-body {
     overflow: auto;
 }
+
+/* Zoom modals start larger than the editing dialogs. */
+.modal-dialog.tiny-bs-resizable.tiny-bs-zoom-dialog {
+    width: 90vw;
+    max-width: 900px;
+    min-height: 400px;
+}

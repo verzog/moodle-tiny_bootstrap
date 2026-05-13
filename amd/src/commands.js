@@ -132,7 +132,7 @@ const buildZoomModal = (uid, src, alt, caption = '') => {
         ? `\n        <p class="mt-2 mb-0 text-muted">${escapeHtml(caption)}</p>`
         : '';
     return `<div class="modal fade" id="${uid}" tabindex="-1" aria-label="${alt}" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
+  <div class="modal-dialog modal-xl modal-dialog-centered tiny-bs-resizable tiny-bs-zoom-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">${alt}</h5>
