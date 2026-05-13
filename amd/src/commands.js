@@ -21,9 +21,41 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {getButtonImage} from 'editor_tiny/utils';
+import {getButtonImage, displayFilepicker} from 'editor_tiny/utils';
 import {get_string as getString} from 'core/str';
 import {buttonName, component, icon} from './common';
+
+// TinyMCE invokes file_picker_callback bound to the editor instance.
+const imageFilePickerCallback = async function(cb, value, meta) {
+    if (meta.filetype !== 'image') {
+        return;
+    }
+    const editor = this;
+    let params;
+    try {
+        params = await displayFilepicker(editor, 'image');
+    } catch (e) {
+        window.console.warn('tiny_bootstrap filepicker cancelled or failed', e);
+        return;
+    }
+    cb(params.url, {alt: params.file || ''});
+};
+
+// Scope file_picker_callback to the lifetime of our own dialog so we don't
+// perturb the editor's global init (which has triggered downstream
+// querySelectorAll-on-undefined errors in form/AMD modules on modedit.php).
+const withFilePicker = (editor, openDialog) => {
+    const previous = editor.options.get('file_picker_callback');
+    editor.options.set('file_picker_callback', imageFilePickerCallback);
+    const restore = () => {
+        if (previous) {
+            editor.options.set('file_picker_callback', previous);
+        } else {
+            editor.options.unset('file_picker_callback');
+        }
+    };
+    openDialog(restore);
+};
 
 const escapeHtml = (s) => (s || '')
     .replace(/&/g, '&amp;')
@@ -272,46 +304,49 @@ const openCardDialog = async(editor) => {
 
     let cardCount = 3;
 
-    editor.windowManager.open({
-        title,
-        size: 'medium',
-        body: {
-            type: 'panel',
-            items: [
-                {
-                    type: 'selectbox',
-                    name: 'count',
-                    label: countLabel,
-                    items: [
-                        {value: '2', text: '2 Cards'},
-                        {value: '3', text: '3 Cards'},
-                        {value: '4', text: '4 Cards'},
-                    ],
-                },
-                ...cardFields(cardCount),
+    withFilePicker(editor, (restore) => {
+        editor.windowManager.open({
+            title,
+            size: 'medium',
+            body: {
+                type: 'panel',
+                items: [
+                    {
+                        type: 'selectbox',
+                        name: 'count',
+                        label: countLabel,
+                        items: [
+                            {value: '2', text: '2 Cards'},
+                            {value: '3', text: '3 Cards'},
+                            {value: '4', text: '4 Cards'},
+                        ],
+                    },
+                    ...cardFields(cardCount),
+                ],
+            },
+            buttons: [
+                {type: 'cancel', text: cancelLabel},
+                {type: 'submit', text: insertLabel, buttonType: 'primary'},
             ],
-        },
-        buttons: [
-            {type: 'cancel', text: cancelLabel},
-            {type: 'submit', text: insertLabel, buttonType: 'primary'},
-        ],
-        onChange: (api, detail) => {
-            if (detail.name === 'count') {
-                cardCount = parseInt(api.getData().count, 10);
-            }
-        },
-        onSubmit: (api) => {
-            const data = api.getData();
-            const n = parseInt(data.count, 10);
-            const cards = Array.from({length: n}, (_, i) => ({
-                imageUrl: (data[`img_url_${i + 1}`] && data[`img_url_${i + 1}`].value) || '',
-                imageAlt: data[`img_alt_${i + 1}`] || '',
-                title: data[`title_${i + 1}`] || '',
-                body: data[`body_${i + 1}`] || '',
-            }));
-            api.close();
-            editor.insertContent(buildCardGroup(cards));
-        },
+            onChange: (api, detail) => {
+                if (detail.name === 'count') {
+                    cardCount = parseInt(api.getData().count, 10);
+                }
+            },
+            onSubmit: (api) => {
+                const data = api.getData();
+                const n = parseInt(data.count, 10);
+                const cards = Array.from({length: n}, (_, i) => ({
+                    imageUrl: (data[`img_url_${i + 1}`] && data[`img_url_${i + 1}`].value) || '',
+                    imageAlt: data[`img_alt_${i + 1}`] || '',
+                    title: data[`title_${i + 1}`] || '',
+                    body: data[`body_${i + 1}`] || '',
+                }));
+                api.close();
+                editor.insertContent(buildCardGroup(cards));
+            },
+            onClose: restore,
+        });
     });
 };
 
@@ -325,25 +360,33 @@ const openImageDialog = async(editor) => {
         getString('cancel', component),
     ]);
 
-    editor.windowManager.open({
-        title,
-        body: {
-            type: 'panel',
-            items: [
-                {type: 'urlinput', name: 'url', label: urlLabel, filetype: 'image'},
-                {type: 'input', name: 'alt', label: altLabel, placeholder: 'Describe the image for screen readers'},
-                {type: 'textarea', name: 'caption', label: captionLabel, placeholder: 'Optional caption shown below the image…'},
+    withFilePicker(editor, (restore) => {
+        editor.windowManager.open({
+            title,
+            body: {
+                type: 'panel',
+                items: [
+                    {type: 'urlinput', name: 'url', label: urlLabel, filetype: 'image'},
+                    {type: 'input', name: 'alt', label: altLabel, placeholder: 'Describe the image for screen readers'},
+                    {
+                        type: 'textarea',
+                        name: 'caption',
+                        label: captionLabel,
+                        placeholder: 'Optional caption shown below the image…',
+                    },
+                ],
+            },
+            buttons: [
+                {type: 'cancel', text: cancelLabel},
+                {type: 'submit', text: insertLabel, buttonType: 'primary'},
             ],
-        },
-        buttons: [
-            {type: 'cancel', text: cancelLabel},
-            {type: 'submit', text: insertLabel, buttonType: 'primary'},
-        ],
-        onSubmit: (api) => {
-            const {url, alt, caption} = api.getData();
-            api.close();
-            editor.insertContent(buildImageModal((url && url.value) || '', alt, caption));
-        },
+            onSubmit: (api) => {
+                const {url, alt, caption} = api.getData();
+                api.close();
+                editor.insertContent(buildImageModal((url && url.value) || '', alt, caption));
+            },
+            onClose: restore,
+        });
     });
 };
 
