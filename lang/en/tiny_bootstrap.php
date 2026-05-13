@@ -25,6 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['bootstrap:use'] = 'Use Bootstrap Scaffolding';
+$string['browse'] = 'Browse repositories…';
 $string['button_bootstrap'] = 'Bootstrap Scaffolding';
 $string['cancel'] = 'Cancel';
 $string['card_body'] = 'Card body text';
@@ -38,6 +39,7 @@ $string['component_cards'] = 'Card Group';
 $string['component_grid'] = 'Page Grid Layout';
 $string['component_heading'] = 'Heading';
 $string['component_image'] = 'Image with Zoom Modal';
+$string['component_label'] = 'Component';
 $string['dialog_card_title'] = 'Insert Card Group';
 $string['dialog_grid_title'] = 'Insert Grid Layout';
 $string['dialog_heading_title'] = 'Insert Heading';
@@ -56,5 +58,6 @@ $string['image_caption'] = 'Caption (optional)';
 $string['image_url'] = 'Image URL';
 $string['insert'] = 'Insert';
 $string['menuitem_bootstrap'] = 'Bootstrap Scaffolding';
+$string['next'] = 'Next';
 $string['pluginname'] = 'Bootstrap Scaffolding';
 $string['privacy:metadata'] = 'The Bootstrap Scaffolding plugin for TinyMCE does not store any personal data.';
