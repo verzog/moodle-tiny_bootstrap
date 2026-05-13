@@ -24,8 +24,41 @@
 import {getButtonImage, displayFilepicker} from 'editor_tiny/utils';
 import {get_string as getString} from 'core/str';
 import ModalSaveCancel from 'core/modal_save_cancel';
+import ModalCancel from 'core/modal_cancel';
 import ModalEvents from 'core/modal_events';
 import {buttonName, component, icon} from './common';
+
+// Inline SVGs for the component picker tiles. 24px, currentColor stroke so
+// they inherit text colour and look at home next to the label.
+const SVG = {
+    grid: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" '
+        + 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
+        + 'stroke-linejoin="round" aria-hidden="true">'
+        + '<rect x="3" y="3" width="7" height="7" rx="1"/>'
+        + '<rect x="14" y="3" width="7" height="7" rx="1"/>'
+        + '<rect x="3" y="14" width="7" height="7" rx="1"/>'
+        + '<rect x="14" y="14" width="7" height="7" rx="1"/>'
+        + '</svg>',
+    heading: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" '
+        + 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
+        + 'stroke-linejoin="round" aria-hidden="true">'
+        + '<path d="M6 4v16"/><path d="M18 4v16"/><path d="M6 12h12"/>'
+        + '</svg>',
+    cards: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" '
+        + 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
+        + 'stroke-linejoin="round" aria-hidden="true">'
+        + '<rect x="3" y="5" width="5.5" height="14" rx="1"/>'
+        + '<rect x="9.25" y="5" width="5.5" height="14" rx="1"/>'
+        + '<rect x="15.5" y="5" width="5.5" height="14" rx="1"/>'
+        + '</svg>',
+    image: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" '
+        + 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
+        + 'stroke-linejoin="round" aria-hidden="true">'
+        + '<rect x="3" y="4" width="18" height="16" rx="2"/>'
+        + '<circle cx="9" cy="10" r="1.6"/>'
+        + '<path d="M21 17l-5-5-9 9"/>'
+        + '</svg>',
+};
 
 const escapeHtml = (s) => (s || '')
     .replace(/&/g, '&amp;')
@@ -35,11 +68,17 @@ const escapeHtml = (s) => (s || '')
     .replace(/'/g, '&#039;');
 
 const buildGrid = (cols, rows = 1) => {
-    const colClass = cols === 1 ? 'col-12' : `col-12 col-md-${12 / cols}`;
+    const widthClass = cols === 1 ? 'col-12' : `col-12 col-md-${12 / cols}`;
+    // Bootstrap 5 utility classes give us a 1px light border with rounded
+    // corners and a little internal padding so the grid sections are visible
+    // while editing without looking heavy.
+    const cellInner = 'tiny-bs-grid-cell border rounded p-3';
     const buildRow = () => {
         const colsHtml = Array.from({length: cols}, (_, i) =>
-            `<div class="${colClass}">
-  <p>Column ${i + 1} content</p>
+            `<div class="${widthClass}">
+  <div class="${cellInner}">
+    <p>Column ${i + 1} content</p>
+  </div>
 </div>`
         ).join('\n');
         return `<div class="row g-3">\n${colsHtml}\n</div>`;
@@ -59,33 +98,55 @@ const buildHeading = (level, text) => {
     return `<h${level}>${safe}</h${level}>`;
 };
 
+const buildZoomModal = (uid, src, alt) =>
+    `<div class="modal fade" id="${uid}" tabindex="-1" aria-label="${alt}" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">${alt}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img src="${src}" class="img-fluid" alt="${alt}">
+      </div>
+    </div>
+  </div>
+</div>`;
+
 const buildCardGroup = (cards) => {
-    const cardsHtml = cards.map((card, i) => {
+    const rendered = cards.map((card, i) => {
+        const uid = 'bsCardImg' + Math.random().toString(36).slice(2, 9);
         const imgSrc = escapeHtml(card.imageUrl) || 'https://placehold.co/600x300?text=Image';
         const imgAlt = escapeHtml(card.imageAlt) || `Card ${i + 1} image`;
         const title = escapeHtml(card.title) || `Card ${i + 1}`;
         const body = escapeHtml(card.body) || 'Add your card content here.';
-        return `  <div class="card">
-    <img src="${imgSrc}" class="card-img-top" alt="${imgAlt}">
+        return {
+            cardHtml: `  <div class="card">
+    <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="Click to enlarge">
+      <img src="${imgSrc}" class="card-img-top" style="cursor:zoom-in;" alt="${imgAlt}">
+    </a>
     <div class="card-body">
       <h5 class="card-title">${title}</h5>
       <p class="card-text">${body}</p>
     </div>
-  </div>`;
-    }).join('\n');
-    return `<!-- Bootstrap 5 card group -->
+  </div>`,
+            modalHtml: buildZoomModal(uid, imgSrc, imgAlt),
+        };
+    });
+    const cardsHtml = rendered.map(r => r.cardHtml).join('\n');
+    const modalsHtml = rendered.map(r => r.modalHtml).join('\n\n');
+    return `<!-- Bootstrap 5 card group with zoomable images -->
 <div class="card-group">
 ${cardsHtml}
-</div>`;
+</div>
+
+${modalsHtml}`;
 };
 
 const buildImageModal = (imageUrl, imageAlt, caption) => {
     const uid = 'bsModal' + Math.random().toString(36).slice(2, 9);
     const src = escapeHtml(imageUrl) || 'https://placehold.co/800x500?text=Image';
     const alt = escapeHtml(imageAlt) || 'Image';
-    const capHtml = caption
-        ? `\n      <p class="mt-2 text-muted">${escapeHtml(caption)}</p>`
-        : '';
     const figcaption = caption
         ? `\n  <figcaption class="mt-1 text-muted small">${escapeHtml(caption)}</figcaption>`
         : '';
@@ -96,20 +157,7 @@ const buildImageModal = (imageUrl, imageAlt, caption) => {
   </a>${figcaption}
 </figure>
 
-<!-- Zoom modal for the image above -->
-<div class="modal fade" id="${uid}" tabindex="-1" aria-label="${alt}" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">${alt}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body text-center">
-        <img src="${src}" class="img-fluid" alt="${alt}">${capHtml}
-      </div>
-    </div>
-  </div>
-</div>`;
+${buildZoomModal(uid, src, alt)}`;
 };
 
 // Render a URL input + a Browse button that opens the Moodle filepicker
@@ -187,42 +235,50 @@ const openModal = async(title, bodyHtml, saveLabel) => {
     return modal;
 };
 
+const componentTile = (value, label, svg) =>
+    `<div class="col-6">
+        <button type="button" class="btn btn-outline-secondary w-100 h-100 p-3 d-flex flex-column
+                align-items-center justify-content-center gap-2"
+                data-component="${value}">
+            <span class="text-primary">${svg}</span>
+            <span class="small">${escapeHtml(label)}</span>
+        </button>
+    </div>`;
+
 const openPicker = async(editor) => {
-    const [
-        dialogTitle,
-        componentLabel,
-        gridLabel,
-        headingLabel,
-        cardsLabel,
-        imageLabel,
-        nextLabel,
-    ] = await Promise.all([
+    const [dialogTitle, gridLabel, headingLabel, cardsLabel, imageLabel] = await Promise.all([
         getString('dialog_title', component),
-        getString('component_label', component),
         getString('component_grid', component),
         getString('component_heading', component),
         getString('component_cards', component),
         getString('component_image', component),
-        getString('next', component),
     ]);
 
-    const body = selectField('bs_component', componentLabel, [
-        {value: 'grid', text: gridLabel},
-        {value: 'heading', text: headingLabel},
-        {value: 'cards', text: cardsLabel},
-        {value: 'image', text: imageLabel},
-    ]);
+    const body = `<div class="row g-3">
+        ${componentTile('grid', gridLabel, SVG.grid)}
+        ${componentTile('heading', headingLabel, SVG.heading)}
+        ${componentTile('cards', cardsLabel, SVG.cards)}
+        ${componentTile('image', imageLabel, SVG.image)}
+    </div>`;
 
-    const modal = await openModal(dialogTitle, body, nextLabel);
-    modal.getRoot().on(ModalEvents.save, () => {
-        const root = modal.getRoot()[0];
-        const chosen = root.querySelector('[name="bs_component"]').value;
-        switch (chosen) {
-            case 'grid': openGridDialog(editor); break;
-            case 'heading': openHeadingDialog(editor); break;
-            case 'cards': openCardDialog(editor); break;
-            case 'image': openImageDialog(editor); break;
-        }
+    const modal = await ModalCancel.create({
+        title: dialogTitle,
+        body,
+        removeOnClose: true,
+        show: true,
+    });
+
+    modal.getRoot()[0].querySelectorAll('button[data-component]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const chosen = btn.dataset.component;
+            modal.hide();
+            switch (chosen) {
+                case 'grid': openGridDialog(editor); break;
+                case 'heading': openHeadingDialog(editor); break;
+                case 'cards': openCardDialog(editor); break;
+                case 'image': openImageDialog(editor); break;
+            }
+        });
     });
 };
 
