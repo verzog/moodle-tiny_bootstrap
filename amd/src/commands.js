@@ -141,7 +141,7 @@ const buildZoomModal = (uid, src, alt, caption = '', title = null) => {
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header py-2">
-        <h5 class="modal-title">${displayTitle}</h5>
+        <h4 class="modal-title">${displayTitle}</h4>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-2 text-center"
