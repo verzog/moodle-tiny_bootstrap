@@ -127,7 +127,7 @@ const buildHeading = (level, text) => {
     return `<h${level}>${safe}</h${level}>`;
 };
 
-// title is pre-escaped (caller's responsibility); caption is raw and escaped here.
+// Title is pre-escaped (caller's responsibility); caption is raw and escaped here.
 const buildZoomModal = (uid, src, alt, caption = '', title = null) => {
     const capHtml = caption
         ? `\n        <p class="mt-2 mb-0 text-muted">${escapeHtml(caption)}</p>`
