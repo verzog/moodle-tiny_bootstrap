@@ -6,11 +6,15 @@ ready-made Bootstrap 5 HTML components without writing any code.
 ## Components
 
 | Component | What it inserts |
-|-----------|----------------|
-| **Page Grid Layout** | 1–4 equal-width responsive columns, with a container you can add more rows to |
+|-----------|-----------------|
+| **Page Grid Layout** | 1–4 equal-width responsive columns in a responsive container |
 | **Heading** | H1–H6 with typed text |
 | **Card Group** | 2–4 equal-width Bootstrap cards, each with an image, title, and body |
 | **Image with Zoom Modal** | A thumbnail that opens a full-size Bootstrap 5 modal with an optional caption |
+| **Jumbotron** | A hero/banner section with title, lead text, and a call-to-action button |
+| **Carousel** | A Bootstrap 5 image slideshow/carousel |
+| **Accordion** | A collapsible accordion with a configurable number of sections |
+| **Responsive Table** | A Bootstrap-wrapped table with optional header row and caption |
 
 ## Requirements
 
