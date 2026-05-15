@@ -1,4 +1,4 @@
-# tiny_bootstrap — Bootstrap 5 Scaffolding for TinyMCE
+# moodle-tiny_bootstrap — Bootstrap 5 Scaffolding for TinyMCE
 
 A TinyMCE plugin for Moodle 5.0+ that lets content authors insert
 ready-made Bootstrap 5 HTML components without writing any code.
