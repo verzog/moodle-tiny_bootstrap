@@ -87,6 +87,21 @@ const SVG = {
         + '<path d="M3 9h18"/><path d="M3 14h18"/>'
         + '<path d="M9 4v16"/><path d="M15 4v16"/>'
         + '</svg>',
+    imagetext: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" '
+        + 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
+        + 'stroke-linejoin="round" aria-hidden="true">'
+        + '<rect x="3" y="5" width="9" height="14" rx="1"/>'
+        + '<circle cx="6.5" cy="9" r="1"/>'
+        + '<path d="M3 16l3-3 3 2.5"/>'
+        + '<path d="M15 8h6"/><path d="M15 12h6"/><path d="M15 16h4"/>'
+        + '</svg>',
+    videotext: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" '
+        + 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
+        + 'stroke-linejoin="round" aria-hidden="true">'
+        + '<rect x="3" y="5" width="9" height="14" rx="1"/>'
+        + '<path d="M6 9l4 2.5L6 14z"/>'
+        + '<path d="M15 8h6"/><path d="M15 12h6"/><path d="M15 16h4"/>'
+        + '</svg>',
 };
 
 const escapeHtml = (s) => (s || '')
@@ -199,6 +214,106 @@ const buildImageModal = (imageUrl, imageAlt, caption) => {
 </figure>
 
 ${buildZoomModal(uid, src, alt, caption)}`;
+};
+
+// Layout 'image-right' puts the image on the right; anything else
+// (default) puts the image on the left. The image is zoomable via the
+// shared modal builder.
+const buildImageText = (layout, imageUrl, imageAlt, caption, heading, bodyText) => {
+    const uid = 'bsImgTxt' + Math.random().toString(36).slice(2, 9);
+    const src = escapeHtml(imageUrl) || 'https://placehold.co/600x400?text=Image';
+    const alt = escapeHtml(imageAlt) || 'Image';
+    const headingSafe = escapeHtml(heading) || 'Heading';
+    const bodySafe = escapeHtml(bodyText) || 'Add your descriptive text here.';
+    const imageRight = layout === 'image-right';
+    const imageCol = `  <div class="col-12 col-md-6">
+    <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="Click to enlarge">
+      <img src="${src}" class="img-fluid rounded" style="cursor:zoom-in;" alt="${alt}">
+    </a>
+  </div>`;
+    const textCol = `  <div class="col-12 col-md-6">
+    <h3>${headingSafe}</h3>
+    <p>${bodySafe}</p>
+  </div>`;
+    const cols = imageRight ? `${textCol}\n${imageCol}` : `${imageCol}\n${textCol}`;
+    return `<!-- Bootstrap 5 image + text, image ${imageRight ? 'right' : 'left'} -->
+<div class="row align-items-center g-4 my-3">
+${cols}
+</div>
+
+${buildZoomModal(uid, src, alt, caption, headingSafe)}`;
+};
+
+// Build the embed markup for the modal body. YouTube and Vimeo URLs become a
+// responsive iframe; anything else is treated as a direct video file URL.
+const videoEmbed = (videoUrl) => {
+    const url = (videoUrl || '').trim();
+    if (!url) {
+        return '<div class="ratio ratio-16x9 bg-body-secondary d-flex '
+            + 'align-items-center justify-content-center text-muted">'
+            + 'No video URL provided</div>';
+    }
+    const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{6,})/);
+    const vimeo = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    if (yt) {
+        return `<div class="ratio ratio-16x9">
+          <iframe src="https://www.youtube.com/embed/${escapeHtml(yt[1])}"
+                  title="Video" allowfullscreen></iframe>
+        </div>`;
+    }
+    if (vimeo) {
+        return `<div class="ratio ratio-16x9">
+          <iframe src="https://player.vimeo.com/video/${escapeHtml(vimeo[1])}"
+                  title="Video" allowfullscreen></iframe>
+        </div>`;
+    }
+    return `<video controls class="w-100" src="${escapeHtml(url)}"></video>`;
+};
+
+// Title is pre-escaped (caller's responsibility). Inline styles only, so the
+// modal works on view pages where the plugin CSS is not loaded.
+const buildVideoModal = (uid, embedHtml, title) => {
+    return `<div class="modal fade" id="${uid}" tabindex="-1" aria-label="${title}" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h4 class="modal-title">${title}</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-2">
+        ${embedHtml}
+      </div>
+    </div>
+  </div>
+</div>`;
+};
+
+// Layout 'video-right' puts the video on the right; anything else
+// (default) puts the video on the left. The poster image opens the video
+// in the shared video modal.
+const buildVideoText = (layout, videoUrl, posterUrl, posterAlt, heading, bodyText) => {
+    const uid = 'bsVidTxt' + Math.random().toString(36).slice(2, 9);
+    const poster = escapeHtml(posterUrl) || 'https://placehold.co/600x400?text=Play+Video';
+    const alt = escapeHtml(posterAlt) || 'Play video';
+    const headingSafe = escapeHtml(heading) || 'Heading';
+    const bodySafe = escapeHtml(bodyText) || 'Add your descriptive text here.';
+    const videoRight = layout === 'video-right';
+    const videoCol = `  <div class="col-12 col-md-6">
+    <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="Click to play">
+      <img src="${poster}" class="img-fluid rounded" style="cursor:pointer;" alt="${alt}">
+    </a>
+  </div>`;
+    const textCol = `  <div class="col-12 col-md-6">
+    <h3>${headingSafe}</h3>
+    <p>${bodySafe}</p>
+  </div>`;
+    const cols = videoRight ? `${textCol}\n${videoCol}` : `${videoCol}\n${textCol}`;
+    return `<!-- Bootstrap 5 video + text, video ${videoRight ? 'right' : 'left'} -->
+<div class="row align-items-center g-4 my-3">
+${cols}
+</div>
+
+${buildVideoModal(uid, videoEmbed(videoUrl), headingSafe)}`;
 };
 
 const buildJumbotron = (title, lead, buttonText) => {
@@ -444,6 +559,7 @@ const openPicker = async(editor) => {
     const [
         dialogTitle, gridLabel, headingLabel, cardsLabel, imageLabel,
         jumbotronLabel, carouselLabel, accordionLabel, tableLabel,
+        imagetextLabel, videotextLabel,
     ] = await Promise.all([
         getString('dialog_title', component),
         getString('component_grid', component),
@@ -454,6 +570,8 @@ const openPicker = async(editor) => {
         getString('component_carousel', component),
         getString('component_accordion', component),
         getString('component_table', component),
+        getString('component_imagetext', component),
+        getString('component_videotext', component),
     ]);
 
     const body = `<div class="row g-3">
@@ -465,6 +583,8 @@ const openPicker = async(editor) => {
         ${componentTile('carousel', carouselLabel, SVG.carousel)}
         ${componentTile('accordion', accordionLabel, SVG.accordion)}
         ${componentTile('table', tableLabel, SVG.table)}
+        ${componentTile('imagetext', imagetextLabel, SVG.imagetext)}
+        ${componentTile('videotext', videotextLabel, SVG.videotext)}
     </div>`;
 
     const modal = enhanceModal(await ModalCancel.create({
@@ -488,6 +608,8 @@ const openPicker = async(editor) => {
                 case 'carousel': openCarouselDialog(editor); break;
                 case 'accordion': openAccordionDialog(editor); break;
                 case 'table': openTableDialog(editor); break;
+                case 'imagetext': openImageTextDialog(editor); break;
+                case 'videotext': openVideoTextDialog(editor); break;
             }
         });
     });
@@ -632,6 +754,94 @@ const openImageDialog = async(editor) => {
         const alt = root.querySelector('[name="alt"]').value;
         const caption = root.querySelector('[name="caption"]').value;
         editor.insertContent(buildImageModal(url, alt, caption));
+    });
+};
+
+const openImageTextDialog = async(editor) => {
+    const [
+        title, urlLabel, altLabel, captionLabel, headingLabel, bodyLabel,
+        layoutLabel, leftLabel, rightLabel, insertLabel, browseLabel,
+    ] = await Promise.all([
+        getString('dialog_imagetext_title', component),
+        getString('image_url', component),
+        getString('image_alt', component),
+        getString('image_caption', component),
+        getString('imagetext_heading', component),
+        getString('imagetext_body', component),
+        getString('imagetext_layout', component),
+        getString('imagetext_layout_imageleft', component),
+        getString('imagetext_layout_imageright', component),
+        getString('insert', component),
+        getString('browse', component),
+    ]);
+
+    const body =
+        selectField('layout', layoutLabel, [
+            {value: 'image-left', text: leftLabel},
+            {value: 'image-right', text: rightLabel},
+        ]) +
+        urlField('url', urlLabel, browseLabel, 'https://placehold.co/600x400?text=Image') +
+        textField('alt', altLabel, 'Describe the image for screen readers') +
+        textField('it_heading', headingLabel, 'Heading') +
+        textareaField('it_body', bodyLabel, 'Add your descriptive text here.') +
+        textareaField('caption', captionLabel, 'Optional caption shown in the zoom modal…');
+
+    const modal = await openModal(title, body, insertLabel);
+    const root = modal.getRoot()[0];
+    wireBrowseButtons(editor, root);
+    modal.getRoot().on(ModalEvents.save, () => {
+        editor.insertContent(buildImageText(
+            root.querySelector('[name="layout"]').value,
+            root.querySelector('[name="url"]').value,
+            root.querySelector('[name="alt"]').value,
+            root.querySelector('[name="caption"]').value,
+            root.querySelector('[name="it_heading"]').value,
+            root.querySelector('[name="it_body"]').value,
+        ));
+    });
+};
+
+const openVideoTextDialog = async(editor) => {
+    const [
+        title, urlLabel, posterLabel, posterAltLabel, headingLabel, bodyLabel,
+        layoutLabel, leftLabel, rightLabel, insertLabel, browseLabel,
+    ] = await Promise.all([
+        getString('dialog_videotext_title', component),
+        getString('videotext_url', component),
+        getString('videotext_poster', component),
+        getString('videotext_poster_alt', component),
+        getString('videotext_heading', component),
+        getString('videotext_body', component),
+        getString('videotext_layout', component),
+        getString('videotext_layout_videoleft', component),
+        getString('videotext_layout_videoright', component),
+        getString('insert', component),
+        getString('browse', component),
+    ]);
+
+    const body =
+        selectField('layout', layoutLabel, [
+            {value: 'video-left', text: leftLabel},
+            {value: 'video-right', text: rightLabel},
+        ]) +
+        textField('video_url', urlLabel, 'YouTube, Vimeo or direct video file URL') +
+        urlField('poster_url', posterLabel, browseLabel, 'https://placehold.co/600x400?text=Play+Video') +
+        textField('poster_alt', posterAltLabel, 'Describe the video for screen readers') +
+        textField('vt_heading', headingLabel, 'Heading') +
+        textareaField('vt_body', bodyLabel, 'Add your descriptive text here.');
+
+    const modal = await openModal(title, body, insertLabel);
+    const root = modal.getRoot()[0];
+    wireBrowseButtons(editor, root);
+    modal.getRoot().on(ModalEvents.save, () => {
+        editor.insertContent(buildVideoText(
+            root.querySelector('[name="layout"]').value,
+            root.querySelector('[name="video_url"]').value,
+            root.querySelector('[name="poster_url"]').value,
+            root.querySelector('[name="poster_alt"]').value,
+            root.querySelector('[name="vt_heading"]').value,
+            root.querySelector('[name="vt_body"]').value,
+        ));
     });
 };
 
