@@ -216,7 +216,7 @@ const buildImageModal = (imageUrl, imageAlt, caption) => {
 ${buildZoomModal(uid, src, alt, caption)}`;
 };
 
-// layout is 'image-right' to put the image on the right; anything else
+// Layout 'image-right' puts the image on the right; anything else
 // (default) puts the image on the left. The image is zoomable via the
 // shared modal builder.
 const buildImageText = (layout, imageUrl, imageAlt, caption, heading, bodyText) => {
@@ -248,6 +248,11 @@ ${buildZoomModal(uid, src, alt, caption, headingSafe)}`;
 // responsive iframe; anything else is treated as a direct video file URL.
 const videoEmbed = (videoUrl) => {
     const url = (videoUrl || '').trim();
+    if (!url) {
+        return '<div class="ratio ratio-16x9 bg-body-secondary d-flex '
+            + 'align-items-center justify-content-center text-muted">'
+            + 'No video URL provided</div>';
+    }
     const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{6,})/);
     const vimeo = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
     if (yt) {
@@ -283,7 +288,7 @@ const buildVideoModal = (uid, embedHtml, title) => {
 </div>`;
 };
 
-// layout is 'video-right' to put the video on the right; anything else
+// Layout 'video-right' puts the video on the right; anything else
 // (default) puts the video on the left. The poster image opens the video
 // in the shared video modal.
 const buildVideoText = (layout, videoUrl, posterUrl, posterAlt, heading, bodyText) => {
