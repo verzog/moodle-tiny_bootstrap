@@ -15,6 +15,8 @@ ready-made Bootstrap 5 HTML components without writing any code.
 | **Carousel** | A Bootstrap 5 image slideshow/carousel |
 | **Accordion** | A collapsible accordion with a configurable number of sections |
 | **Responsive Table** | A Bootstrap-wrapped table with optional header row and caption |
+| **Image and Text** | A zoomable image beside a heading and body text — image left/text right or image right/text left |
+| **Video and Text** | A poster image that opens a video (YouTube, Vimeo or file) in a modal, beside a heading and body text — video left/text right or video right/text left |
 
 ## Requirements
 
