@@ -295,9 +295,15 @@ const buildVideoModal = (uid, embedHtml, title) => {
   </div>
 </div>
 <script>
-(function(){var m=document.getElementById('${uid}');if(!m)return;
-m.addEventListener('show.bs.modal',function(){m.querySelectorAll('[data-src]').forEach(function(e){e.src=e.dataset.src;});});
-m.addEventListener('hidden.bs.modal',function(){m.querySelectorAll('iframe').forEach(function(e){e.src='';});m.querySelectorAll('video').forEach(function(e){e.pause();e.removeAttribute('src');e.load();});});
+(function(){
+var m=document.getElementById('${uid}');if(!m)return;
+m.addEventListener('show.bs.modal',function(){
+m.querySelectorAll('[data-src]').forEach(function(e){e.src=e.dataset.src;});
+});
+m.addEventListener('hidden.bs.modal',function(){
+m.querySelectorAll('iframe').forEach(function(e){e.src='';});
+m.querySelectorAll('video').forEach(function(e){e.pause();e.removeAttribute('src');e.load();});
+});
 })();
 </script>`;
 };
