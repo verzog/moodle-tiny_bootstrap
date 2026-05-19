@@ -60,7 +60,7 @@ const chunk = output[0];
 
 const result = await minify(chunk.code, {
     mangle: false,
-    format: {wrap_func_args: true},
+    module: true,
     sourceMap: {
         content: chunk.map ? JSON.stringify(chunk.map) : undefined,
         filename: 'commands.min.js',
