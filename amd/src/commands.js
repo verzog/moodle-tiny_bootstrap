@@ -244,7 +244,7 @@ ${cols}
 ${buildZoomModal(uid, src, alt, caption, headingSafe)}`;
 };
 
-// Build the embed markup for the modal body. YouTube and Vimeo URLs become a
+// Build the embed markup for a video. YouTube and Vimeo URLs become a
 // responsive iframe; anything else is treated as a direct video file URL.
 const videoEmbed = (videoUrl) => {
     const url = (videoUrl || '').trim();
@@ -289,20 +289,34 @@ const buildVideoModal = (uid, embedHtml, title) => {
 };
 
 // Layout 'video-right' puts the video on the right; anything else
-// (default) puts the video on the left. The poster image opens the video
-// in the shared video modal.
-const buildVideoText = (layout, videoUrl, posterUrl, posterAlt, heading, bodyText) => {
+// (default) puts the video on the left.
+// displayMode 'inline' embeds the video directly so the browser's native
+// fullscreen button can be used; 'modal' (default) shows a poster image
+// that opens the video in a Bootstrap modal.
+const buildVideoText = (layout, videoUrl, posterUrl, posterAlt, heading, bodyText, displayMode = 'modal') => {
     const uid = 'bsVidTxt' + Math.random().toString(36).slice(2, 9);
     const poster = escapeHtml(posterUrl) || 'https://placehold.co/600x400?text=Play+Video';
     const alt = escapeHtml(posterAlt) || 'Play video';
     const headingSafe = escapeHtml(heading) || 'Heading';
     const bodySafe = escapeHtml(bodyText) || 'Add your descriptive text here.';
     const videoRight = layout === 'video-right';
-    const videoCol = `  <div class="col-12 col-md-6">
+
+    let videoCol;
+    let modalHtml = '';
+
+    if (displayMode === 'inline') {
+        videoCol = `  <div class="col-12 col-md-6">
+    ${videoEmbed(videoUrl)}
+  </div>`;
+    } else {
+        videoCol = `  <div class="col-12 col-md-6">
     <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="Click to play">
       <img src="${poster}" class="img-fluid rounded" style="cursor:pointer;" alt="${alt}">
     </a>
   </div>`;
+        modalHtml = `\n${buildVideoModal(uid, videoEmbed(videoUrl), headingSafe)}`;
+    }
+
     const textCol = `  <div class="col-12 col-md-6">
     <h3>${headingSafe}</h3>
     <p>${bodySafe}</p>
@@ -311,9 +325,7 @@ const buildVideoText = (layout, videoUrl, posterUrl, posterAlt, heading, bodyTex
     return `<!-- Bootstrap 5 video + text, video ${videoRight ? 'right' : 'left'} -->
 <div class="row align-items-center g-4 my-3">
 ${cols}
-</div>
-
-${buildVideoModal(uid, videoEmbed(videoUrl), headingSafe)}`;
+</div>${modalHtml}`;
 };
 
 const buildJumbotron = (title, lead, buttonText) => {
@@ -804,7 +816,9 @@ const openImageTextDialog = async(editor) => {
 const openVideoTextDialog = async(editor) => {
     const [
         title, urlLabel, posterLabel, posterAltLabel, headingLabel, bodyLabel,
-        layoutLabel, leftLabel, rightLabel, insertLabel, browseLabel,
+        layoutLabel, leftLabel, rightLabel,
+        displayLabel, modalLabel, inlineLabel,
+        insertLabel, browseLabel,
     ] = await Promise.all([
         getString('dialog_videotext_title', component),
         getString('videotext_url', component),
@@ -815,6 +829,9 @@ const openVideoTextDialog = async(editor) => {
         getString('videotext_layout', component),
         getString('videotext_layout_videoleft', component),
         getString('videotext_layout_videoright', component),
+        getString('videotext_display', component),
+        getString('videotext_display_modal', component),
+        getString('videotext_display_inline', component),
         getString('insert', component),
         getString('browse', component),
     ]);
@@ -823,6 +840,10 @@ const openVideoTextDialog = async(editor) => {
         selectField('layout', layoutLabel, [
             {value: 'video-left', text: leftLabel},
             {value: 'video-right', text: rightLabel},
+        ]) +
+        selectField('display_mode', displayLabel, [
+            {value: 'modal', text: modalLabel},
+            {value: 'inline', text: inlineLabel},
         ]) +
         textField('video_url', urlLabel, 'YouTube, Vimeo or direct video file URL') +
         urlField('poster_url', posterLabel, browseLabel, 'https://placehold.co/600x400?text=Play+Video') +
@@ -841,6 +862,7 @@ const openVideoTextDialog = async(editor) => {
             root.querySelector('[name="poster_alt"]').value,
             root.querySelector('[name="vt_heading"]').value,
             root.querySelector('[name="vt_body"]').value,
+            root.querySelector('[name="display_mode"]').value,
         ));
     });
 };
