@@ -246,9 +246,7 @@ ${buildZoomModal(uid, src, alt, caption, headingSafe)}`;
 
 // Build the embed markup for a video. YouTube and Vimeo URLs become a
 // responsive iframe; anything else is treated as a direct video file URL.
-// When lazy=true the src is stored in data-src so the media does not load
-// until the modal opens (prevents background autoplay while hidden).
-const videoEmbed = (videoUrl, lazy = false) => {
+const videoEmbed = (videoUrl) => {
     const url = (videoUrl || '').trim();
     if (!url) {
         return '<div class="ratio ratio-16x9 bg-body-secondary d-flex '
@@ -257,29 +255,23 @@ const videoEmbed = (videoUrl, lazy = false) => {
     }
     const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{6,})/);
     const vimeo = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-    const sa = lazy ? 'data-src' : 'src';
     if (yt) {
         return `<div class="ratio ratio-16x9">
-          <iframe ${sa}="https://www.youtube.com/embed/${escapeHtml(yt[1])}"
+          <iframe src="https://www.youtube.com/embed/${escapeHtml(yt[1])}"
                   title="Video" allowfullscreen></iframe>
         </div>`;
     }
     if (vimeo) {
         return `<div class="ratio ratio-16x9">
-          <iframe ${sa}="https://player.vimeo.com/video/${escapeHtml(vimeo[1])}"
+          <iframe src="https://player.vimeo.com/video/${escapeHtml(vimeo[1])}"
                   title="Video" allowfullscreen></iframe>
         </div>`;
-    }
-    if (lazy) {
-        return `<video controls class="w-100" data-src="${escapeHtml(url)}"></video>`;
     }
     return `<video controls class="w-100" src="${escapeHtml(url)}"></video>`;
 };
 
 // Title is pre-escaped (caller's responsibility). Inline styles only, so the
 // modal works on view pages where the plugin CSS is not loaded.
-// The inline script lazy-loads media on open and stops it on close so the
-// video never plays while the modal is hidden.
 const buildVideoModal = (uid, embedHtml, title) => {
     return `<div class="modal fade" id="${uid}" tabindex="-1" aria-label="${title}" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -293,19 +285,7 @@ const buildVideoModal = (uid, embedHtml, title) => {
       </div>
     </div>
   </div>
-</div>
-<script>
-(function(){
-var m=document.getElementById('${uid}');if(!m)return;
-m.addEventListener('show.bs.modal',function(){
-m.querySelectorAll('[data-src]').forEach(function(e){e.src=e.dataset.src;});
-});
-m.addEventListener('hidden.bs.modal',function(){
-m.querySelectorAll('iframe').forEach(function(e){e.src='';});
-m.querySelectorAll('video').forEach(function(e){e.pause();e.removeAttribute('src');e.load();});
-});
-})();
-</script>`;
+</div>`;
 };
 
 // Layout 'video-right' puts the video on the right; anything else
@@ -334,7 +314,7 @@ const buildVideoText = (layout, videoUrl, posterUrl, posterAlt, heading, bodyTex
       <img src="${poster}" class="img-fluid rounded" style="cursor:pointer;" alt="${alt}">
     </a>
   </div>`;
-        modalHtml = `\n${buildVideoModal(uid, videoEmbed(videoUrl, true), headingSafe)}`;
+        modalHtml = `\n${buildVideoModal(uid, videoEmbed(videoUrl), headingSafe)}`;
     }
 
     const textCol = `  <div class="col-12 col-md-6">
