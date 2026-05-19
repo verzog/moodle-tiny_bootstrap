@@ -5,10 +5,12 @@
 import {rollup} from 'rollup';
 import {nodeResolve} from '@rollup/plugin-node-resolve';
 import {transform} from '@babel/core';
-import {minify} from 'terser';
-import {writeFileSync} from 'fs';
+import {createRequire} from 'module';
 import path from 'path';
 import {fileURLToPath} from 'url';
+
+const require = createRequire(import.meta.url);
+const {terser} = require('rollup-plugin-terser');
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -33,7 +35,7 @@ const bundle = await rollup({
             comments: false,
             compact: false,
             plugins: [
-                ['transform-es2015-modules-amd-lazy', {strictMode: false}],
+                'transform-es2015-modules-amd-lazy',
                 'system-import-transformer',
                 path.resolve(__dirname, '.grunt/babel-plugin-add-module-to-define.js'),
             ],
@@ -48,27 +50,14 @@ const bundle = await rollup({
                 }],
             ],
         }),
+        terser({mangle: false}),
     ],
 });
 
-const {output} = await bundle.generate({
+await bundle.write({
+    file: 'amd/build/commands.min.js',
     format: 'esm',
     sourcemap: true,
 });
-
-const chunk = output[0];
-
-const result = await minify(chunk.code, {
-    mangle: false,
-    module: true,
-    sourceMap: {
-        content: chunk.map ? JSON.stringify(chunk.map) : undefined,
-        filename: 'commands.min.js',
-        url: 'commands.min.js.map',
-    },
-});
-
-writeFileSync('amd/build/commands.min.js', result.code);
-writeFileSync('amd/build/commands.min.js.map', result.map);
 
 console.log('Built amd/build/commands.min.js');
