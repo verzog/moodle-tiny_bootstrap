@@ -152,7 +152,7 @@ const buildZoomModal = (uid, src, alt, caption = '', title = null) => {
     // the TinyMCE plugin CSS (styles.css) is not loaded.
     // Setting width:100% + height:65vh + object-fit:contain makes the image fill
     // the modal body and scale up small images while preserving aspect ratio.
-    return `<div class="modal fade" id="${uid}" tabindex="-1" aria-label="${alt}" aria-hidden="true">
+    return `<div class="modal fade tiny-bootstrap-modal" id="${uid}" tabindex="-1" aria-label="${alt}" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header py-2">
@@ -273,7 +273,7 @@ const videoEmbed = (videoUrl) => {
 // Title is pre-escaped (caller's responsibility). Inline styles only, so the
 // modal works on view pages where the plugin CSS is not loaded.
 const buildVideoModal = (uid, embedHtml, title) => {
-    return `<div class="modal fade" id="${uid}" tabindex="-1" aria-label="${title}" aria-hidden="true">
+    return `<div class="modal fade tiny-bootstrap-modal" id="${uid}" tabindex="-1" aria-label="${title}" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header py-2">

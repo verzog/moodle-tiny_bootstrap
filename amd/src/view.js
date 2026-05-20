@@ -24,7 +24,9 @@ const stopVideosIn = (root) => {
 
 const onHidden = (event) => {
     const modal = event.target;
-    if (!modal || !modal.classList || !modal.classList.contains('modal')) {
+    // Only act on modals this plugin inserted — other plugins' modals may
+    // legitimately rely on their iframes' in-memory state surviving a hide.
+    if (!modal || !modal.classList || !modal.classList.contains('tiny-bootstrap-modal')) {
         return;
     }
     stopVideosIn(modal);
