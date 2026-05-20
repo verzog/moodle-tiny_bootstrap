@@ -15,18 +15,29 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * TinyMCE Bootstrap Scaffolding plugin version info.
+ * Hook callbacks for tiny_bootstrap.
  *
  * @package    tiny_bootstrap
- * @copyright  2025 Skin Cancer College of Australasia <admin@skincancercollege.org>
+ * @copyright  2026 Skin Cancer College of Australasia <admin@skincancercollege.org>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace tiny_bootstrap;
 
-$plugin->component = 'tiny_bootstrap';
-$plugin->version   = 2026052000;
-$plugin->requires  = 2025041400; // Moodle 5.0+.
-$plugin->supported = [500, 501];
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.1.0';
+/**
+ * Hook callbacks.
+ */
+class hook_callbacks {
+    /**
+     * Load the small view-side AMD module that pauses videos and resets
+     * iframes when a Bootstrap modal inserted by this plugin is dismissed.
+     *
+     * @param \core\hook\output\before_footer_html_generation $hook
+     */
+    public static function before_footer_html_generation(
+        \core\hook\output\before_footer_html_generation $hook
+    ): void {
+        global $PAGE;
+        $PAGE->requires->js_call_amd('tiny_bootstrap/view', 'init');
+    }
+}

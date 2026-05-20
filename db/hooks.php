@@ -15,18 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * TinyMCE Bootstrap Scaffolding plugin version info.
+ * Hook callback registrations for tiny_bootstrap.
  *
  * @package    tiny_bootstrap
- * @copyright  2025 Skin Cancer College of Australasia <admin@skincancercollege.org>
+ * @copyright  2026 Skin Cancer College of Australasia <admin@skincancercollege.org>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'tiny_bootstrap';
-$plugin->version   = 2026052000;
-$plugin->requires  = 2025041400; // Moodle 5.0+.
-$plugin->supported = [500, 501];
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.1.0';
+$callbacks = [
+    [
+        'hook'     => \core\hook\output\before_footer_html_generation::class,
+        'callback' => [\tiny_bootstrap\hook_callbacks::class, 'before_footer_html_generation'],
+    ],
+];
