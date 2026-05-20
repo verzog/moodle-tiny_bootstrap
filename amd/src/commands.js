@@ -328,15 +328,68 @@ ${cols}
 </div>${modalHtml}`;
 };
 
-const buildJumbotron = (title, lead, buttonText) => {
+// Build the absolutely-positioned background layer for a jumbotron. Returns
+// an empty string when bgType is 'none' or bgUrl is blank. Inline styles only
+// so it renders correctly on view pages without the plugin CSS.
+const buildJumbotronBackground = (bgType, bgUrl, bgAlt) => {
+    const u = (bgUrl || '').trim();
+    if (!u || bgType === 'none') {
+        return '';
+    }
+    const cover = 'position:absolute;inset:0;width:100%;height:100%;'
+        + 'object-fit:cover;border:0;pointer-events:none;z-index:0;';
+    if (bgType === 'image') {
+        const alt = escapeHtml(bgAlt);
+        return `\n  <img src="${escapeHtml(u)}" alt="${alt}" style="${cover}">`;
+    }
+    // bgType === 'video'.
+    const yt = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{6,})/);
+    const vimeo = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    if (yt) {
+        const id = escapeHtml(yt[1]);
+        const src = `https://www.youtube.com/embed/${id}`
+            + `?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0`
+            + `&playsinline=1&modestbranding=1&rel=0&disablekb=1`;
+        return `\n  <iframe src="${src}" title="Background video"`
+            + ` aria-hidden="true" tabindex="-1"`
+            + ` allow="autoplay; encrypted-media" style="${cover}"></iframe>`;
+    }
+    if (vimeo) {
+        const id = escapeHtml(vimeo[1]);
+        const src = `https://player.vimeo.com/video/${id}`
+            + `?background=1&autoplay=1&muted=1&loop=1`;
+        return `\n  <iframe src="${src}" title="Background video"`
+            + ` aria-hidden="true" tabindex="-1"`
+            + ` allow="autoplay" style="${cover}"></iframe>`;
+    }
+    return `\n  <video autoplay muted loop playsinline aria-hidden="true"`
+        + ` src="${escapeHtml(u)}" style="${cover}"></video>`;
+};
+
+const buildJumbotron = (title, lead, buttonText, bgType, bgUrl, bgAlt, overlay) => {
     const titleSafe = escapeHtml(title) || 'Welcome';
     const leadSafe = escapeHtml(lead) || 'A short, friendly description of what this section is about.';
     const btn = buttonText
-        ? `\n  <hr class="my-4">\n  <a class="btn btn-primary btn-lg" href="#" role="button">${escapeHtml(buttonText)}</a>`
+        ? `\n    <hr class="my-4">\n    <a class="btn btn-primary btn-lg" href="#" role="button">${escapeHtml(buttonText)}</a>`
+        : '';
+    const bg = buildJumbotronBackground(bgType, bgUrl, bgAlt);
+    const hasBg = bg !== '';
+    const overlayHtml = (hasBg && overlay)
+        ? `\n  <div aria-hidden="true" style="position:absolute;inset:0;`
+            + `background:rgba(0,0,0,0.45);z-index:1;pointer-events:none;"></div>`
+        : '';
+    // When there's a background, drop the muted bg-body-tertiary so the media
+    // shows through, add overflow:hidden so the cover layer is clipped to
+    // rounded corners, and force readable light text over the media.
+    const wrapperClass = hasBg
+        ? 'position-relative overflow-hidden p-5 mb-4 rounded-3 border'
+        : 'p-5 mb-4 bg-body-tertiary rounded-3 border';
+    const contentStyle = hasBg
+        ? ' style="position:relative;z-index:2;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.5);"'
         : '';
     return `<!-- Bootstrap 5 jumbotron -->
-<div class="p-5 mb-4 bg-body-tertiary rounded-3 border">
-  <div class="container-fluid py-3">
+<div class="${wrapperClass}">${bg}${overlayHtml}
+  <div class="container-fluid py-3"${contentStyle}>
     <h1 class="display-5 fw-bold">${titleSafe}</h1>
     <p class="col-md-9 fs-5">${leadSafe}</p>${btn}
   </div>
@@ -868,18 +921,38 @@ const openVideoTextDialog = async(editor) => {
 };
 
 const openJumbotronDialog = async(editor) => {
-    const [title, titleLabel, leadLabel, buttonLabel, insertLabel] = await Promise.all([
+    const [
+        title, titleLabel, leadLabel, buttonLabel, insertLabel, browseLabel,
+        bgTypeLabel, bgNoneLabel, bgImageLabel, bgVideoLabel,
+        bgUrlLabel, bgAltLabel, overlayLabel,
+    ] = await Promise.all([
         getString('dialog_jumbotron_title', component),
         getString('jumbotron_title', component),
         getString('jumbotron_lead', component),
         getString('jumbotron_button', component),
         getString('insert', component),
+        getString('browse', component),
+        getString('jumbotron_bg_type', component),
+        getString('jumbotron_bg_none', component),
+        getString('jumbotron_bg_image', component),
+        getString('jumbotron_bg_video', component),
+        getString('jumbotron_bg_url', component),
+        getString('jumbotron_bg_alt', component),
+        getString('jumbotron_overlay', component),
     ]);
 
     const body =
         textField('jt_title', titleLabel, 'Welcome') +
         textareaField('jt_lead', leadLabel, 'A short, friendly description of what this section is about.') +
-        textField('jt_button', buttonLabel, 'Learn more (leave blank for no button)');
+        textField('jt_button', buttonLabel, 'Learn more (leave blank for no button)') +
+        selectField('jt_bg_type', bgTypeLabel, [
+            {value: 'none', text: bgNoneLabel},
+            {value: 'image', text: bgImageLabel},
+            {value: 'video', text: bgVideoLabel},
+        ], 'none') +
+        urlField('jt_bg_url', bgUrlLabel, browseLabel, 'https://placehold.co/1600x600?text=Background') +
+        textField('jt_bg_alt', bgAltLabel, 'Describe the background image for screen readers') +
+        checkboxField('jt_overlay', overlayLabel, true);
 
     const modal = await openModal(title, body, insertLabel);
     modal.getRoot().on(ModalEvents.save, () => {
@@ -888,6 +961,10 @@ const openJumbotronDialog = async(editor) => {
             root.querySelector('[name="jt_title"]').value,
             root.querySelector('[name="jt_lead"]').value,
             root.querySelector('[name="jt_button"]').value,
+            root.querySelector('[name="jt_bg_type"]').value,
+            root.querySelector('[name="jt_bg_url"]').value,
+            root.querySelector('[name="jt_bg_alt"]').value,
+            root.querySelector('[name="jt_overlay"]').checked,
         ));
     });
 };
