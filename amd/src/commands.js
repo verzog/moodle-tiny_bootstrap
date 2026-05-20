@@ -342,7 +342,7 @@ const buildJumbotronBackground = (bgType, bgUrl, bgAlt) => {
         const alt = escapeHtml(bgAlt);
         return `\n  <img src="${escapeHtml(u)}" alt="${alt}" style="${cover}">`;
     }
-    // bgType === 'video'.
+    // The remaining case is bgType === 'video'.
     const yt = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{6,})/);
     const vimeo = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
     if (yt) {
