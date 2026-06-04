@@ -24,6 +24,7 @@
 
 namespace tiny_bootstrap;
 
+use context;
 use editor_tiny\plugin;
 use editor_tiny\plugin_with_buttons;
 use editor_tiny\plugin_with_menuitems;
@@ -32,6 +33,24 @@ use editor_tiny\plugin_with_menuitems;
  * TinyMCE Bootstrap Scaffolding plugin.
  */
 class plugininfo extends plugin implements plugin_with_buttons, plugin_with_menuitems {
+    /**
+     * Checks whether this plugin is enabled for the given context.
+     *
+     * @param context $context
+     * @param array $options
+     * @param array $fpoptions
+     * @param \editor_tiny\editor|null $editor
+     * @return bool
+     */
+    public static function is_enabled(
+        context $context,
+        array $options,
+        array $fpoptions,
+        ?\editor_tiny\editor $editor = null
+    ): bool {
+        return has_capability('tiny/bootstrap:use', $context);
+    }
+
     /**
      * Returns the buttons provided by this plugin.
      *
