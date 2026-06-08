@@ -22,7 +22,7 @@
  */
 
 import {getButtonImage, displayFilepicker} from 'editor_tiny/utils';
-import {get_string as getString} from 'core/str';
+import {get_string as getString, get_strings as getStrings} from 'core/str';
 import ModalSaveCancel from 'core/modal_save_cancel';
 import ModalCancel from 'core/modal_cancel';
 import ModalEvents from 'core/modal_events';
@@ -126,6 +126,53 @@ const escapeHtml = (s) => (s || '')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 
+// User-facing text used by the synchronous builder and dialog helpers is
+// prefetched once via loadStrings (called from getSetup) and read from `str`,
+// so none of it is hard-coded in the generated markup. fmt substitutes the
+// single {$a} placeholder used by the numbered default strings.
+let str = {};
+const fmt = (template, a) => (template || '').replace('{$a}', a);
+
+const STRING_KEYS = [
+    'image_url', 'card_title', 'card_placeholder_body', 'next',
+    'grid_1col', 'grid_2col', 'grid_3col', 'grid_4col',
+    'click_to_enlarge', 'click_to_play', 'close', 'video_title',
+    'background_video', 'previous', 'toggle_dropdown', 'no_video_url',
+    'grid_cell', 'heading_default', 'card_default', 'card_default_alt',
+    'default_alt', 'default_heading', 'default_body', 'play_video_alt',
+    'jumbotron_default_title', 'jumbotron_default_lead', 'slide_default',
+    'section_default', 'section_body_default', 'table_heading_cell',
+    'table_body_cell', 'dropdown_default_label', 'dropdown_default_action',
+    'alt_text', 'describe_image', 'body_text', 'heading_option',
+    'heading_text_placeholder', 'cards_n', 'describe_image_sr',
+    'image_caption_placeholder', 'imagetext_caption_placeholder',
+    'videotext_url_placeholder', 'describe_video_sr',
+    'jumbotron_button_placeholder', 'jumbotron_button_url_placeholder',
+    'describe_bg_sr', 'caption_title', 'caption_text', 'caption_text_placeholder',
+    'section_title', 'section_body', 'sections_n', 'rows_n', 'columns_n',
+    'table_caption_placeholder', 'item_text', 'item_default', 'item_link',
+    'item_link_placeholder', 'items_n', 'item_heading',
+    'colour_primary', 'colour_secondary', 'colour_success', 'colour_danger',
+    'colour_warning', 'colour_info', 'colour_light', 'colour_dark',
+    'cheatsheet_buttons', 'cheatsheet_buttongroup', 'cheatsheet_left',
+    'cheatsheet_middle', 'cheatsheet_right', 'cheatsheet_alerts',
+    'cheatsheet_alert_text', 'cheatsheet_badges', 'cheatsheet_listgroup',
+    'cheatsheet_list_active', 'cheatsheet_list_second', 'cheatsheet_list_third',
+    'cheatsheet_progress', 'cheatsheet_example', 'cheatsheet_spinner',
+    'cheatsheet_loading', 'cheatsheet_breadcrumb', 'cheatsheet_home',
+    'cheatsheet_library', 'cheatsheet_data', 'cheatsheet_pagination',
+    'cheatsheet_pagination_nav',
+];
+
+const loadStrings = async() => {
+    const values = await getStrings(STRING_KEYS.map((key) => ({key, component})));
+    const map = {};
+    STRING_KEYS.forEach((key, i) => {
+        map[key] = values[i];
+    });
+    str = map;
+};
+
 const buildGrid = (cols, rows = 1) => {
     const widthClass = cols === 1 ? 'col-12' : `col-12 col-md-${12 / cols}`;
     // Bootstrap 5 utility classes give us a 1px light border with rounded
@@ -136,7 +183,7 @@ const buildGrid = (cols, rows = 1) => {
         const colsHtml = Array.from({length: cols}, (_, i) =>
             `<div class="${widthClass}">
   <div class="${cellInner}">
-    <p>Column ${i + 1} content</p>
+    <p>${escapeHtml(fmt(str.grid_cell, i + 1))}</p>
   </div>
 </div>`
         ).join('\n');
@@ -153,7 +200,7 @@ const buildHeading = (level, text) => {
     const safe = (text || '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;') || `Heading ${level}`;
+        .replace(/>/g, '&gt;') || escapeHtml(fmt(str.heading_default, level));
     return `<h${level}>${safe}</h${level}>`;
 };
 
@@ -172,7 +219,7 @@ const buildZoomModal = (uid, src, alt, caption = '', title = null) => {
     <div class="modal-content">
       <div class="modal-header py-2">
         <h4 class="modal-title">${displayTitle}</h4>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="${escapeHtml(str.close)}"></button>
       </div>
       <div class="modal-body p-2 text-center"
            style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
@@ -198,8 +245,8 @@ const buildCardGroup = (cards, opts = {}) => {
         rowCols = 'row-cols-1 row-cols-md-3';
     }
     const rendered = cards.map((card, i) => {
-        const title = escapeHtml(card.title) || `Card ${i + 1}`;
-        const body = escapeHtml(card.body) || 'Add your card content here.';
+        const title = escapeHtml(card.title) || escapeHtml(fmt(str.card_default, i + 1));
+        const body = escapeHtml(card.body) || escapeHtml(str.card_placeholder_body);
         if (!withImages) {
             return {
                 cardHtml: `  <div class="col">
@@ -215,11 +262,11 @@ const buildCardGroup = (cards, opts = {}) => {
         }
         const uid = 'bsCardImg' + Math.random().toString(36).slice(2, 9);
         const imgSrc = escapeHtml(card.imageUrl) || 'https://placehold.co/600x300?text=Image';
-        const imgAlt = escapeHtml(card.imageAlt) || `Card ${i + 1} image`;
+        const imgAlt = escapeHtml(card.imageAlt) || escapeHtml(fmt(str.card_default_alt, i + 1));
         return {
             cardHtml: `  <div class="col">
     <div class="card h-100">
-      <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="Click to enlarge">
+      <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="${escapeHtml(str.click_to_enlarge)}">
         <img src="${imgSrc}" class="card-img-top" style="cursor:zoom-in;" alt="${imgAlt}">
       </a>
       <div class="card-body">
@@ -243,13 +290,13 @@ ${cardsHtml}
 const buildImageModal = (imageUrl, imageAlt, caption) => {
     const uid = 'bsModal' + Math.random().toString(36).slice(2, 9);
     const src = escapeHtml(imageUrl) || 'https://placehold.co/800x500?text=Image';
-    const alt = escapeHtml(imageAlt) || 'Image';
+    const alt = escapeHtml(imageAlt) || escapeHtml(str.default_alt);
     const figcaption = caption
         ? `\n  <figcaption class="mt-1 text-muted small">${escapeHtml(caption)}</figcaption>`
         : '';
     return `<!-- Bootstrap 5 image with zoom modal -->
 <figure class="text-center">
-  <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="Click to enlarge">
+  <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="${escapeHtml(str.click_to_enlarge)}">
     <img src="${src}" class="img-fluid img-thumbnail" style="max-height:250px;cursor:zoom-in;" alt="${alt}">
   </a>${figcaption}
 </figure>
@@ -263,12 +310,12 @@ ${buildZoomModal(uid, src, alt, caption)}`;
 const buildImageText = (layout, imageUrl, imageAlt, caption, heading, bodyText) => {
     const uid = 'bsImgTxt' + Math.random().toString(36).slice(2, 9);
     const src = escapeHtml(imageUrl) || 'https://placehold.co/600x400?text=Image';
-    const alt = escapeHtml(imageAlt) || 'Image';
-    const headingSafe = escapeHtml(heading) || 'Heading';
-    const bodySafe = escapeHtml(bodyText) || 'Add your descriptive text here.';
+    const alt = escapeHtml(imageAlt) || escapeHtml(str.default_alt);
+    const headingSafe = escapeHtml(heading) || escapeHtml(str.default_heading);
+    const bodySafe = escapeHtml(bodyText) || escapeHtml(str.default_body);
     const imageRight = layout === 'image-right';
     const imageCol = `  <div class="col-12 col-md-6">
-    <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="Click to enlarge">
+    <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="${escapeHtml(str.click_to_enlarge)}">
       <img src="${src}" class="img-fluid rounded" style="cursor:zoom-in;" alt="${alt}">
     </a>
   </div>`;
@@ -292,20 +339,20 @@ const videoEmbed = (videoUrl) => {
     if (!url) {
         return '<div class="ratio ratio-16x9 bg-body-secondary d-flex '
             + 'align-items-center justify-content-center text-muted">'
-            + 'No video URL provided</div>';
+            + `${escapeHtml(str.no_video_url)}</div>`;
     }
     const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{6,})/);
     const vimeo = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
     if (yt) {
         return `<div class="ratio ratio-16x9">
           <iframe src="https://www.youtube.com/embed/${escapeHtml(yt[1])}"
-                  title="Video" allowfullscreen></iframe>
+                  title="${escapeHtml(str.video_title)}" allowfullscreen></iframe>
         </div>`;
     }
     if (vimeo) {
         return `<div class="ratio ratio-16x9">
           <iframe src="https://player.vimeo.com/video/${escapeHtml(vimeo[1])}"
-                  title="Video" allowfullscreen></iframe>
+                  title="${escapeHtml(str.video_title)}" allowfullscreen></iframe>
         </div>`;
     }
     return `<video controls class="w-100" src="${escapeHtml(url)}"></video>`;
@@ -319,7 +366,7 @@ const buildVideoModal = (uid, embedHtml, title) => {
     <div class="modal-content">
       <div class="modal-header py-2">
         <h4 class="modal-title">${title}</h4>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="${escapeHtml(str.close)}"></button>
       </div>
       <div class="modal-body p-2">
         ${embedHtml}
@@ -337,9 +384,9 @@ const buildVideoModal = (uid, embedHtml, title) => {
 const buildVideoText = (layout, videoUrl, posterUrl, posterAlt, heading, bodyText, displayMode = 'modal') => {
     const uid = 'bsVidTxt' + Math.random().toString(36).slice(2, 9);
     const poster = escapeHtml(posterUrl) || 'https://placehold.co/600x400?text=Play+Video';
-    const alt = escapeHtml(posterAlt) || 'Play video';
-    const headingSafe = escapeHtml(heading) || 'Heading';
-    const bodySafe = escapeHtml(bodyText) || 'Add your descriptive text here.';
+    const alt = escapeHtml(posterAlt) || escapeHtml(str.play_video_alt);
+    const headingSafe = escapeHtml(heading) || escapeHtml(str.default_heading);
+    const bodySafe = escapeHtml(bodyText) || escapeHtml(str.default_body);
     const videoRight = layout === 'video-right';
 
     let videoCol;
@@ -351,7 +398,7 @@ const buildVideoText = (layout, videoUrl, posterUrl, posterAlt, heading, bodyTex
   </div>`;
     } else {
         videoCol = `  <div class="col-12 col-md-6">
-    <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="Click to play">
+    <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="${escapeHtml(str.click_to_play)}">
       <img src="${poster}" class="img-fluid rounded" style="cursor:pointer;" alt="${alt}">
     </a>
   </div>`;
@@ -391,7 +438,7 @@ const buildJumbotronBackground = (bgType, bgUrl, bgAlt) => {
         const src = `https://www.youtube.com/embed/${id}`
             + `?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0`
             + `&playsinline=1&modestbranding=1&rel=0&disablekb=1`;
-        return `\n  <iframe src="${src}" title="Background video"`
+        return `\n  <iframe src="${src}" title="${escapeHtml(str.background_video)}"`
             + ` aria-hidden="true" tabindex="-1"`
             + ` allow="autoplay; encrypted-media" style="${cover}"></iframe>`;
     }
@@ -399,7 +446,7 @@ const buildJumbotronBackground = (bgType, bgUrl, bgAlt) => {
         const id = escapeHtml(vimeo[1]);
         const src = `https://player.vimeo.com/video/${id}`
             + `?background=1&autoplay=1&muted=1&loop=1`;
-        return `\n  <iframe src="${src}" title="Background video"`
+        return `\n  <iframe src="${src}" title="${escapeHtml(str.background_video)}"`
             + ` aria-hidden="true" tabindex="-1"`
             + ` allow="autoplay" style="${cover}"></iframe>`;
     }
@@ -408,8 +455,8 @@ const buildJumbotronBackground = (bgType, bgUrl, bgAlt) => {
 };
 
 const buildJumbotron = (title, lead, buttonText, buttonUrl, bgType, bgUrl, bgAlt, overlay) => {
-    const titleSafe = escapeHtml(title) || 'Welcome';
-    const leadSafe = escapeHtml(lead) || 'A short, friendly description of what this section is about.';
+    const titleSafe = escapeHtml(title) || escapeHtml(str.jumbotron_default_title);
+    const leadSafe = escapeHtml(lead) || escapeHtml(str.jumbotron_default_lead);
     const href = escapeHtml((buttonUrl || '').trim()) || '#';
     const btn = buttonText
         ? `\n    <hr class="my-4">\n    <a class="btn btn-primary btn-lg" href="${href}" role="button">`
@@ -449,11 +496,11 @@ const buildCarousel = (slides, height = '') => {
     const indicators = slides.map((_, i) =>
         `    <button type="button" data-bs-target="#${uid}" data-bs-slide-to="${i}"`
         + `${i === 0 ? ' class="active" aria-current="true"' : ''}`
-        + ` aria-label="Slide ${i + 1}"></button>`
+        + ` aria-label="${escapeHtml(fmt(str.slide_default, i + 1))}"></button>`
     ).join('\n');
     const inner = slides.map((s, i) => {
         const src = escapeHtml(s.imageUrl) || `https://placehold.co/1200x500?text=Slide+${i + 1}`;
-        const alt = escapeHtml(s.imageAlt) || `Slide ${i + 1}`;
+        const alt = escapeHtml(s.imageAlt) || escapeHtml(fmt(str.slide_default, i + 1));
         const caption = escapeHtml(s.captionTitle);
         const text = escapeHtml(s.captionText);
         const captionHtml = (caption || text)
@@ -476,11 +523,11 @@ ${inner}
   </div>
   <button class="carousel-control-prev" type="button" data-bs-target="#${uid}" data-bs-slide="prev">
     <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Previous</span>
+    <span class="visually-hidden">${escapeHtml(str.previous)}</span>
   </button>
   <button class="carousel-control-next" type="button" data-bs-target="#${uid}" data-bs-slide="next">
     <span class="carousel-control-next-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Next</span>
+    <span class="visually-hidden">${escapeHtml(str.next)}</span>
   </button>
 </div>`;
 };
@@ -490,8 +537,8 @@ const buildAccordion = (sections) => {
     const items = sections.map((s, i) => {
         const headingId = `${uid}-h${i}`;
         const collapseId = `${uid}-c${i}`;
-        const title = escapeHtml(s.title) || `Section ${i + 1}`;
-        const body = escapeHtml(s.body) || 'Section content goes here.';
+        const title = escapeHtml(s.title) || escapeHtml(fmt(str.section_default, i + 1));
+        const body = escapeHtml(s.body) || escapeHtml(str.section_body_default);
         const expanded = i === 0;
         return `  <div class="accordion-item">
     <h2 class="accordion-header" id="${headingId}">
@@ -543,11 +590,14 @@ const buildTable = (rows, cols, headerRow, caption, opts = {}) => {
     const captionHtml = caption ? `\n  <caption>${escapeHtml(caption)}</caption>` : '';
     const headerHtml = headerRow
         ? `\n  <thead${theadClass}>\n    <tr>\n${Array.from({length: cols}, (_, c) =>
-            `      <th scope="col">Heading ${c + 1}</th>`).join('\n')}\n    </tr>\n  </thead>`
+            `      <th scope="col">${escapeHtml(fmt(str.table_heading_cell, c + 1))}</th>`)
+            .join('\n')}\n    </tr>\n  </thead>`
         : '';
+    const cellText = (r, c) => escapeHtml(
+        (str.table_body_cell || '').replace('{$a->row}', r + 1).replace('{$a->col}', c + 1));
     const bodyRows = Array.from({length: rows}, (_, r) =>
         `    <tr>\n${Array.from({length: cols}, (_, c) =>
-            `      <td>Row ${r + 1}, Cell ${c + 1}</td>`).join('\n')}\n    </tr>`).join('\n');
+            `      <td>${cellText(r, c)}</td>`).join('\n')}\n    </tr>`).join('\n');
     return `<!-- Bootstrap 5 responsive table -->
 <div class="table-responsive">
   <table class="${classes.join(' ')}">${captionHtml}${headerHtml}
@@ -563,7 +613,7 @@ ${bodyRows}
 // (Bootstrap's split-button dropdown pattern).
 const buildDropdown = (label, variant, alignEnd, split, items) => {
     const uid = 'bsDrop' + Math.random().toString(36).slice(2, 9);
-    const labelSafe = escapeHtml(label) || 'Dropdown';
+    const labelSafe = escapeHtml(label) || escapeHtml(str.dropdown_default_label);
     const btnVariant = `btn btn-${escapeHtml(variant) || 'primary'}`;
     const menuClass = alignEnd ? 'dropdown-menu dropdown-menu-end' : 'dropdown-menu';
     const itemsHtml = items.map((it) => {
@@ -574,12 +624,12 @@ const buildDropdown = (label, variant, alignEnd, split, items) => {
         const href = escapeHtml((it.url || '').trim()) || '#';
         return `    <li><a class="dropdown-item" href="${href}">${text}</a></li>`;
     }).filter(Boolean).join('\n')
-        || '    <li><a class="dropdown-item" href="#">Action</a></li>';
+        || `    <li><a class="dropdown-item" href="#">${escapeHtml(str.dropdown_default_action)}</a></li>`;
     const toggle = split
         ? `  <button type="button" class="${btnVariant}">${labelSafe}</button>
   <button type="button" class="${btnVariant} dropdown-toggle dropdown-toggle-split"
           id="${uid}" data-bs-toggle="dropdown" aria-expanded="false">
-    <span class="visually-hidden">Toggle Dropdown</span>
+    <span class="visually-hidden">${escapeHtml(str.toggle_dropdown)}</span>
   </button>`
         : `  <button type="button" class="${btnVariant} dropdown-toggle"
           id="${uid}" data-bs-toggle="dropdown" aria-expanded="false">${labelSafe}</button>`;
@@ -601,68 +651,69 @@ const buildCheatsheet = () => {
     const outlines = ['primary', 'secondary', 'success', 'danger']
         .map(v => `  <button type="button" class="btn btn-outline-${v}">${v}</button>`).join('\n');
     const alerts = ['primary', 'success', 'warning', 'danger']
-        .map(v => `  <div class="alert alert-${v}" role="alert">A simple ${v} alert.</div>`).join('\n');
+        .map(v => `  <div class="alert alert-${v}" role="alert">`
+            + `${escapeHtml(fmt(str.cheatsheet_alert_text, v))}</div>`).join('\n');
     const badges = ['primary', 'secondary', 'success', 'danger', 'warning', 'info']
         .map(v => `  <span class="badge text-bg-${v}">${v}</span>`).join('\n');
     return `<!-- Bootstrap 5 cheatsheet — delete the sections you don't need -->
 <div class="tiny-bs-cheatsheet">
 
-  <h2>Buttons</h2>
+  <h2>${escapeHtml(str.cheatsheet_buttons)}</h2>
   <div class="d-flex flex-wrap gap-2 mb-3">
 ${buttons}
   </div>
   <div class="d-flex flex-wrap gap-2 mb-3">
 ${outlines}
   </div>
-  <div class="btn-group mb-3" role="group" aria-label="Button group">
-    <button type="button" class="btn btn-primary">Left</button>
-    <button type="button" class="btn btn-primary">Middle</button>
-    <button type="button" class="btn btn-primary">Right</button>
+  <div class="btn-group mb-3" role="group" aria-label="${escapeHtml(str.cheatsheet_buttongroup)}">
+    <button type="button" class="btn btn-primary">${escapeHtml(str.cheatsheet_left)}</button>
+    <button type="button" class="btn btn-primary">${escapeHtml(str.cheatsheet_middle)}</button>
+    <button type="button" class="btn btn-primary">${escapeHtml(str.cheatsheet_right)}</button>
   </div>
 
-  <h2>Alerts</h2>
+  <h2>${escapeHtml(str.cheatsheet_alerts)}</h2>
 ${alerts}
 
-  <h2>Badges</h2>
+  <h2>${escapeHtml(str.cheatsheet_badges)}</h2>
   <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
 ${badges}
   </div>
 
-  <h2>List group</h2>
+  <h2>${escapeHtml(str.cheatsheet_listgroup)}</h2>
   <ul class="list-group mb-3">
-    <li class="list-group-item active" aria-current="true">An active item</li>
-    <li class="list-group-item">A second item</li>
-    <li class="list-group-item">A third item</li>
+    <li class="list-group-item active" aria-current="true">${escapeHtml(str.cheatsheet_list_active)}</li>
+    <li class="list-group-item">${escapeHtml(str.cheatsheet_list_second)}</li>
+    <li class="list-group-item">${escapeHtml(str.cheatsheet_list_third)}</li>
   </ul>
 
-  <h2>Progress</h2>
-  <div class="progress mb-3" role="progressbar" aria-label="Example"
+  <h2>${escapeHtml(str.cheatsheet_progress)}</h2>
+  <div class="progress mb-3" role="progressbar" aria-label="${escapeHtml(str.cheatsheet_example)}"
        aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
     <div class="progress-bar" style="width:50%">50%</div>
   </div>
 
-  <h2>Spinner</h2>
+  <h2>${escapeHtml(str.cheatsheet_spinner)}</h2>
   <div class="spinner-border text-primary mb-3" role="status">
-    <span class="visually-hidden">Loading…</span>
+    <span class="visually-hidden">${escapeHtml(str.cheatsheet_loading)}</span>
   </div>
 
-  <h2>Breadcrumb</h2>
-  <nav aria-label="breadcrumb">
+  <h2>${escapeHtml(str.cheatsheet_breadcrumb)}</h2>
+  <nav aria-label="${escapeHtml(str.cheatsheet_breadcrumb)}">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="#">Home</a></li>
-      <li class="breadcrumb-item"><a href="#">Library</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Data</li>
+      <li class="breadcrumb-item"><a href="#">${escapeHtml(str.cheatsheet_home)}</a></li>
+      <li class="breadcrumb-item"><a href="#">${escapeHtml(str.cheatsheet_library)}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">${escapeHtml(str.cheatsheet_data)}</li>
     </ol>
   </nav>
 
-  <h2>Pagination</h2>
-  <nav aria-label="Page navigation">
+  <h2>${escapeHtml(str.cheatsheet_pagination)}</h2>
+  <nav aria-label="${escapeHtml(str.cheatsheet_pagination_nav)}">
     <ul class="pagination">
-      <li class="page-item"><a class="page-link" href="#">Previous</a></li>
+      <li class="page-item"><a class="page-link" href="#">${escapeHtml(str.previous)}</a></li>
       <li class="page-item"><a class="page-link" href="#">1</a></li>
       <li class="page-item active" aria-current="page"><a class="page-link" href="#">2</a></li>
       <li class="page-item"><a class="page-link" href="#">3</a></li>
-      <li class="page-item"><a class="page-link" href="#">Next</a></li>
+      <li class="page-item"><a class="page-link" href="#">${escapeHtml(str.next)}</a></li>
     </ul>
   </nav>
 
@@ -879,10 +930,10 @@ const openGridDialog = async(editor) => {
     ]);
 
     const body = selectField('cols', colsLabel, [
-        {value: '1', text: '1 Column (full width)'},
-        {value: '2', text: '2 Columns (equal)'},
-        {value: '3', text: '3 Columns (equal)'},
-        {value: '4', text: '4 Columns (equal)'},
+        {value: '1', text: str.grid_1col},
+        {value: '2', text: str.grid_2col},
+        {value: '3', text: str.grid_3col},
+        {value: '4', text: str.grid_4col},
     ]);
 
     const modal = await openModal(title, body, insertLabel);
@@ -901,8 +952,8 @@ const openHeadingDialog = async(editor) => {
     ]);
 
     const body = selectField('level', levelLabel,
-        ['1', '2', '3', '4', '5', '6'].map(n => ({value: n, text: `H${n}`}))
-    ) + textField('text', textLabel, 'Enter heading text…');
+        ['1', '2', '3', '4', '5', '6'].map(n => ({value: n, text: fmt(str.heading_option, n)}))
+    ) + textField('text', textLabel, str.heading_text_placeholder);
 
     const modal = await openModal(title, body, insertLabel);
     modal.getRoot().on(ModalEvents.save, () => {
@@ -917,13 +968,13 @@ const openHeadingDialog = async(editor) => {
 // text-only cards.
 const cardSection = (i, browseLabel, withImages = true) => {
     const imageFields = withImages
-        ? urlField(`img_url_${i}`, 'Image URL', browseLabel, 'https://placehold.co/600x300?text=Card+Image') +
-            textField(`img_alt_${i}`, 'Alt text', 'Describe the image')
+        ? urlField(`img_url_${i}`, str.image_url, browseLabel, 'https://placehold.co/600x300?text=Card+Image') +
+            textField(`img_alt_${i}`, str.alt_text, str.describe_image)
         : '';
-    return `<h6 class="mt-3 mb-2 text-muted text-uppercase small">Card ${i}</h6>` +
+    return `<h6 class="mt-3 mb-2 text-muted text-uppercase small">${escapeHtml(fmt(str.card_default, i))}</h6>` +
         imageFields +
-        textField(`title_${i}`, 'Card title', `Card ${i}`) +
-        textareaField(`body_${i}`, 'Body text', 'Add your card content here.');
+        textField(`title_${i}`, str.card_title, fmt(str.card_default, i)) +
+        textareaField(`body_${i}`, str.body_text, str.card_placeholder_body);
 };
 
 const openCardDialog = async(editor) => {
@@ -950,9 +1001,9 @@ const openCardDialog = async(editor) => {
 
     const body =
         selectField('count', countLabel, [
-            {value: '2', text: '2 Cards'},
-            {value: '3', text: '3 Cards'},
-            {value: '4', text: '4 Cards'},
+            {value: '2', text: fmt(str.cards_n, 2)},
+            {value: '3', text: fmt(str.cards_n, 3)},
+            {value: '4', text: fmt(str.cards_n, 4)},
         ], '3') +
         selectField('card_spacing', spacingLabel, [
             {value: 'g-0', text: spacingNone},
@@ -1031,8 +1082,8 @@ const openImageDialog = async(editor) => {
 
     const body =
         urlField('url', urlLabel, browseLabel, 'https://placehold.co/800x500?text=Image') +
-        textField('alt', altLabel, 'Describe the image for screen readers') +
-        textareaField('caption', captionLabel, 'Optional caption shown below the image…');
+        textField('alt', altLabel, str.describe_image_sr) +
+        textareaField('caption', captionLabel, str.image_caption_placeholder);
 
     const modal = await openModal(title, body, insertLabel);
     const root = modal.getRoot()[0];
@@ -1069,10 +1120,10 @@ const openImageTextDialog = async(editor) => {
             {value: 'image-right', text: rightLabel},
         ]) +
         urlField('url', urlLabel, browseLabel, 'https://placehold.co/600x400?text=Image') +
-        textField('alt', altLabel, 'Describe the image for screen readers') +
-        textField('it_heading', headingLabel, 'Heading') +
-        textareaField('it_body', bodyLabel, 'Add your descriptive text here.') +
-        textareaField('caption', captionLabel, 'Optional caption shown in the zoom modal…');
+        textField('alt', altLabel, str.describe_image_sr) +
+        textField('it_heading', headingLabel, str.default_heading) +
+        textareaField('it_body', bodyLabel, str.default_body) +
+        textareaField('caption', captionLabel, str.imagetext_caption_placeholder);
 
     const modal = await openModal(title, body, insertLabel);
     const root = modal.getRoot()[0];
@@ -1121,11 +1172,11 @@ const openVideoTextDialog = async(editor) => {
             {value: 'modal', text: modalLabel},
             {value: 'inline', text: inlineLabel},
         ]) +
-        textField('video_url', urlLabel, 'YouTube, Vimeo or direct video file URL') +
+        textField('video_url', urlLabel, str.videotext_url_placeholder) +
         urlField('poster_url', posterLabel, browseLabel, 'https://placehold.co/600x400?text=Play+Video') +
-        textField('poster_alt', posterAltLabel, 'Describe the video for screen readers') +
-        textField('vt_heading', headingLabel, 'Heading') +
-        textareaField('vt_body', bodyLabel, 'Add your descriptive text here.');
+        textField('poster_alt', posterAltLabel, str.describe_video_sr) +
+        textField('vt_heading', headingLabel, str.default_heading) +
+        textareaField('vt_body', bodyLabel, str.default_body);
 
     const modal = await openModal(title, body, insertLabel);
     const root = modal.getRoot()[0];
@@ -1166,17 +1217,17 @@ const openJumbotronDialog = async(editor) => {
     ]);
 
     const body =
-        textField('jt_title', titleLabel, 'Welcome') +
-        textareaField('jt_lead', leadLabel, 'A short, friendly description of what this section is about.') +
-        textField('jt_button', buttonLabel, 'Learn more (leave blank for no button)') +
-        textField('jt_button_url', buttonUrlLabel, 'https://example.com or leave blank') +
+        textField('jt_title', titleLabel, str.jumbotron_default_title) +
+        textareaField('jt_lead', leadLabel, str.jumbotron_default_lead) +
+        textField('jt_button', buttonLabel, str.jumbotron_button_placeholder) +
+        textField('jt_button_url', buttonUrlLabel, str.jumbotron_button_url_placeholder) +
         selectField('jt_bg_type', bgTypeLabel, [
             {value: 'none', text: bgNoneLabel},
             {value: 'image', text: bgImageLabel},
             {value: 'video', text: bgVideoLabel},
         ], 'none') +
         urlField('jt_bg_url', bgUrlLabel, browseLabel, 'https://placehold.co/1600x600?text=Background') +
-        textField('jt_bg_alt', bgAltLabel, 'Describe the background image for screen readers') +
+        textField('jt_bg_alt', bgAltLabel, str.describe_bg_sr) +
         checkboxField('jt_overlay', overlayLabel, true);
 
     const modal = await openModal(title, body, insertLabel);
@@ -1197,11 +1248,11 @@ const openJumbotronDialog = async(editor) => {
 };
 
 const carouselSlideSection = (i, browseLabel) =>
-    `<h6 class="mt-3 mb-2 text-muted text-uppercase small">Slide ${i}</h6>` +
-    urlField(`slide_url_${i}`, 'Image URL', browseLabel, 'https://placehold.co/1200x500?text=Slide+Image') +
-    textField(`slide_alt_${i}`, 'Alt text', 'Describe the image') +
-    textField(`slide_title_${i}`, 'Caption title', `Slide ${i}`) +
-    textareaField(`slide_text_${i}`, 'Caption text', 'Optional caption text shown on the slide.');
+    `<h6 class="mt-3 mb-2 text-muted text-uppercase small">${escapeHtml(fmt(str.slide_default, i))}</h6>` +
+    urlField(`slide_url_${i}`, str.image_url, browseLabel, 'https://placehold.co/1200x500?text=Slide+Image') +
+    textField(`slide_alt_${i}`, str.alt_text, str.describe_image) +
+    textField(`slide_title_${i}`, str.caption_title, fmt(str.slide_default, i)) +
+    textareaField(`slide_text_${i}`, str.caption_text, str.caption_text_placeholder);
 
 const openCarouselDialog = async(editor) => {
     const [
@@ -1246,9 +1297,9 @@ const openCarouselDialog = async(editor) => {
 };
 
 const accordionSection = (i) =>
-    `<h6 class="mt-3 mb-2 text-muted text-uppercase small">Section ${i}</h6>` +
-    textField(`acc_title_${i}`, 'Section title', `Section ${i}`) +
-    textareaField(`acc_body_${i}`, 'Section body', 'Section content goes here.');
+    `<h6 class="mt-3 mb-2 text-muted text-uppercase small">${escapeHtml(fmt(str.section_default, i))}</h6>` +
+    textField(`acc_title_${i}`, str.section_title, fmt(str.section_default, i)) +
+    textareaField(`acc_body_${i}`, str.section_body, str.section_body_default);
 
 const openAccordionDialog = async(editor) => {
     const [title, countLabel, insertLabel] = await Promise.all([
@@ -1261,10 +1312,10 @@ const openAccordionDialog = async(editor) => {
     const renderSections = (n) => Array.from({length: n}, (_, i) => accordionSection(i + 1)).join('');
     const body =
         selectField('acc_count', countLabel, [
-            {value: '2', text: '2 Sections'},
-            {value: '3', text: '3 Sections'},
-            {value: '4', text: '4 Sections'},
-            {value: '5', text: '5 Sections'},
+            {value: '2', text: fmt(str.sections_n, 2)},
+            {value: '3', text: fmt(str.sections_n, 3)},
+            {value: '4', text: fmt(str.sections_n, 4)},
+            {value: '5', text: fmt(str.sections_n, 5)},
         ], sectionCount) +
         `<div data-region="sections">${renderSections(sectionCount)}</div>`;
 
@@ -1308,14 +1359,14 @@ const openAccordionDialog = async(editor) => {
 // selectors. The empty value means "no contextual class" (default theme look).
 const tableColourOptions = (noneLabel) => [
     {value: '', text: noneLabel},
-    {value: 'primary', text: 'Primary (blue)'},
-    {value: 'secondary', text: 'Secondary (grey)'},
-    {value: 'success', text: 'Success (green)'},
-    {value: 'danger', text: 'Danger (red)'},
-    {value: 'warning', text: 'Warning (yellow)'},
-    {value: 'info', text: 'Info (cyan)'},
-    {value: 'light', text: 'Light'},
-    {value: 'dark', text: 'Dark'},
+    {value: 'primary', text: str.colour_primary},
+    {value: 'secondary', text: str.colour_secondary},
+    {value: 'success', text: str.colour_success},
+    {value: 'danger', text: str.colour_danger},
+    {value: 'warning', text: str.colour_warning},
+    {value: 'info', text: str.colour_info},
+    {value: 'light', text: str.colour_light},
+    {value: 'dark', text: str.colour_dark},
 ];
 
 const openTableDialog = async(editor) => {
@@ -1339,8 +1390,8 @@ const openTableDialog = async(editor) => {
         getString('table_small', component),
     ]);
 
-    const rowOpts = [2, 3, 4, 5, 6, 8, 10].map(n => ({value: String(n), text: `${n} rows`}));
-    const colOpts = [2, 3, 4, 5, 6].map(n => ({value: String(n), text: `${n} columns`}));
+    const rowOpts = [2, 3, 4, 5, 6, 8, 10].map(n => ({value: String(n), text: fmt(str.rows_n, n)}));
+    const colOpts = [2, 3, 4, 5, 6].map(n => ({value: String(n), text: fmt(str.columns_n, n)}));
 
     const body =
         selectField('tbl_rows', rowsLabel, rowOpts, '3') +
@@ -1352,7 +1403,7 @@ const openTableDialog = async(editor) => {
         checkboxField('tbl_hover', hoverLabel, true) +
         checkboxField('tbl_bordered', borderedLabel, false) +
         checkboxField('tbl_small', smallLabel, false) +
-        textField('tbl_caption', captionLabel, 'Optional caption shown above the table');
+        textField('tbl_caption', captionLabel, str.table_caption_placeholder);
 
     const modal = await openModal(title, body, insertLabel);
     modal.getRoot().on(ModalEvents.save, () => {
@@ -1375,9 +1426,9 @@ const openTableDialog = async(editor) => {
 };
 
 const dropdownItemSection = (i) =>
-    `<h6 class="mt-3 mb-2 text-muted text-uppercase small">Item ${i}</h6>` +
-    textField(`dd_text_${i}`, 'Item text', `Action ${i}`) +
-    textField(`dd_url_${i}`, 'Item link (URL)', 'https://example.com or leave blank for #');
+    `<h6 class="mt-3 mb-2 text-muted text-uppercase small">${escapeHtml(fmt(str.item_heading, i))}</h6>` +
+    textField(`dd_text_${i}`, str.item_text, fmt(str.item_default, i)) +
+    textField(`dd_url_${i}`, str.item_link, str.item_link_placeholder);
 
 const openDropdownDialog = async(editor) => {
     const [
@@ -1399,10 +1450,10 @@ const openDropdownDialog = async(editor) => {
     const renderItems = (n) => Array.from({length: n}, (_, i) => dropdownItemSection(i + 1)).join('');
     const variantOpts = [
         'primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark',
-    ].map(v => ({value: v, text: v.charAt(0).toUpperCase() + v.slice(1)}));
+    ].map(v => ({value: v, text: str[`colour_${v}`]}));
 
     const body =
-        textField('dd_label', labelLabel, 'Dropdown') +
+        textField('dd_label', labelLabel, str.dropdown_default_label) +
         selectField('dd_variant', variantLabel, variantOpts, 'primary') +
         selectField('dd_align', alignLabel, [
             {value: 'start', text: alignStart},
@@ -1410,10 +1461,10 @@ const openDropdownDialog = async(editor) => {
         ], 'start') +
         checkboxField('dd_split', splitLabel, false) +
         selectField('dd_count', countLabel, [
-            {value: '2', text: '2 Items'},
-            {value: '3', text: '3 Items'},
-            {value: '4', text: '4 Items'},
-            {value: '5', text: '5 Items'},
+            {value: '2', text: fmt(str.items_n, 2)},
+            {value: '3', text: fmt(str.items_n, 3)},
+            {value: '4', text: fmt(str.items_n, 4)},
+            {value: '5', text: fmt(str.items_n, 5)},
         ], '3') +
         `<div data-region="items">${renderItems(itemCount)}</div>`;
 
@@ -1477,6 +1528,7 @@ export const getSetup = async() => {
     const [buttonImage, buttonTitle] = await Promise.all([
         getButtonImage('bootstrap', component),
         getString('button_bootstrap', component),
+        loadStrings(),
     ]);
 
     return (editor) => {
