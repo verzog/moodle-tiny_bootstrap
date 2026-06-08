@@ -68,6 +68,7 @@ $string['cheatsheet_example'] = 'Example';
 $string['cheatsheet_home'] = 'Home';
 $string['cheatsheet_intro'] = 'Insert a reference block of common Bootstrap 5 snippets '
     . '(buttons, alerts, badges, list groups and more). After inserting, delete the sections you do not need.';
+$string['cheatsheet_left'] = 'Left';
 $string['cheatsheet_library'] = 'Library';
 $string['cheatsheet_list_active'] = 'An active item';
 $string['cheatsheet_list_second'] = 'A second item';
@@ -79,7 +80,6 @@ $string['cheatsheet_pagination'] = 'Pagination';
 $string['cheatsheet_pagination_nav'] = 'Page navigation';
 $string['cheatsheet_progress'] = 'Progress';
 $string['cheatsheet_right'] = 'Right';
-$string['cheatsheet_left'] = 'Left';
 $string['cheatsheet_spinner'] = 'Spinner';
 $string['click_to_enlarge'] = 'Click to enlarge';
 $string['click_to_play'] = 'Click to play';
