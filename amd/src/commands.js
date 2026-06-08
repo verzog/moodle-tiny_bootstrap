@@ -162,6 +162,12 @@ const STRING_KEYS = [
     'cheatsheet_loading', 'cheatsheet_breadcrumb', 'cheatsheet_home',
     'cheatsheet_library', 'cheatsheet_data', 'cheatsheet_pagination',
     'cheatsheet_pagination_nav',
+    'cheatsheet_typography', 'cheatsheet_lead', 'cheatsheet_quote',
+    'cheatsheet_button_sizes', 'cheatsheet_large', 'cheatsheet_default',
+    'cheatsheet_small', 'cheatsheet_disabled', 'cheatsheet_active',
+    'cheatsheet_cards', 'cheatsheet_card_text', 'cheatsheet_card_action',
+    'cheatsheet_tables', 'cheatsheet_nav', 'cheatsheet_link',
+    'cheatsheet_accordion', 'placeholder_button',
 ];
 
 const loadStrings = async() => {
@@ -655,8 +661,22 @@ const buildCheatsheet = () => {
             + `${escapeHtml(fmt(str.cheatsheet_alert_text, v))}</div>`).join('\n');
     const badges = ['primary', 'secondary', 'success', 'danger', 'warning', 'info']
         .map(v => `  <span class="badge text-bg-${v}">${v}</span>`).join('\n');
+    const headings = [1, 2, 3, 4, 5, 6]
+        .map(n => `  <h${n}>${escapeHtml(fmt(str.heading_default, n))}</h${n}>`).join('\n');
+    const navItems = `    <li class="nav-item">`
+        + `<a class="nav-link active" aria-current="page" href="#">${escapeHtml(str.cheatsheet_active)}</a></li>
+    <li class="nav-item"><a class="nav-link" href="#">${escapeHtml(str.cheatsheet_link)}</a></li>
+    <li class="nav-item">`
+        + `<a class="nav-link disabled" aria-disabled="true">${escapeHtml(str.cheatsheet_disabled)}</a></li>`;
     return `<!-- Bootstrap 5 cheatsheet — delete the sections you don't need -->
 <div class="tiny-bs-cheatsheet">
+
+  <h2>${escapeHtml(str.cheatsheet_typography)}</h2>
+${headings}
+  <p class="lead">${escapeHtml(str.cheatsheet_lead)}</p>
+  <blockquote class="blockquote">
+    <p>${escapeHtml(str.cheatsheet_quote)}</p>
+  </blockquote>
 
   <h2>${escapeHtml(str.cheatsheet_buttons)}</h2>
   <div class="d-flex flex-wrap gap-2 mb-3">
@@ -664,6 +684,15 @@ ${buttons}
   </div>
   <div class="d-flex flex-wrap gap-2 mb-3">
 ${outlines}
+  </div>
+
+  <h2>${escapeHtml(str.cheatsheet_button_sizes)}</h2>
+  <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+    <button type="button" class="btn btn-primary btn-lg">${escapeHtml(str.cheatsheet_large)}</button>
+    <button type="button" class="btn btn-primary">${escapeHtml(str.cheatsheet_default)}</button>
+    <button type="button" class="btn btn-primary btn-sm">${escapeHtml(str.cheatsheet_small)}</button>
+    <button type="button" class="btn btn-primary active">${escapeHtml(str.cheatsheet_active)}</button>
+    <button type="button" class="btn btn-primary" disabled>${escapeHtml(str.cheatsheet_disabled)}</button>
   </div>
   <div class="btn-group mb-3" role="group" aria-label="${escapeHtml(str.cheatsheet_buttongroup)}">
     <button type="button" class="btn btn-primary">${escapeHtml(str.cheatsheet_left)}</button>
@@ -679,12 +708,35 @@ ${alerts}
 ${badges}
   </div>
 
+  <h2>${escapeHtml(str.cheatsheet_cards)}</h2>
+  <div class="card mb-3" style="max-width:20rem;">
+    <div class="card-body">
+      <h5 class="card-title">${escapeHtml(str.card_title)}</h5>
+      <p class="card-text">${escapeHtml(str.cheatsheet_card_text)}</p>
+      <a href="#" class="btn btn-primary">${escapeHtml(str.cheatsheet_card_action)}</a>
+    </div>
+  </div>
+
+  <h2>${escapeHtml(str.cheatsheet_tables)}</h2>
+  ${buildTable(3, 3, true, '')}
+
   <h2>${escapeHtml(str.cheatsheet_listgroup)}</h2>
   <ul class="list-group mb-3">
     <li class="list-group-item active" aria-current="true">${escapeHtml(str.cheatsheet_list_active)}</li>
     <li class="list-group-item">${escapeHtml(str.cheatsheet_list_second)}</li>
     <li class="list-group-item">${escapeHtml(str.cheatsheet_list_third)}</li>
   </ul>
+
+  <h2>${escapeHtml(str.cheatsheet_nav)}</h2>
+  <ul class="nav nav-tabs mb-3">
+${navItems}
+  </ul>
+  <ul class="nav nav-pills mb-3">
+${navItems}
+  </ul>
+
+  <h2>${escapeHtml(str.cheatsheet_accordion)}</h2>
+  ${buildAccordion([{title: '', body: ''}, {title: '', body: ''}])}
 
   <h2>${escapeHtml(str.cheatsheet_progress)}</h2>
   <div class="progress mb-3" role="progressbar" aria-label="${escapeHtml(str.cheatsheet_example)}"
@@ -728,7 +780,7 @@ const urlField = (name, label, browseLabel, placeholderUrl = null) => {
         ? `<button type="button" class="btn btn-outline-secondary"
                    data-action="placeholder" data-target="${name}"
                    data-placeholder-url="${escapeHtml(placeholderUrl)}">
-                Placeholder
+                ${escapeHtml(str.placeholder_button)}
             </button>`
         : '';
     return `<div class="form-group mb-3">
