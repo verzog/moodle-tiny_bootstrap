@@ -272,8 +272,10 @@ const buildCardGroup = (cards, opts = {}) => {
         return {
             cardHtml: `  <div class="col">
     <div class="card h-100">
-      <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="${escapeHtml(str.click_to_enlarge)}" style="border-top-left-radius:inherit;border-top-right-radius:inherit;overflow:hidden;">
-        <img src="${imgSrc}" class="card-img-top" style="cursor:zoom-in;border-top-left-radius:inherit;border-top-right-radius:inherit;" alt="${imgAlt}">
+      <a href="#" class="tiny-bs-card-img-link" data-bs-toggle="modal"
+         data-bs-target="#${uid}" title="${escapeHtml(str.click_to_enlarge)}">
+        <img src="${imgSrc}" class="card-img-top tiny-bs-card-img"
+             style="cursor:zoom-in;" alt="${imgAlt}">
       </a>
       <div class="card-body">
         <h5 class="card-title">${title}</h5>
