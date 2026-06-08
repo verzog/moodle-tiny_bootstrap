@@ -78,8 +78,7 @@ $string['cheatsheet_default'] = 'Default';
 $string['cheatsheet_disabled'] = 'Disabled';
 $string['cheatsheet_example'] = 'Example';
 $string['cheatsheet_home'] = 'Home';
-$string['cheatsheet_intro'] = 'Insert a reference block of common Bootstrap 5 snippets '
-    . '(buttons, alerts, badges, list groups and more). After inserting, delete the sections you do not need.';
+$string['cheatsheet_intro'] = 'Insert a reference block of common Bootstrap 5 snippets (buttons, alerts, badges, list groups and more). After inserting, delete the sections you do not need.';
 $string['cheatsheet_large'] = 'Large';
 $string['cheatsheet_lead'] = 'This is a lead paragraph — it stands out from the regular text.';
 $string['cheatsheet_left'] = 'Left';
@@ -127,9 +126,7 @@ $string['component_label'] = 'Component';
 $string['component_table'] = 'Responsive Table';
 $string['component_videotext'] = 'Video and Text';
 $string['customcss'] = 'Custom CSS';
-$string['customcss_desc'] = 'CSS entered here is added to every page (both in the editor and on view pages), '
-    . 'letting you re-brand the Bootstrap components inserted by this plugin — for example overriding button, '
-    . 'card or jumbotron colours to match your organisation. Leave blank to use the theme defaults.';
+$string['customcss_desc'] = 'CSS entered here is added to every page (both in the editor and on view pages), letting you re-brand the Bootstrap components inserted by this plugin — for example overriding button, card or jumbotron colours to match your organisation. Leave blank to use the theme defaults.';
 $string['default_alt'] = 'Image';
 $string['default_body'] = 'Add your descriptive text here.';
 $string['default_heading'] = 'Heading';
