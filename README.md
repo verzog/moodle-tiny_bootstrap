@@ -17,6 +17,23 @@ ready-made Bootstrap 5 HTML components without writing any code.
 | **Responsive Table** | A Bootstrap-wrapped table with optional header row and caption |
 | **Image and Text** | A zoomable image beside a heading and body text — image left/text right or image right/text left |
 | **Video and Text** | A poster image that opens a video (YouTube, Vimeo or file) in a modal, beside a heading and body text — video left/text right or video right/text left |
+| **Dropdown** | A Bootstrap 5 dropdown button with a configurable colour, alignment, optional split caret, and 2–5 linked menu items |
+| **Cheatsheet** | A reference block of common Bootstrap 5 snippets (buttons, alerts, badges, list groups, progress, breadcrumb, pagination) to insert and trim down |
+
+### Per-component options
+
+- **Card Group** — choose the **spacing between cards** and toggle **Include images** off for text-only cards.
+- **Jumbotron** — the call-to-action button now takes a **link (URL)**, and the background image/video field has a working **Browse repositories…** button.
+- **Carousel** — choose a fixed **slide height** (small/medium/large/extra-large) so mismatched images line up, or keep natural heights.
+- **Responsive Table** — pick a **table colour** and **header colour** (Bootstrap contextual variants) and toggle **striped**, **bordered**, **hover** and **compact** styles.
+
+## Branding (admin)
+
+Site administrators can add custom CSS that applies to every page — both inside
+the editor and on pages where the components render — under
+**Site administration → Plugins → Text editors → TinyMCE editor → Bootstrap Scaffolding**.
+Use it to override button, card or jumbotron colours so the inserted components
+match your organisation's branding. Leave it blank to use the theme defaults.
 
 ## Requirements
 
