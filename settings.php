@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Hook callback registrations for tiny_bootstrap.
+ * Admin settings for tiny_bootstrap.
  *
  * @package    tiny_bootstrap
  * @copyright  2026 Skin Cancer College of Australasia <admin@skincancercollege.org>
@@ -24,13 +24,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$callbacks = [
-    [
-        'hook'     => \core\hook\output\before_footer_html_generation::class,
-        'callback' => [\tiny_bootstrap\hook_callbacks::class, 'before_footer_html_generation'],
-    ],
-    [
-        'hook'     => \core\hook\output\before_standard_head_html_generation::class,
-        'callback' => [\tiny_bootstrap\hook_callbacks::class, 'before_standard_head_html_generation'],
-    ],
-];
+if ($ADMIN->fulltree) {
+    $settings->add(new admin_setting_configtextarea(
+        'tiny_bootstrap/customcss',
+        get_string('customcss', 'tiny_bootstrap'),
+        get_string('customcss_desc', 'tiny_bootstrap'),
+        '',
+        PARAM_RAW,
+        '60',
+        '12'
+    ));
+}

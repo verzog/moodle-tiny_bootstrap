@@ -40,4 +40,23 @@ class hook_callbacks {
         global $PAGE;
         $PAGE->requires->js_call_amd('tiny_bootstrap/view', 'init');
     }
+
+    /**
+     * Inject the admin-defined branding CSS into the page head so it applies
+     * both inside the editor and on view pages where the components render.
+     *
+     * @param \core\hook\output\before_standard_head_html_generation $hook
+     */
+    public static function before_standard_head_html_generation(
+        \core\hook\output\before_standard_head_html_generation $hook
+    ): void {
+        $css = trim((string) get_config('tiny_bootstrap', 'customcss'));
+        if ($css === '') {
+            return;
+        }
+        // Strip any closing style tag so the admin CSS cannot break out of the
+        // element it is placed in.
+        $css = str_ireplace('</style>', '', $css);
+        $hook->add_html('<style id="tiny-bootstrap-custom-css">' . "\n" . $css . "\n" . '</style>');
+    }
 }
