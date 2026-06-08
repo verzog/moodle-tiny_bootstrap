@@ -184,18 +184,19 @@ const buildZoomModal = (uid, src, alt, caption = '', title = null) => {
 </div>`;
 };
 
-// opts: {gap, withImages}. gap is a Bootstrap gutter class ('g-0'…'g-5') that
+// Opts: {gap, withImages}. gap is a Bootstrap gutter class ('g-0'…'g-5') that
 // sets the spacing between cards; withImages=false renders text-only cards
 // (no image, no zoom modal). The cards sit in a responsive .row so they wrap
 // and keep equal heights (.h-100) with real spacing between them — unlike
 // .card-group, which butts the cards together with no gaps.
 const buildCardGroup = (cards, opts = {}) => {
     const {gap = 'g-4', withImages = true} = opts;
-    const rowCols = cards.length >= 4
-        ? 'row-cols-1 row-cols-sm-2 row-cols-lg-4'
-        : cards.length === 3
-            ? 'row-cols-1 row-cols-md-3'
-            : 'row-cols-1 row-cols-md-2';
+    let rowCols = 'row-cols-1 row-cols-md-2';
+    if (cards.length >= 4) {
+        rowCols = 'row-cols-1 row-cols-sm-2 row-cols-lg-4';
+    } else if (cards.length === 3) {
+        rowCols = 'row-cols-1 row-cols-md-3';
+    }
     const rendered = cards.map((card, i) => {
         const title = escapeHtml(card.title) || `Card ${i + 1}`;
         const body = escapeHtml(card.body) || 'Add your card content here.';
@@ -438,7 +439,7 @@ const buildJumbotron = (title, lead, buttonText, buttonUrl, bgType, bgUrl, bgAlt
 </div>`;
 };
 
-// height is a pixel value (e.g. '400') that fixes every slide to the same
+// Height is a pixel value (e.g. '400') that fixes every slide to the same
 // height with object-fit:cover so mismatched source images line up; an empty
 // string keeps each image at its natural height.
 const buildCarousel = (slides, height = '') => {
@@ -512,7 +513,7 @@ ${items}
 </div>`;
 };
 
-// opts: {variant, headerVariant, striped, bordered, hover, small} where
+// Opts: {variant, headerVariant, striped, bordered, hover, small} where
 // variant/headerVariant are Bootstrap contextual names ('dark', 'primary', …)
 // or '' for none, and the rest are booleans toggling the matching .table-*
 // utility class.
@@ -557,7 +558,7 @@ ${bodyRows}
 </div>`;
 };
 
-// items: [{text, url}]. variant is a Bootstrap button colour ('primary', …),
+// Items: [{text, url}]. variant is a Bootstrap button colour ('primary', …),
 // alignEnd right-aligns the menu, and split renders a separate caret button
 // (Bootstrap's split-button dropdown pattern).
 const buildDropdown = (label, variant, alignEnd, split, items) => {
@@ -912,7 +913,7 @@ const openHeadingDialog = async(editor) => {
     });
 };
 
-// withImages=false drops the image URL/alt fields so authors can build
+// When withImages is false, drop the image URL/alt fields so authors can build
 // text-only cards.
 const cardSection = (i, browseLabel, withImages = true) => {
     const imageFields = withImages
