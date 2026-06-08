@@ -272,8 +272,8 @@ const buildCardGroup = (cards, opts = {}) => {
         return {
             cardHtml: `  <div class="col">
     <div class="card h-100">
-      <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="${escapeHtml(str.click_to_enlarge)}">
-        <img src="${imgSrc}" class="card-img-top" style="cursor:zoom-in;" alt="${imgAlt}">
+      <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="${escapeHtml(str.click_to_enlarge)}" style="border-top-left-radius:inherit;border-top-right-radius:inherit;overflow:hidden;">
+        <img src="${imgSrc}" class="card-img-top" style="cursor:zoom-in;border-top-left-radius:inherit;border-top-right-radius:inherit;" alt="${imgAlt}">
       </a>
       <div class="card-body">
         <h5 class="card-title">${title}</h5>
@@ -495,10 +495,16 @@ const buildJumbotron = (title, lead, buttonText, buttonUrl, bgType, bgUrl, bgAlt
 // Height is a pixel value (e.g. '400') that fixes every slide to the same
 // height with object-fit:cover so mismatched source images line up; an empty
 // string keeps each image at its natural height.
-const buildCarousel = (slides, height = '') => {
+// autoslide: '' (off), 'slow' (~7s), or 'fast' (~2.5s). When off, the carousel
+// only advances via the prev/next controls or indicators.
+const buildCarousel = (slides, height = '', autoslide = '') => {
     const uid = 'bsCar' + Math.random().toString(36).slice(2, 9);
     const px = String(height).trim();
     const imgStyle = px ? ` style="height:${escapeHtml(px)}px;object-fit:cover;"` : '';
+    const intervals = {slow: 7000, fast: 2500};
+    const rideAttrs = intervals[autoslide]
+        ? ` data-bs-ride="carousel" data-bs-interval="${intervals[autoslide]}"`
+        : ' data-bs-interval="false"';
     const indicators = slides.map((_, i) =>
         `    <button type="button" data-bs-target="#${uid}" data-bs-slide-to="${i}"`
         + `${i === 0 ? ' class="active" aria-current="true"' : ''}`
@@ -520,7 +526,7 @@ const buildCarousel = (slides, height = '') => {
     </div>`;
     }).join('\n');
     return `<!-- Bootstrap 5 carousel -->
-<div id="${uid}" class="carousel slide" data-bs-ride="carousel">
+<div id="${uid}" class="carousel slide"${rideAttrs}>
   <div class="carousel-indicators">
 ${indicators}
   </div>
@@ -1310,6 +1316,7 @@ const openCarouselDialog = async(editor) => {
     const [
         title, insertLabel, browseLabel, heightLabel,
         heightAuto, heightSmall, heightMedium, heightLarge, heightXl,
+        autoslideLabel, autoslideOff, autoslideSlow, autoslideFast,
     ] = await Promise.all([
         getString('dialog_carousel_title', component),
         getString('insert', component),
@@ -1320,6 +1327,10 @@ const openCarouselDialog = async(editor) => {
         getString('carousel_height_medium', component),
         getString('carousel_height_large', component),
         getString('carousel_height_xl', component),
+        getString('carousel_autoslide', component),
+        getString('carousel_autoslide_off', component),
+        getString('carousel_autoslide_slow', component),
+        getString('carousel_autoslide_fast', component),
     ]);
 
     const slideCount = 3;
@@ -1331,6 +1342,11 @@ const openCarouselDialog = async(editor) => {
             {value: '500', text: heightLarge},
             {value: '650', text: heightXl},
         ], '400') +
+        selectField('carousel_autoslide', autoslideLabel, [
+            {value: '', text: autoslideOff},
+            {value: 'slow', text: autoslideSlow},
+            {value: 'fast', text: autoslideFast},
+        ], '') +
         Array.from({length: slideCount}, (_, i) => carouselSlideSection(i + 1, browseLabel)).join('');
 
     const modal = await openModal(title, body, insertLabel);
@@ -1344,7 +1360,8 @@ const openCarouselDialog = async(editor) => {
             captionText: root.querySelector(`[name="slide_text_${i + 1}"]`).value,
         }));
         const height = root.querySelector('[name="carousel_height"]').value;
-        editor.insertContent(buildCarousel(slides, height));
+        const autoslide = root.querySelector('[name="carousel_autoslide"]').value;
+        editor.insertContent(buildCarousel(slides, height, autoslide));
     });
 };
 
