@@ -10,7 +10,7 @@ ready-made Bootstrap 5 HTML components without writing any code.
 | **Page Grid Layout** | 1–4 equal-width responsive columns in a responsive container |
 | **Heading** | H1–H6 with typed text |
 | **Card Group** | 2–4 equal-width Bootstrap cards, each with an image, title, and body |
-| **Image with Zoom Modal** | A thumbnail that opens a full-size Bootstrap 5 modal with an optional caption |
+| **Image with Zoom Modal** | A thumbnail that opens a full-size Bootstrap 5 modal with an optional caption and a left/centre/right alignment choice |
 | **Jumbotron** | A hero/banner section with title, lead text, and a call-to-action button |
 | **Carousel** | A Bootstrap 5 image slideshow/carousel |
 | **Accordion** | A collapsible accordion with a configurable number of sections |
@@ -22,6 +22,7 @@ ready-made Bootstrap 5 HTML components without writing any code.
 
 ### Per-component options
 
+- **Image with Zoom Modal** — choose an **alignment**: centred (default), left or right. Left/right float the image so surrounding text wraps alongside it, with a max-width that keeps a large image from overflowing a narrow content area (such as a quiz answer box).
 - **Card Group** — choose the **spacing between cards** and toggle **Include images** off for text-only cards.
 - **Jumbotron** — the call-to-action button now takes a **link (URL)**, and the background image/video field has a working **Browse repositories…** button.
 - **Carousel** — choose a fixed **slide height** (small/medium/large/extra-large) so mismatched images line up, or keep natural heights.
