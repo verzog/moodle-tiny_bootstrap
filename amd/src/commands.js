@@ -295,12 +295,13 @@ ${cardsHtml}
 </div>${modalsBlock}`;
 };
 
-// align: 'center' (default) renders a centred block figure; 'left'/'right'
-// float the figure so following text wraps alongside it. Floated figures get
-// an inline max-width so a wide image can't overflow a narrow content area
-// (e.g. a quiz answer box), and img-fluid on the image scales it down to fit.
-// Only Bootstrap utility classes + inline styles are used so the chosen
-// alignment also renders on view pages where the plugin CSS is not loaded.
+// The align argument controls placement: 'center' (default) renders a centred
+// block figure; 'left'/'right' float the figure so following text wraps
+// alongside it. Floated figures get an inline max-width so a wide image can't
+// overflow a narrow content area (e.g. a quiz answer box), and img-fluid on the
+// image scales it down to fit. Only Bootstrap utility classes + inline styles
+// are used so the chosen alignment also renders on view pages where the plugin
+// CSS is not loaded.
 const buildImageModal = (imageUrl, imageAlt, caption, align = 'center') => {
     const uid = 'bsModal' + Math.random().toString(36).slice(2, 9);
     const src = escapeHtml(imageUrl) || 'https://placehold.co/800x500?text=Image';
