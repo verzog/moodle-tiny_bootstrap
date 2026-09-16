@@ -78,7 +78,7 @@ HTML source view and paste it inside the same `.container-fluid`.
 ### Image modal tip
 
 The inserted modal uses Bootstrap 5's `data-bs-toggle` attributes, so it works
-automatically on any Moodle 4.x Boost-based page without any additional
+automatically on any Moodle 5.0+ Boost-based page without any additional
 JavaScript.
 
 ## Development
@@ -87,11 +87,11 @@ JavaScript.
 # Install CI tooling
 composer create-project moodlehq/moodle-plugin-ci ../moodle-plugin-ci ^4
 
-# Check coding standards
-../moodle-plugin-ci/vendor/bin/phpcs ./lib.php
+# Check coding standards (whole plugin)
+../moodle-plugin-ci/vendor/bin/phpcs .
 
 # Auto-fix formatting
-../moodle-plugin-ci/vendor/bin/phpcbf ./lib.php
+../moodle-plugin-ci/vendor/bin/phpcbf .
 
 # Compile AMD modules (run from Moodle root)
 grunt amd --root=lib/editor/tiny/plugins/bootstrap
