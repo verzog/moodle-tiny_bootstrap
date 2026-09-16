@@ -4,8 +4,15 @@ All notable changes to the **Bootstrap Scaffolding** TinyMCE plugin
 (`tiny_bootstrap`) are recorded here. Versions follow the plugin's
 `$plugin->release` value in `version.php`.
 
-Supported Moodle: **5.0 and 5.1** (`$plugin->supported = [500, 501]`,
+Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 `requires = 2025041400`). Requires **PHP 8.2+** and a Bootstrap 5 theme.
+
+## 1.4.2
+
+### Compatibility
+- Declared support for **Moodle 5.2** after a full API compatibility check,
+  and added `MOODLE_502_STABLE` to the CI matrix (`main`/5.3-dev already
+  tested). `supported` is now `[500, 502]`.
 
 ## 1.4.1
 
