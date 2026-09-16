@@ -19,8 +19,8 @@
  * iframes and HTML5 <video> elements keep playing audio in the hidden modal.
  *
  * @module     tiny_bootstrap/view
- * @copyright  2026 Skin Cancer College of Australasia <admin@skincancercollege.org>
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2025-2026 Skin Cancer College of Australasia <admin@skincancercollege.org>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 const stopVideosIn = (root) => {
