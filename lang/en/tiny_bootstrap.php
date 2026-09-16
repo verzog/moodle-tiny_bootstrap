@@ -250,6 +250,7 @@ $string['videotext_body'] = 'Body text';
 $string['videotext_display'] = 'Video display';
 $string['videotext_display_inline'] = 'Inline with native controls (supports fullscreen)';
 $string['videotext_display_modal'] = 'Click poster to open in modal';
+$string['videotext_fullscreen'] = 'Fullscreen';
 $string['videotext_heading'] = 'Heading';
 $string['videotext_layout'] = 'Layout';
 $string['videotext_layout_videoleft'] = 'Video left, text right';

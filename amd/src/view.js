@@ -53,10 +53,32 @@ const onHidden = (event) => {
     stopVideosIn(modal);
 };
 
+// Expand a Video and Text media element to fill the screen when its Fullscreen
+// button is clicked. The button carries data-tiny-bs-fullscreen with the id of
+// the media wrapper; we fullscreen the inner iframe/video (or the wrapper).
+const onFullscreenClick = (event) => {
+    const btn = event.target.closest('[data-tiny-bs-fullscreen]');
+    if (!btn) {
+        return;
+    }
+    const wrap = document.getElementById(btn.getAttribute('data-tiny-bs-fullscreen'));
+    if (!wrap) {
+        return;
+    }
+    const el = wrap.querySelector('iframe, video') || wrap;
+    const request = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if (request) {
+        Promise.resolve(request.call(el)).catch((e) => {
+            window.console.warn('tiny_bootstrap fullscreen request failed', e);
+        });
+    }
+};
+
 export const init = () => {
     if (window.tinyBootstrapViewInit) {
         return;
     }
     window.tinyBootstrapViewInit = true;
     document.addEventListener('hidden.bs.modal', onHidden, true);
+    document.addEventListener('click', onFullscreenClick, false);
 };
