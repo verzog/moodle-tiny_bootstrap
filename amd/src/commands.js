@@ -169,7 +169,7 @@ const STRING_KEYS = [
     'cheatsheet_tables', 'cheatsheet_nav', 'cheatsheet_link',
     'cheatsheet_accordion', 'placeholder_button',
     'rich_bold', 'rich_italic', 'rich_link', 'rich_unlink', 'rich_link_prompt',
-    'videotext_open_modal', 'cancel',
+    'videotext_open_modal', 'videotext_fullscreen', 'cancel',
 ];
 
 // Tags allowed in the lightweight rich-text fields, with their permitted
@@ -461,27 +461,34 @@ const buildVideoModal = (uid, embedHtml, title) => {
 };
 
 // Layout 'video-right' puts the video on the right; anything else
-// (default) puts the video on the left. The video plays in place; an
-// "Open in a larger view" button opens the same video in a Bootstrap modal
-// for a bigger view.
+// (default) puts the video on the left. The video plays in place; a
+// "Fullscreen" button expands it to fill the screen, and an "Open in a larger
+// view" button opens the same video in a Bootstrap modal.
 const buildVideoText = (layout, videoUrl, heading, bodyText) => {
     const uid = 'bsVidTxt' + Math.random().toString(36).slice(2, 9);
+    const mediaId = `${uid}-media`;
     const headingSafe = escapeHtml(heading) || escapeHtml(str.default_heading);
     const bodySafe = sanitizeRich(bodyText) || escapeHtml(str.default_body);
     const videoRight = layout === 'video-right';
     const hasUrl = (videoUrl || '').trim() !== '';
 
-    // Only offer the modal (and build it) when there is a real video to show.
-    const modalBtn = hasUrl
-        ? `\n    <button type="button" class="btn btn-outline-secondary btn-sm mt-2"
-            data-bs-toggle="modal" data-bs-target="#${uid}">${escapeHtml(str.videotext_open_modal)}</button>`
+    // Only offer the controls (and build the modal) when there is a real video.
+    // The fullscreen button is handled by the view-side module (view.js), which
+    // expands the media element referenced by data-tiny-bs-fullscreen.
+    const controls = hasUrl
+        ? `\n    <div class="mt-2 d-flex flex-wrap gap-2">
+      <button type="button" class="btn btn-outline-secondary btn-sm"
+              data-tiny-bs-fullscreen="${mediaId}">${escapeHtml(str.videotext_fullscreen)}</button>
+      <button type="button" class="btn btn-outline-secondary btn-sm"
+              data-bs-toggle="modal" data-bs-target="#${uid}">${escapeHtml(str.videotext_open_modal)}</button>
+    </div>`
         : '';
     const modalHtml = hasUrl
         ? `\n${buildVideoModal(uid, videoEmbed(videoUrl), headingSafe)}`
         : '';
 
     const videoCol = `  <div class="col-12 col-md-6">
-    ${videoEmbed(videoUrl)}${modalBtn}
+    <div id="${mediaId}">${videoEmbed(videoUrl)}</div>${controls}
   </div>`;
     const textCol = `  <div class="col-12 col-md-6">
     <h3>${headingSafe}</h3>
