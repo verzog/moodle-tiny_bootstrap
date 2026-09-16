@@ -17,8 +17,8 @@
  * Buttons, menu items and dialog flow for tiny_bootstrap.
  *
  * @module     tiny_bootstrap/commands
- * @copyright  2025 Skin Cancer College of Australasia <admin@skincancercollege.org>
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2025-2026 Skin Cancer College of Australasia <admin@skincancercollege.org>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 import {getButtonImage, displayFilepicker} from 'editor_tiny/utils';
@@ -168,7 +168,65 @@ const STRING_KEYS = [
     'cheatsheet_cards', 'cheatsheet_card_text', 'cheatsheet_card_action',
     'cheatsheet_tables', 'cheatsheet_nav', 'cheatsheet_link',
     'cheatsheet_accordion', 'placeholder_button',
+    'rich_bold', 'rich_italic', 'rich_link', 'rich_unlink', 'rich_link_prompt',
+    'videotext_open_modal', 'cancel',
 ];
+
+// Tags allowed in the lightweight rich-text fields, with their permitted
+// attributes. Everything else is unwrapped (kept as text) or dropped. This is
+// a defence-in-depth client-side pass; Moodle re-filters the saved HTML through
+// its own text sanitiser when the content is displayed.
+const RICH_ALLOWED = {
+    A: ['href'], B: [], STRONG: [], I: [], EM: [], U: [], BR: [], P: [], DIV: [],
+};
+
+// Sanitise rich-text field HTML down to the RICH_ALLOWED whitelist. Disallowed
+// elements are unwrapped so their text survives; disallowed attributes are
+// stripped; link targets are restricted to safe URL schemes.
+const sanitizeRich = (html) => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html || '';
+    const walk = (node) => {
+        Array.prototype.slice.call(node.childNodes).forEach((child) => {
+            if (child.nodeType === 1) {
+                const tag = child.tagName;
+                if (!RICH_ALLOWED[tag]) {
+                    walk(child);
+                    while (child.firstChild) {
+                        node.insertBefore(child.firstChild, child);
+                    }
+                    node.removeChild(child);
+                    return;
+                }
+                Array.prototype.slice.call(child.attributes).forEach((attr) => {
+                    if (RICH_ALLOWED[tag].indexOf(attr.name.toLowerCase()) === -1) {
+                        child.removeAttribute(attr.name);
+                    }
+                });
+                if (tag === 'A') {
+                    const href = (child.getAttribute('href') || '').trim();
+                    // Only permit safe schemes and relative or anchor links.
+                    if (!/^(https?:|mailto:|\/|#)/i.test(href)) {
+                        child.removeAttribute('href');
+                    } else {
+                        child.setAttribute('rel', 'noopener noreferrer');
+                    }
+                }
+                walk(child);
+            } else if (child.nodeType === 8) {
+                node.removeChild(child);
+            }
+        });
+    };
+    walk(tmp);
+    return tmp.innerHTML.trim();
+};
+
+// Read the raw HTML from a rich-text field within a container (empty if absent).
+const getRich = (root, name) => {
+    const el = root.querySelector(`[data-rich="${name}"]`);
+    return el ? el.innerHTML : '';
+};
 
 const loadStrings = async() => {
     const values = await getStrings(STRING_KEYS.map((key) => ({key, component})));
@@ -212,8 +270,9 @@ const buildHeading = (level, text) => {
 
 // Title is pre-escaped (caller's responsibility); caption is raw and escaped here.
 const buildZoomModal = (uid, src, alt, caption = '', title = null) => {
-    const capHtml = caption
-        ? `\n        <p class="mt-2 mb-0 text-muted">${escapeHtml(caption)}</p>`
+    const capContent = sanitizeRich(caption);
+    const capHtml = capContent
+        ? `\n        <div class="mt-2 mb-0 text-muted">${capContent}</div>`
         : '';
     const displayTitle = title || alt;
     // Use modal-xl + inline styles so the zoom works on regular view pages where
@@ -252,14 +311,14 @@ const buildCardGroup = (cards, opts = {}) => {
     }
     const rendered = cards.map((card, i) => {
         const title = escapeHtml(card.title) || escapeHtml(fmt(str.card_default, i + 1));
-        const body = escapeHtml(card.body) || escapeHtml(str.card_placeholder_body);
+        const body = sanitizeRich(card.body) || escapeHtml(str.card_placeholder_body);
         if (!withImages) {
             return {
                 cardHtml: `  <div class="col">
     <div class="card h-100">
       <div class="card-body">
         <h5 class="card-title">${title}</h5>
-        <p class="card-text">${body}</p>
+        <div class="card-text">${body}</div>
       </div>
     </div>
   </div>`,
@@ -279,7 +338,7 @@ const buildCardGroup = (cards, opts = {}) => {
       </a>
       <div class="card-body">
         <h5 class="card-title">${title}</h5>
-        <p class="card-text">${body}</p>
+        <div class="card-text">${body}</div>
       </div>
     </div>
   </div>`,
@@ -306,8 +365,9 @@ const buildImageModal = (imageUrl, imageAlt, caption, align = 'center') => {
     const uid = 'bsModal' + Math.random().toString(36).slice(2, 9);
     const src = escapeHtml(imageUrl) || 'https://placehold.co/800x500?text=Image';
     const alt = escapeHtml(imageAlt) || escapeHtml(str.default_alt);
-    const figcaption = caption
-        ? `\n  <figcaption class="mt-1 text-muted small">${escapeHtml(caption)}</figcaption>`
+    const capContent = sanitizeRich(caption);
+    const figcaption = capContent
+        ? `\n  <figcaption class="mt-1 text-muted small">${capContent}</figcaption>`
         : '';
     let figClass = 'text-center';
     let figStyle = '';
@@ -336,7 +396,7 @@ const buildImageText = (layout, imageUrl, imageAlt, caption, heading, bodyText) 
     const src = escapeHtml(imageUrl) || 'https://placehold.co/600x400?text=Image';
     const alt = escapeHtml(imageAlt) || escapeHtml(str.default_alt);
     const headingSafe = escapeHtml(heading) || escapeHtml(str.default_heading);
-    const bodySafe = escapeHtml(bodyText) || escapeHtml(str.default_body);
+    const bodySafe = sanitizeRich(bodyText) || escapeHtml(str.default_body);
     const imageRight = layout === 'image-right';
     const imageCol = `  <div class="col-12 col-md-6">
     <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="${escapeHtml(str.click_to_enlarge)}">
@@ -345,7 +405,7 @@ const buildImageText = (layout, imageUrl, imageAlt, caption, heading, bodyText) 
   </div>`;
     const textCol = `  <div class="col-12 col-md-6">
     <h3>${headingSafe}</h3>
-    <p>${bodySafe}</p>
+    <div>${bodySafe}</div>
   </div>`;
     const cols = imageRight ? `${textCol}\n${imageCol}` : `${imageCol}\n${textCol}`;
     return `<!-- Bootstrap 5 image + text, image ${imageRight ? 'right' : 'left'} -->
@@ -401,37 +461,31 @@ const buildVideoModal = (uid, embedHtml, title) => {
 };
 
 // Layout 'video-right' puts the video on the right; anything else
-// (default) puts the video on the left.
-// displayMode 'inline' embeds the video directly so the browser's native
-// fullscreen button can be used; 'modal' (default) shows a poster image
-// that opens the video in a Bootstrap modal.
-const buildVideoText = (layout, videoUrl, posterUrl, posterAlt, heading, bodyText, displayMode = 'modal') => {
+// (default) puts the video on the left. The video plays in place; an
+// "Open in a larger view" button opens the same video in a Bootstrap modal
+// for a bigger view.
+const buildVideoText = (layout, videoUrl, heading, bodyText) => {
     const uid = 'bsVidTxt' + Math.random().toString(36).slice(2, 9);
-    const poster = escapeHtml(posterUrl) || 'https://placehold.co/600x400?text=Play+Video';
-    const alt = escapeHtml(posterAlt) || escapeHtml(str.play_video_alt);
     const headingSafe = escapeHtml(heading) || escapeHtml(str.default_heading);
-    const bodySafe = escapeHtml(bodyText) || escapeHtml(str.default_body);
+    const bodySafe = sanitizeRich(bodyText) || escapeHtml(str.default_body);
     const videoRight = layout === 'video-right';
+    const hasUrl = (videoUrl || '').trim() !== '';
 
-    let videoCol;
-    let modalHtml = '';
+    // Only offer the modal (and build it) when there is a real video to show.
+    const modalBtn = hasUrl
+        ? `\n    <button type="button" class="btn btn-outline-secondary btn-sm mt-2"
+            data-bs-toggle="modal" data-bs-target="#${uid}">${escapeHtml(str.videotext_open_modal)}</button>`
+        : '';
+    const modalHtml = hasUrl
+        ? `\n${buildVideoModal(uid, videoEmbed(videoUrl), headingSafe)}`
+        : '';
 
-    if (displayMode === 'inline') {
-        videoCol = `  <div class="col-12 col-md-6">
-    ${videoEmbed(videoUrl)}
+    const videoCol = `  <div class="col-12 col-md-6">
+    ${videoEmbed(videoUrl)}${modalBtn}
   </div>`;
-    } else {
-        videoCol = `  <div class="col-12 col-md-6">
-    <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="${escapeHtml(str.click_to_play)}">
-      <img src="${poster}" class="img-fluid rounded" style="cursor:pointer;" alt="${alt}">
-    </a>
-  </div>`;
-        modalHtml = `\n${buildVideoModal(uid, videoEmbed(videoUrl), headingSafe)}`;
-    }
-
     const textCol = `  <div class="col-12 col-md-6">
     <h3>${headingSafe}</h3>
-    <p>${bodySafe}</p>
+    <div>${bodySafe}</div>
   </div>`;
     const cols = videoRight ? `${textCol}\n${videoCol}` : `${videoCol}\n${textCol}`;
     return `<!-- Bootstrap 5 video + text, video ${videoRight ? 'right' : 'left'} -->
@@ -480,7 +534,7 @@ const buildJumbotronBackground = (bgType, bgUrl, bgAlt) => {
 
 const buildJumbotron = (title, lead, buttonText, buttonUrl, bgType, bgUrl, bgAlt, overlay) => {
     const titleSafe = escapeHtml(title) || escapeHtml(str.jumbotron_default_title);
-    const leadSafe = escapeHtml(lead) || escapeHtml(str.jumbotron_default_lead);
+    const leadSafe = sanitizeRich(lead) || escapeHtml(str.jumbotron_default_lead);
     const href = escapeHtml((buttonUrl || '').trim()) || '#';
     const btn = buttonText
         ? `\n    <hr class="my-4">\n    <a class="btn btn-primary btn-lg" href="${href}" role="button">`
@@ -505,20 +559,56 @@ const buildJumbotron = (title, lead, buttonText, buttonUrl, bgType, bgUrl, bgAlt
 <div class="${wrapperClass}">${bg}${overlayHtml}
   <div class="container-fluid py-3"${contentStyle}>
     <h1 class="display-5 fw-bold">${titleSafe}</h1>
-    <p class="col-md-9 fs-5">${leadSafe}</p>${btn}
+    <div class="col-md-9 fs-5">${leadSafe}</div>${btn}
   </div>
 </div>`;
 };
 
-// Height is a pixel value (e.g. '400') that fixes every slide to the same
-// height with object-fit:cover so mismatched source images line up; an empty
-// string keeps each image at its natural height.
-// autoslide: '' (off), 'slow' (~7s), or 'fast' (~2.5s). When off, the carousel
-// only advances via the prev/next controls or indicators.
-const buildCarousel = (slides, height = '', autoslide = '') => {
+// Named aspect ratios for carousel slides, mapped to a CSS aspect-ratio value.
+const CAROUSEL_RATIOS = {
+    '16x9': '16 / 9', '4x3': '4 / 3', '1x1': '1 / 1', '21x9': '21 / 9',
+};
+
+// Convert a #rrggbb colour and a 0-1 alpha to an rgba() string.
+const hexToRgba = (hex, alpha) => {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec((hex || '').trim());
+    if (!m) {
+        return `rgba(0, 0, 0, ${alpha})`;
+    }
+    return `rgba(${parseInt(m[1], 16)}, ${parseInt(m[2], 16)}, ${parseInt(m[3], 16)}, ${alpha})`;
+};
+
+// Modern circular prev/next control: an inline-SVG chevron on a translucent
+// disc, styled inline so it renders on view pages without the plugin CSS
+// (Bootstrap's default control-icon background images do not always resolve).
+const carouselControl = (uid, dir, label) => {
+    const path = dir === 'prev' ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6';
+    const disc = 'display:inline-flex;align-items:center;justify-content:center;'
+        + 'width:2.75rem;height:2.75rem;border-radius:50%;background:rgba(0,0,0,0.5);'
+        + 'box-shadow:0 1px 4px rgba(0,0,0,0.35);';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"`
+        + ` fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"`
+        + ` stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
+    return `  <button class="carousel-control-${dir}" type="button" data-bs-target="#${uid}" data-bs-slide="${dir}">
+    <span aria-hidden="true" style="${disc}">${svg}</span>
+    <span class="visually-hidden">${escapeHtml(label)}</span>
+  </button>`;
+};
+
+// The ratio argument is '' (natural image height) or a CAROUSEL_RATIOS key
+// ('16x9'…) that fixes every slide to the same shape with object-fit:cover so
+// mismatched images line up.
+// autoslide is '' (off), 'slow' (~7s), or 'fast' (~2.5s).
+// captionBg is null, or {colour: '#rrggbb', opacity: 0-1} for a translucent
+// panel behind the caption so overlaid text stays readable.
+const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => {
     const uid = 'bsCar' + Math.random().toString(36).slice(2, 9);
-    const px = String(height).trim();
-    const imgStyle = px ? ` style="height:${escapeHtml(px)}px;object-fit:cover;"` : '';
+    const ratioCss = CAROUSEL_RATIOS[ratio]
+        ? ` style="aspect-ratio:${CAROUSEL_RATIOS[ratio]};object-fit:cover;"` : '';
+    const capStyle = (captionBg && Number(captionBg.opacity) > 0)
+        ? ` style="background:${hexToRgba(captionBg.colour, captionBg.opacity)};`
+            + `padding:0.75rem 1rem;border-radius:0.5rem;"`
+        : '';
     const intervals = {slow: 7000, fast: 2500};
     const rideAttrs = intervals[autoslide]
         ? ` data-bs-ride="carousel" data-bs-interval="${intervals[autoslide]}"`
@@ -532,15 +622,15 @@ const buildCarousel = (slides, height = '', autoslide = '') => {
         const src = escapeHtml(s.imageUrl) || `https://placehold.co/1200x500?text=Slide+${i + 1}`;
         const alt = escapeHtml(s.imageAlt) || escapeHtml(fmt(str.slide_default, i + 1));
         const caption = escapeHtml(s.captionTitle);
-        const text = escapeHtml(s.captionText);
+        const text = sanitizeRich(s.captionText);
         const captionHtml = (caption || text)
-            ? `\n      <div class="carousel-caption d-none d-md-block">
+            ? `\n      <div class="carousel-caption d-none d-md-block"${capStyle}>
         ${caption ? `<h5>${caption}</h5>` : ''}
-        ${text ? `<p>${text}</p>` : ''}
+        ${text ? `<div>${text}</div>` : ''}
       </div>`
             : '';
         return `    <div class="carousel-item${i === 0 ? ' active' : ''}">
-      <img src="${src}" class="d-block w-100"${imgStyle} alt="${alt}">${captionHtml}
+      <img src="${src}" class="d-block w-100"${ratioCss} alt="${alt}">${captionHtml}
     </div>`;
     }).join('\n');
     return `<!-- Bootstrap 5 carousel -->
@@ -551,14 +641,8 @@ ${indicators}
   <div class="carousel-inner">
 ${inner}
   </div>
-  <button class="carousel-control-prev" type="button" data-bs-target="#${uid}" data-bs-slide="prev">
-    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">${escapeHtml(str.previous)}</span>
-  </button>
-  <button class="carousel-control-next" type="button" data-bs-target="#${uid}" data-bs-slide="next">
-    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">${escapeHtml(str.next)}</span>
-  </button>
+${carouselControl(uid, 'prev', str.previous)}
+${carouselControl(uid, 'next', str.next)}
 </div>`;
 };
 
@@ -568,7 +652,7 @@ const buildAccordion = (sections) => {
         const headingId = `${uid}-h${i}`;
         const collapseId = `${uid}-c${i}`;
         const title = escapeHtml(s.title) || escapeHtml(fmt(str.section_default, i + 1));
-        const body = escapeHtml(s.body) || escapeHtml(str.section_body_default);
+        const body = sanitizeRich(s.body) || escapeHtml(str.section_body_default);
         const expanded = i === 0;
         return `  <div class="accordion-item">
     <h2 class="accordion-header" id="${headingId}">
@@ -617,7 +701,8 @@ const buildTable = (rows, cols, headerRow, caption, opts = {}) => {
     }
     classes.push('align-middle');
     const theadClass = headerVariant ? ` class="table-${headerVariant}"` : '';
-    const captionHtml = caption ? `\n  <caption>${escapeHtml(caption)}</caption>` : '';
+    const captionContent = sanitizeRich(caption);
+    const captionHtml = captionContent ? `\n  <caption>${captionContent}</caption>` : '';
     const headerHtml = headerRow
         ? `\n  <thead${theadClass}>\n    <tr>\n${Array.from({length: cols}, (_, c) =>
             `      <th scope="col">${escapeHtml(fmt(str.table_heading_cell, c + 1))}</th>`)
@@ -826,11 +911,42 @@ const textField = (name, label, placeholder = '') =>
                placeholder="${escapeHtml(placeholder)}" autocomplete="off">
     </div>`;
 
-const textareaField = (name, label, placeholder = '') =>
+// A lightweight rich-text field: a contenteditable box with a small toolbar
+// (bold, italic, insert/remove link) so authors can embed hyperlinks in body
+// and caption text. The value is read with getRich() and sanitised on insert.
+const richField = (name, label, placeholder = '') =>
     `<div class="form-group mb-3">
         <label for="${name}" class="form-label">${escapeHtml(label)}</label>
-        <textarea id="${name}" name="${name}" class="form-control" rows="2"
-                  placeholder="${escapeHtml(placeholder)}"></textarea>
+        <div class="tiny-bs-rich" data-rich-wrap>
+            <div class="btn-toolbar mb-1" role="toolbar">
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary" data-rich-cmd="bold"
+                            title="${escapeHtml(str.rich_bold)}"><b>B</b></button>
+                    <button type="button" class="btn btn-outline-secondary" data-rich-cmd="italic"
+                            title="${escapeHtml(str.rich_italic)}"><i>I</i></button>
+                    <button type="button" class="btn btn-outline-secondary" data-rich-cmd="createLink"
+                            title="${escapeHtml(str.rich_link)}">&#128279;</button>
+                    <button type="button" class="btn btn-outline-secondary" data-rich-cmd="unlink"
+                            title="${escapeHtml(str.rich_unlink)}">&#9741;</button>
+                </div>
+            </div>
+            <div class="input-group input-group-sm mb-1 d-none" data-rich-linkrow>
+                <input type="text" class="form-control" data-rich-linkurl autocomplete="off"
+                       placeholder="${escapeHtml(str.rich_link_prompt)}">
+                <button type="button" class="btn btn-primary" data-rich-linkadd>${escapeHtml(str.rich_link)}</button>
+                <button type="button" class="btn btn-outline-secondary" data-rich-linkcancel>${escapeHtml(str.cancel)}</button>
+            </div>
+            <div id="${name}" data-rich="${name}" class="form-control tiny-bs-rich-input"
+                 contenteditable="true" role="textbox" aria-multiline="true"
+                 aria-label="${escapeHtml(label)}" data-placeholder="${escapeHtml(placeholder)}"></div>
+        </div>
+    </div>`;
+
+const colourField = (name, label, defaultValue = '#000000') =>
+    `<div class="form-group mb-3">
+        <label for="${name}" class="form-label">${escapeHtml(label)}</label>
+        <input type="color" id="${name}" name="${name}" class="form-control form-control-color"
+               value="${escapeHtml(defaultValue)}">
     </div>`;
 
 const selectField = (name, label, options, defaultValue = null) => {
@@ -893,6 +1009,80 @@ const wireBrowseButtons = (editor, root) => {
             const target = root.querySelector(`[name="${btn.dataset.target}"]`);
             if (target) {
                 target.value = btn.dataset.placeholderUrl;
+            }
+        });
+    });
+};
+
+// Wire the rich-text toolbars: bold/italic/link/unlink acting on the
+// contenteditable box each toolbar belongs to. Uses execCommand (widely
+// supported) with styleWithCSS off so formatting is emitted as <b>/<i> tags
+// that survive sanitisation. Delegated per wrapper so it keeps working after
+// AJAX re-renders swap the fields in.
+const wireRichEditors = (root) => {
+    root.querySelectorAll('[data-rich-wrap]').forEach((wrap) => {
+        if (wrap.dataset.richWired) {
+            return;
+        }
+        wrap.dataset.richWired = '1';
+        const editable = wrap.querySelector('[data-rich]');
+        const linkRow = wrap.querySelector('[data-rich-linkrow]');
+        const linkUrl = wrap.querySelector('[data-rich-linkurl]');
+        let savedRange = null;
+
+        const exec = (cmd, value = null) => {
+            editable.focus();
+            try {
+                document.execCommand('styleWithCSS', false, false);
+            } catch (e) {
+                window.console.warn('tiny_bootstrap styleWithCSS unsupported', e);
+            }
+            document.execCommand(cmd, false, value);
+        };
+
+        // Insert the link the author typed, restoring the text selection that
+        // was active when they opened the link row (focus moved to the input).
+        const applyLink = () => {
+            const url = linkUrl.value.trim();
+            linkRow.classList.add('d-none');
+            if (!url) {
+                return;
+            }
+            editable.focus();
+            if (savedRange) {
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(savedRange);
+            }
+            exec('createLink', url);
+        };
+
+        wrap.querySelectorAll('button[data-rich-cmd]').forEach((btn) => {
+            // Keep the selection in the editable when the toolbar is clicked.
+            btn.addEventListener('mousedown', (e) => e.preventDefault());
+            btn.addEventListener('click', () => {
+                const cmd = btn.dataset.richCmd;
+                if (cmd === 'createLink') {
+                    const sel = window.getSelection();
+                    savedRange = (sel && sel.rangeCount) ? sel.getRangeAt(0).cloneRange() : null;
+                    linkUrl.value = '';
+                    linkRow.classList.remove('d-none');
+                    linkUrl.focus();
+                    return;
+                }
+                exec(cmd);
+            });
+        });
+
+        wrap.querySelector('[data-rich-linkadd]').addEventListener('mousedown', (e) => e.preventDefault());
+        wrap.querySelector('[data-rich-linkadd]').addEventListener('click', applyLink);
+        wrap.querySelector('[data-rich-linkcancel]').addEventListener('click', () => {
+            linkRow.classList.add('d-none');
+        });
+        linkUrl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyLink();
             }
         });
     });
@@ -1050,7 +1240,7 @@ const cardSection = (i, browseLabel, withImages = true) => {
     return `<h6 class="mt-3 mb-2 text-muted text-uppercase small">${escapeHtml(fmt(str.card_default, i))}</h6>` +
         imageFields +
         textField(`title_${i}`, str.card_title, fmt(str.card_default, i)) +
-        textareaField(`body_${i}`, str.body_text, str.card_placeholder_body);
+        richField(`body_${i}`, str.body_text, str.card_placeholder_body);
 };
 
 const openCardDialog = async(editor) => {
@@ -1094,19 +1284,29 @@ const openCardDialog = async(editor) => {
     const root = modal.getRoot()[0];
     const cardsRegion = root.querySelector('[data-region="cards"]');
 
-    // Capture values when the fields change so we can repopulate after a re-render.
+    // Capture values when the fields change so we can repopulate after a
+    // re-render, covering both plain inputs and the rich-text boxes.
     const captureValues = () => {
-        const snapshot = {};
+        const snapshot = {inputs: {}, rich: {}};
         cardsRegion.querySelectorAll('input, textarea').forEach((el) => {
-            snapshot[el.name] = el.value;
+            snapshot.inputs[el.name] = el.value;
+        });
+        cardsRegion.querySelectorAll('[data-rich]').forEach((el) => {
+            snapshot.rich[el.dataset.rich] = el.innerHTML;
         });
         return snapshot;
     };
     const restoreValues = (snapshot) => {
-        Object.entries(snapshot).forEach(([name, value]) => {
+        Object.entries(snapshot.inputs).forEach(([name, value]) => {
             const el = cardsRegion.querySelector(`[name="${name}"]`);
             if (el) {
                 el.value = value;
+            }
+        });
+        Object.entries(snapshot.rich).forEach(([name, html]) => {
+            const el = cardsRegion.querySelector(`[data-rich="${name}"]`);
+            if (el) {
+                el.innerHTML = html;
             }
         });
     };
@@ -1115,9 +1315,11 @@ const openCardDialog = async(editor) => {
         cardsRegion.innerHTML = renderCards(cardCount);
         restoreValues(snapshot);
         wireBrowseButtons(editor, cardsRegion);
+        wireRichEditors(cardsRegion);
     };
 
     wireBrowseButtons(editor, cardsRegion);
+    wireRichEditors(cardsRegion);
 
     root.querySelector('[name="count"]').addEventListener('change', (e) => {
         cardCount = parseInt(e.target.value, 10);
@@ -1129,15 +1331,15 @@ const openCardDialog = async(editor) => {
     });
 
     modal.getRoot().on(ModalEvents.save, () => {
-        const data = {};
-        cardsRegion.querySelectorAll('input, textarea').forEach((el) => {
-            data[el.name] = el.value;
-        });
+        const val = (name) => {
+            const el = cardsRegion.querySelector(`[name="${name}"]`);
+            return el ? el.value : '';
+        };
         const cards = Array.from({length: cardCount}, (_, i) => ({
-            imageUrl: data[`img_url_${i + 1}`] || '',
-            imageAlt: data[`img_alt_${i + 1}`] || '',
-            title: data[`title_${i + 1}`] || '',
-            body: data[`body_${i + 1}`] || '',
+            imageUrl: val(`img_url_${i + 1}`),
+            imageAlt: val(`img_alt_${i + 1}`),
+            title: val(`title_${i + 1}`),
+            body: getRich(cardsRegion, `body_${i + 1}`),
         }));
         editor.insertContent(buildCardGroup(cards, {
             gap: root.querySelector('[name="card_spacing"]').value,
@@ -1166,7 +1368,7 @@ const openImageDialog = async(editor) => {
     const body =
         urlField('url', urlLabel, browseLabel, 'https://placehold.co/800x500?text=Image') +
         textField('alt', altLabel, str.describe_image_sr) +
-        textareaField('caption', captionLabel, str.image_caption_placeholder) +
+        richField('caption', captionLabel, str.image_caption_placeholder) +
         selectField('align', alignLabel, [
             {value: 'center', text: alignCenter},
             {value: 'left', text: alignLeft},
@@ -1176,10 +1378,11 @@ const openImageDialog = async(editor) => {
     const modal = await openModal(title, body, insertLabel);
     const root = modal.getRoot()[0];
     wireBrowseButtons(editor, root);
+    wireRichEditors(root);
     modal.getRoot().on(ModalEvents.save, () => {
         const url = root.querySelector('[name="url"]').value;
         const alt = root.querySelector('[name="alt"]').value;
-        const caption = root.querySelector('[name="caption"]').value;
+        const caption = getRich(root, 'caption');
         const align = root.querySelector('[name="align"]').value;
         editor.insertContent(buildImageModal(url, alt, caption, align));
     });
@@ -1211,45 +1414,38 @@ const openImageTextDialog = async(editor) => {
         urlField('url', urlLabel, browseLabel, 'https://placehold.co/600x400?text=Image') +
         textField('alt', altLabel, str.describe_image_sr) +
         textField('it_heading', headingLabel, str.default_heading) +
-        textareaField('it_body', bodyLabel, str.default_body) +
-        textareaField('caption', captionLabel, str.imagetext_caption_placeholder);
+        richField('it_body', bodyLabel, str.default_body) +
+        richField('caption', captionLabel, str.imagetext_caption_placeholder);
 
     const modal = await openModal(title, body, insertLabel);
     const root = modal.getRoot()[0];
     wireBrowseButtons(editor, root);
+    wireRichEditors(root);
     modal.getRoot().on(ModalEvents.save, () => {
         editor.insertContent(buildImageText(
             root.querySelector('[name="layout"]').value,
             root.querySelector('[name="url"]').value,
             root.querySelector('[name="alt"]').value,
-            root.querySelector('[name="caption"]').value,
+            getRich(root, 'caption'),
             root.querySelector('[name="it_heading"]').value,
-            root.querySelector('[name="it_body"]').value,
+            getRich(root, 'it_body'),
         ));
     });
 };
 
 const openVideoTextDialog = async(editor) => {
     const [
-        title, urlLabel, posterLabel, posterAltLabel, headingLabel, bodyLabel,
-        layoutLabel, leftLabel, rightLabel,
-        displayLabel, modalLabel, inlineLabel,
-        insertLabel, browseLabel,
+        title, urlLabel, headingLabel, bodyLabel,
+        layoutLabel, leftLabel, rightLabel, insertLabel,
     ] = await Promise.all([
         getString('dialog_videotext_title', component),
         getString('videotext_url', component),
-        getString('videotext_poster', component),
-        getString('videotext_poster_alt', component),
         getString('videotext_heading', component),
         getString('videotext_body', component),
         getString('videotext_layout', component),
         getString('videotext_layout_videoleft', component),
         getString('videotext_layout_videoright', component),
-        getString('videotext_display', component),
-        getString('videotext_display_modal', component),
-        getString('videotext_display_inline', component),
         getString('insert', component),
-        getString('browse', component),
     ]);
 
     const body =
@@ -1257,28 +1453,19 @@ const openVideoTextDialog = async(editor) => {
             {value: 'video-left', text: leftLabel},
             {value: 'video-right', text: rightLabel},
         ]) +
-        selectField('display_mode', displayLabel, [
-            {value: 'modal', text: modalLabel},
-            {value: 'inline', text: inlineLabel},
-        ]) +
         textField('video_url', urlLabel, str.videotext_url_placeholder) +
-        urlField('poster_url', posterLabel, browseLabel, 'https://placehold.co/600x400?text=Play+Video') +
-        textField('poster_alt', posterAltLabel, str.describe_video_sr) +
         textField('vt_heading', headingLabel, str.default_heading) +
-        textareaField('vt_body', bodyLabel, str.default_body);
+        richField('vt_body', bodyLabel, str.default_body);
 
     const modal = await openModal(title, body, insertLabel);
     const root = modal.getRoot()[0];
-    wireBrowseButtons(editor, root);
+    wireRichEditors(root);
     modal.getRoot().on(ModalEvents.save, () => {
         editor.insertContent(buildVideoText(
             root.querySelector('[name="layout"]').value,
             root.querySelector('[name="video_url"]').value,
-            root.querySelector('[name="poster_url"]').value,
-            root.querySelector('[name="poster_alt"]').value,
             root.querySelector('[name="vt_heading"]').value,
-            root.querySelector('[name="vt_body"]').value,
-            root.querySelector('[name="display_mode"]').value,
+            getRich(root, 'vt_body'),
         ));
     });
 };
@@ -1307,7 +1494,7 @@ const openJumbotronDialog = async(editor) => {
 
     const body =
         textField('jt_title', titleLabel, str.jumbotron_default_title) +
-        textareaField('jt_lead', leadLabel, str.jumbotron_default_lead) +
+        richField('jt_lead', leadLabel, str.jumbotron_default_lead) +
         textField('jt_button', buttonLabel, str.jumbotron_button_placeholder) +
         textField('jt_button_url', buttonUrlLabel, str.jumbotron_button_url_placeholder) +
         selectField('jt_bg_type', bgTypeLabel, [
@@ -1322,10 +1509,11 @@ const openJumbotronDialog = async(editor) => {
     const modal = await openModal(title, body, insertLabel);
     const root = modal.getRoot()[0];
     wireBrowseButtons(editor, root);
+    wireRichEditors(root);
     modal.getRoot().on(ModalEvents.save, () => {
         editor.insertContent(buildJumbotron(
             root.querySelector('[name="jt_title"]').value,
-            root.querySelector('[name="jt_lead"]').value,
+            getRich(root, 'jt_lead'),
             root.querySelector('[name="jt_button"]').value,
             root.querySelector('[name="jt_button_url"]').value,
             root.querySelector('[name="jt_bg_type"]').value,
@@ -1341,65 +1529,85 @@ const carouselSlideSection = (i, browseLabel) =>
     urlField(`slide_url_${i}`, str.image_url, browseLabel, 'https://placehold.co/1200x500?text=Slide+Image') +
     textField(`slide_alt_${i}`, str.alt_text, str.describe_image) +
     textField(`slide_title_${i}`, str.caption_title, fmt(str.slide_default, i)) +
-    textareaField(`slide_text_${i}`, str.caption_text, str.caption_text_placeholder);
+    richField(`slide_text_${i}`, str.caption_text, str.caption_text_placeholder);
 
 const openCarouselDialog = async(editor) => {
     const [
-        title, insertLabel, browseLabel, heightLabel,
-        heightAuto, heightSmall, heightMedium, heightLarge, heightXl,
+        title, insertLabel, browseLabel, ratioLabel,
+        ratioNatural, ratio16x9, ratio4x3, ratio1x1, ratio21x9,
         autoslideLabel, autoslideOff, autoslideSlow, autoslideFast,
+        captionBgLabel, captionOpacityLabel,
+        opacityNone, opacityLight, opacityMedium, opacityStrong,
     ] = await Promise.all([
         getString('dialog_carousel_title', component),
         getString('insert', component),
         getString('browse', component),
-        getString('carousel_height', component),
-        getString('carousel_height_auto', component),
-        getString('carousel_height_small', component),
-        getString('carousel_height_medium', component),
-        getString('carousel_height_large', component),
-        getString('carousel_height_xl', component),
+        getString('carousel_ratio', component),
+        getString('carousel_ratio_natural', component),
+        getString('carousel_ratio_16x9', component),
+        getString('carousel_ratio_4x3', component),
+        getString('carousel_ratio_1x1', component),
+        getString('carousel_ratio_21x9', component),
         getString('carousel_autoslide', component),
         getString('carousel_autoslide_off', component),
         getString('carousel_autoslide_slow', component),
         getString('carousel_autoslide_fast', component),
+        getString('caption_bg_colour', component),
+        getString('caption_bg_opacity', component),
+        getString('caption_bg_opacity_none', component),
+        getString('caption_bg_opacity_light', component),
+        getString('caption_bg_opacity_medium', component),
+        getString('caption_bg_opacity_strong', component),
     ]);
 
     const slideCount = 3;
     const body =
-        selectField('carousel_height', heightLabel, [
-            {value: '', text: heightAuto},
-            {value: '300', text: heightSmall},
-            {value: '400', text: heightMedium},
-            {value: '500', text: heightLarge},
-            {value: '650', text: heightXl},
-        ], '400') +
+        selectField('carousel_ratio', ratioLabel, [
+            {value: '16x9', text: ratio16x9},
+            {value: '4x3', text: ratio4x3},
+            {value: '1x1', text: ratio1x1},
+            {value: '21x9', text: ratio21x9},
+            {value: '', text: ratioNatural},
+        ], '16x9') +
         selectField('carousel_autoslide', autoslideLabel, [
             {value: '', text: autoslideOff},
             {value: 'slow', text: autoslideSlow},
             {value: 'fast', text: autoslideFast},
         ], '') +
+        colourField('caption_bg_colour', captionBgLabel, '#000000') +
+        selectField('caption_bg_opacity', captionOpacityLabel, [
+            {value: '0.5', text: opacityMedium},
+            {value: '0.25', text: opacityLight},
+            {value: '0.75', text: opacityStrong},
+            {value: '0', text: opacityNone},
+        ], '0.5') +
         Array.from({length: slideCount}, (_, i) => carouselSlideSection(i + 1, browseLabel)).join('');
 
     const modal = await openModal(title, body, insertLabel);
     const root = modal.getRoot()[0];
     wireBrowseButtons(editor, root);
+    wireRichEditors(root);
     modal.getRoot().on(ModalEvents.save, () => {
         const slides = Array.from({length: slideCount}, (_, i) => ({
             imageUrl: root.querySelector(`[name="slide_url_${i + 1}"]`).value,
             imageAlt: root.querySelector(`[name="slide_alt_${i + 1}"]`).value,
             captionTitle: root.querySelector(`[name="slide_title_${i + 1}"]`).value,
-            captionText: root.querySelector(`[name="slide_text_${i + 1}"]`).value,
+            captionText: getRich(root, `slide_text_${i + 1}`),
         }));
-        const height = root.querySelector('[name="carousel_height"]').value;
+        const ratio = root.querySelector('[name="carousel_ratio"]').value;
         const autoslide = root.querySelector('[name="carousel_autoslide"]').value;
-        editor.insertContent(buildCarousel(slides, height, autoslide));
+        const captionBg = {
+            colour: root.querySelector('[name="caption_bg_colour"]').value,
+            opacity: root.querySelector('[name="caption_bg_opacity"]').value,
+        };
+        editor.insertContent(buildCarousel(slides, ratio, autoslide, captionBg));
     });
 };
 
 const accordionSection = (i) =>
     `<h6 class="mt-3 mb-2 text-muted text-uppercase small">${escapeHtml(fmt(str.section_default, i))}</h6>` +
     textField(`acc_title_${i}`, str.section_title, fmt(str.section_default, i)) +
-    textareaField(`acc_body_${i}`, str.section_body, str.section_body_default);
+    richField(`acc_body_${i}`, str.section_body, str.section_body_default);
 
 const openAccordionDialog = async(editor) => {
     const [title, countLabel, insertLabel] = await Promise.all([
@@ -1424,32 +1632,44 @@ const openAccordionDialog = async(editor) => {
     const region = root.querySelector('[data-region="sections"]');
 
     const snapshot = () => {
-        const out = {};
+        const out = {inputs: {}, rich: {}};
         region.querySelectorAll('input, textarea').forEach((el) => {
-            out[el.name] = el.value;
+            out.inputs[el.name] = el.value;
+        });
+        region.querySelectorAll('[data-rich]').forEach((el) => {
+            out.rich[el.dataset.rich] = el.innerHTML;
         });
         return out;
     };
     const restore = (data) => {
-        Object.entries(data).forEach(([name, value]) => {
+        Object.entries(data.inputs).forEach(([name, value]) => {
             const el = region.querySelector(`[name="${name}"]`);
             if (el) {
                 el.value = value;
             }
         });
+        Object.entries(data.rich).forEach(([name, html]) => {
+            const el = region.querySelector(`[data-rich="${name}"]`);
+            if (el) {
+                el.innerHTML = html;
+            }
+        });
     };
+
+    wireRichEditors(region);
 
     root.querySelector('[name="acc_count"]').addEventListener('change', (e) => {
         const data = snapshot();
         sectionCount = parseInt(e.target.value, 10);
         region.innerHTML = renderSections(sectionCount);
         restore(data);
+        wireRichEditors(region);
     });
 
     modal.getRoot().on(ModalEvents.save, () => {
         const sections = Array.from({length: sectionCount}, (_, i) => ({
             title: region.querySelector(`[name="acc_title_${i + 1}"]`).value,
-            body: region.querySelector(`[name="acc_body_${i + 1}"]`).value,
+            body: getRich(region, `acc_body_${i + 1}`),
         }));
         editor.insertContent(buildAccordion(sections));
     });
@@ -1503,16 +1723,17 @@ const openTableDialog = async(editor) => {
         checkboxField('tbl_hover', hoverLabel, true) +
         checkboxField('tbl_bordered', borderedLabel, false) +
         checkboxField('tbl_small', smallLabel, false) +
-        textField('tbl_caption', captionLabel, str.table_caption_placeholder);
+        richField('tbl_caption', captionLabel, str.table_caption_placeholder);
 
     const modal = await openModal(title, body, insertLabel);
+    const root = modal.getRoot()[0];
+    wireRichEditors(root);
     modal.getRoot().on(ModalEvents.save, () => {
-        const root = modal.getRoot()[0];
         editor.insertContent(buildTable(
             parseInt(root.querySelector('[name="tbl_rows"]').value, 10),
             parseInt(root.querySelector('[name="tbl_cols"]').value, 10),
             root.querySelector('[name="tbl_header"]').checked,
-            root.querySelector('[name="tbl_caption"]').value,
+            getRich(root, 'tbl_caption'),
             {
                 variant: root.querySelector('[name="tbl_variant"]').value,
                 headerVariant: root.querySelector('[name="tbl_header_variant"]').value,

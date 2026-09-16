@@ -17,8 +17,8 @@
  * Toolbar and menu placement for tiny_bootstrap.
  *
  * @module     tiny_bootstrap/configuration
- * @copyright  2025 Skin Cancer College of Australasia <admin@skincancercollege.org>
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2025-2026 Skin Cancer College of Australasia <admin@skincancercollege.org>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 import {addMenubarItem, addToolbarButtons} from 'editor_tiny/utils';

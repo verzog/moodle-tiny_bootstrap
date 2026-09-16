@@ -17,8 +17,8 @@
  * Shared constants for tiny_bootstrap AMD modules.
  *
  * @module     tiny_bootstrap/common
- * @copyright  2025 Skin Cancer College of Australasia <admin@skincancercollege.org>
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2025-2026 Skin Cancer College of Australasia <admin@skincancercollege.org>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 export const component = 'tiny_bootstrap';

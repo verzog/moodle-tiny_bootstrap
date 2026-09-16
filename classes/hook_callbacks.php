@@ -18,8 +18,8 @@
  * Hook callbacks for tiny_bootstrap.
  *
  * @package    tiny_bootstrap
- * @copyright  2026 Skin Cancer College of Australasia <admin@skincancercollege.org>
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2025-2026 Skin Cancer College of Australasia <admin@skincancercollege.org>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace tiny_bootstrap;
@@ -54,9 +54,13 @@ class hook_callbacks {
         if ($css === '') {
             return;
         }
-        // Strip any closing style tag so the admin CSS cannot break out of the
-        // element it is placed in.
-        $css = str_ireplace('</style>', '', $css);
+        // Neutralise any closing style tag so the admin CSS cannot break out of
+        // the element it is placed in. Only "</style" followed by whitespace,
+        // "/" or ">" (or the end of input) is a real end tag to the HTML
+        // parser, so match exactly those cases — this blocks the breakout
+        // variants without corrupting legitimate CSS such as
+        // content: "</styles".
+        $css = preg_replace('#</style(?=[\s/>]|$)#i', '', $css);
         $hook->add_html('<style id="tiny-bootstrap-custom-css">' . "\n" . $css . "\n" . '</style>');
     }
 }

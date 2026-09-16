@@ -18,8 +18,8 @@
  * Language strings for tiny_bootstrap (AU English).
  *
  * @package    tiny_bootstrap
- * @copyright  2025 Skin Cancer College of Australasia <admin@skincancercollege.org>
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2025-2026 Skin Cancer College of Australasia <admin@skincancercollege.org>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -32,6 +32,12 @@ $string['bootstrap:use'] = 'Use Bootstrap Scaffolding';
 $string['browse'] = 'Browse repositories…';
 $string['button_bootstrap'] = 'Bootstrap Scaffolding';
 $string['cancel'] = 'Cancel';
+$string['caption_bg_colour'] = 'Caption background colour';
+$string['caption_bg_opacity'] = 'Caption background opacity';
+$string['caption_bg_opacity_light'] = 'Light';
+$string['caption_bg_opacity_medium'] = 'Medium';
+$string['caption_bg_opacity_none'] = 'None (transparent)';
+$string['caption_bg_opacity_strong'] = 'Strong';
 $string['caption_text'] = 'Caption text';
 $string['caption_text_placeholder'] = 'Optional caption text shown on the slide.';
 $string['caption_title'] = 'Caption title';
@@ -55,12 +61,12 @@ $string['carousel_autoslide'] = 'Autoslide';
 $string['carousel_autoslide_fast'] = 'Fast (2.5s)';
 $string['carousel_autoslide_off'] = 'Off (manual controls only)';
 $string['carousel_autoslide_slow'] = 'Slow (7s)';
-$string['carousel_height'] = 'Slide height';
-$string['carousel_height_auto'] = 'Auto (natural image height)';
-$string['carousel_height_large'] = 'Large (500px)';
-$string['carousel_height_medium'] = 'Medium (400px)';
-$string['carousel_height_small'] = 'Small (300px)';
-$string['carousel_height_xl'] = 'Extra large (650px)';
+$string['carousel_ratio'] = 'Aspect ratio';
+$string['carousel_ratio_16x9'] = 'Widescreen (16:9)';
+$string['carousel_ratio_1x1'] = 'Square (1:1)';
+$string['carousel_ratio_21x9'] = 'Cinematic (21:9)';
+$string['carousel_ratio_4x3'] = 'Standard (4:3)';
+$string['carousel_ratio_natural'] = 'Natural (image height)';
 $string['cheatsheet_accordion'] = 'Accordion';
 $string['cheatsheet_active'] = 'Active';
 $string['cheatsheet_alert_text'] = 'A simple {$a} alert.';
@@ -212,6 +218,11 @@ $string['play_video_alt'] = 'Play video';
 $string['pluginname'] = 'Bootstrap Scaffolding';
 $string['previous'] = 'Previous';
 $string['privacy:metadata'] = 'The Bootstrap Scaffolding plugin for TinyMCE does not store any personal data.';
+$string['rich_bold'] = 'Bold';
+$string['rich_italic'] = 'Italic';
+$string['rich_link'] = 'Insert link';
+$string['rich_link_prompt'] = 'Enter the link URL (leave blank to cancel)';
+$string['rich_unlink'] = 'Remove link';
 $string['rows_n'] = '{$a} rows';
 $string['section_body'] = 'Section body';
 $string['section_body_default'] = 'Section content goes here.';
@@ -243,6 +254,7 @@ $string['videotext_heading'] = 'Heading';
 $string['videotext_layout'] = 'Layout';
 $string['videotext_layout_videoleft'] = 'Video left, text right';
 $string['videotext_layout_videoright'] = 'Video right, text left';
+$string['videotext_open_modal'] = 'Open in a larger view';
 $string['videotext_poster'] = 'Poster image URL (optional, modal mode only)';
 $string['videotext_poster_alt'] = 'Poster image alt text';
 $string['videotext_url'] = 'Video URL';

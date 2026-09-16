@@ -68,3 +68,18 @@
     max-width: 900px;
     min-height: 400px;
 }
+
+/*
+ * Lightweight rich-text fields in the component dialogs. The editable area is a
+ * contenteditable div styled like a form-control; when empty it shows its
+ * data-placeholder as greyed hint text.
+ */
+.tiny-bs-rich-input {
+    min-height: 4.5em;
+    overflow: auto;
+}
+
+.tiny-bs-rich-input:empty::before {
+    content: attr(data-placeholder);
+    color: #6c757d;
+}
