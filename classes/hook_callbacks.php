@@ -54,11 +54,13 @@ class hook_callbacks {
         if ($css === '') {
             return;
         }
-        // Strip any closing style tag so the admin CSS cannot break out of the
-        // element it is placed in. Match the tag prefix, not the exact
-        // "</style>", so spaced or newline variants such as "</style >" and
-        // "</style\n>" are removed too.
-        $css = str_ireplace('</style', '', $css);
+        // Neutralise any closing style tag so the admin CSS cannot break out of
+        // the element it is placed in. Only "</style" followed by whitespace,
+        // "/" or ">" (or the end of input) is a real end tag to the HTML
+        // parser, so match exactly those cases — this blocks the breakout
+        // variants without corrupting legitimate CSS such as
+        // content: "</styles".
+        $css = preg_replace('#</style(?=[\s/>]|$)#i', '', $css);
         $hook->add_html('<style id="tiny-bootstrap-custom-css">' . "\n" . $css . "\n" . '</style>');
     }
 }
