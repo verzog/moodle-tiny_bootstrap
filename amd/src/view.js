@@ -81,14 +81,15 @@ const onCardRowNav = (event) => {
     if (!btn) {
         return;
     }
-    // The control is an anchor (Moodle strips user-content buttons), so stop it
-    // following its placeholder href and jumping the page to the top.
-    event.preventDefault();
     const row = btn.closest('.tiny-bs-cardrow');
     const track = row && row.querySelector('[data-cardrow-track]');
     if (!track) {
         return;
     }
+    // Only now that this is a genuine card-row control (an anchor, since Moodle
+    // strips user-content buttons) do we stop it following its placeholder href
+    // and jumping the page to the top; an unrelated anchor is left alone.
+    event.preventDefault();
     const forward = btn.getAttribute('data-cardrow-nav') !== 'prev';
     const card = track.querySelector('.card');
     // Step by one card width plus the gap, or most of the viewport as a fallback.
@@ -100,6 +101,28 @@ const onCardRowNav = (event) => {
     track.scrollBy({left: sign * step, behavior: 'smooth'});
 };
 
+// The prev/next and indicator controls are anchors with role="button" (Moodle
+// strips user-content buttons). A real button activates on the Space key, but a
+// focused anchor scrolls the page on Space instead, and both Bootstrap's
+// carousel data API and onCardRowNav act only on click. Bridge Space to a click
+// for the plugin's own anchor controls so keyboard users can operate them.
+// Enter already activates an anchor natively, so it needs no bridging.
+const onControlKey = (event) => {
+    if (event.key !== ' ' && event.key !== 'Spacebar') {
+        return;
+    }
+    const control = event.target.closest(
+        'a[role="button"][data-cardrow-nav],'
+        + 'a[role="button"][data-bs-slide],'
+        + 'a[role="button"][data-bs-slide-to]'
+    );
+    if (!control) {
+        return;
+    }
+    event.preventDefault();
+    control.click();
+};
+
 export const init = () => {
     if (window.tinyBootstrapViewInit) {
         return;
@@ -108,4 +131,5 @@ export const init = () => {
     document.addEventListener('hidden.bs.modal', onHidden, true);
     document.addEventListener('click', onFullscreenClick, false);
     document.addEventListener('click', onCardRowNav, false);
+    document.addEventListener('keydown', onControlKey, false);
 };
