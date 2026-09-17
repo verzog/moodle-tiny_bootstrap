@@ -178,6 +178,10 @@ const STRING_KEYS = [
     'rich_bold', 'rich_italic', 'rich_link', 'rich_unlink', 'rich_link_prompt',
     'rich_source', 'videotext_open_modal', 'videotext_fullscreen', 'cancel',
     'slide_button', 'slide_button_url', 'slide_button_colour',
+    'cardrow_styling', 'cardrow_size', 'cardrow_size_small', 'cardrow_size_medium',
+    'cardrow_size_large', 'cardrow_bg', 'cardrow_bg_colour', 'cardrow_text',
+    'cardrow_text_colour', 'cardrow_border', 'cardrow_border_colour',
+    'cardrow_radius', 'cardrow_radius_none', 'cardrow_shadow',
 ];
 
 // Structural and formatting tags allowed in the rich-text fields, with any
@@ -684,23 +688,31 @@ const hexToRgba = (hex, alpha) => {
     return `rgba(${parseInt(m[1], 16)}, ${parseInt(m[2], 16)}, ${parseInt(m[3], 16)}, ${alpha})`;
 };
 
-// Modern circular prev/next control: an inline-SVG chevron on a translucent
-// disc, styled inline so it renders on view pages without the plugin CSS
-// (Bootstrap's default control-icon background images do not always resolve).
+// A prev/next chevron drawn with CSS borders rather than an SVG. Moodle's
+// output sanitiser strips SVG stroke/fill attributes, which would leave an SVG
+// chevron invisible; a rotated bordered box survives (the transform is kept, as
+// the control disc's own translate is). Returns just the arrow glyph span.
+const chevronIcon = (dir) => {
+    const edges = dir === 'prev'
+        ? 'border-left:0.16rem solid #fff;border-bottom:0.16rem solid #fff;margin-left:0.2rem;'
+        : 'border-right:0.16rem solid #fff;border-top:0.16rem solid #fff;margin-right:0.2rem;';
+    return `<span aria-hidden="true" style="display:inline-block;width:0.6rem;height:0.6rem;`
+        + `${edges}transform:rotate(45deg);"></span>`;
+};
+
+// Modern circular prev/next control: a CSS chevron on a translucent disc, styled
+// inline so it renders on view pages without the plugin CSS (Bootstrap's default
+// control-icon background images do not always resolve).
 const carouselControl = (uid, dir, label) => {
-    const path = dir === 'prev' ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6';
     const disc = 'display:inline-flex;align-items:center;justify-content:center;'
         + 'width:2.75rem;height:2.75rem;border-radius:50%;background:rgba(0,0,0,0.5);'
         + 'box-shadow:0 1px 4px rgba(0,0,0,0.35);';
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"`
-        + ` fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"`
-        + ` stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
     // An anchor, not a button: Moodle's output sanitiser drops a user-content
     // button that carries no data-bs-* toggle (data-bs-slide is not one), so a
     // button control is stripped from the page. Bootstrap's carousel data API
     // drives an anchor control natively and suppresses its href navigation.
     return `  <a class="carousel-control-${dir}" href="#" role="button" data-bs-target="#${uid}" data-bs-slide="${dir}">
-    <span aria-hidden="true" style="${disc}">${svg}</span>
+    <span aria-hidden="true" style="${disc}">${chevronIcon(dir)}</span>
     <span class="visually-hidden">${escapeHtml(label)}</span>
   </a>`;
 };
@@ -805,7 +817,49 @@ ${carouselControl(uid, 'next', str.next)}
 // on view pages without the plugin stylesheet; the arrows use the view AMD
 // module. cards is a list of {title, body, imageUrl, imageAlt, btnText, btnUrl,
 // btnVariant}.
-const buildCardRow = (cards) => {
+const buildCardRow = (cards, opts = {}) => {
+    const width = Number(opts.width) || 0;
+    const height = Number(opts.height) || 0;
+    const imageBand = Number(opts.imageHeight) || 0;
+    const bg = escapeHtml((opts.bg || '').trim());
+    const textColour = escapeHtml((opts.textColour || '').trim());
+    const border = escapeHtml((opts.border || '').trim());
+    const radius = escapeHtml((opts.radius || '').trim());
+    const shadow = !!opts.shadow;
+    // The shared look styles applied to every card so the whole row is uniform:
+    // background, text colour, border, corner rounding and drop shadow.
+    const lookParts = [];
+    if (bg) {
+        lookParts.push(`background:${bg}`);
+    }
+    if (textColour) {
+        lookParts.push(`color:${textColour}`);
+    }
+    if (border) {
+        lookParts.push(`border:1px solid ${border}`);
+    }
+    if (radius) {
+        lookParts.push(`border-radius:${radius}`);
+    }
+    if (shadow) {
+        lookParts.push('box-shadow:0 0.5rem 1rem rgba(0, 0, 0, 0.15)');
+    }
+    const look = lookParts.join(';');
+    const cardImage = (imageUrl, imageAlt) => {
+        if (!imageUrl) {
+            return '';
+        }
+        // With a fixed card size the image sits in a fixed-height band and is
+        // cropped by a clipping wrapper rather than object-fit (whose support in
+        // the output sanitiser is not guaranteed), so a small or oddly shaped
+        // picture still fills the band without being distorted.
+        if (imageBand) {
+            return `\n      <div style="height:${imageBand}px;overflow:hidden;display:flex;`
+                + `align-items:center;justify-content:center;">`
+                + `<img src="${imageUrl}" alt="${imageAlt}" style="width:100%;height:auto;display:block;"></div>`;
+        }
+        return `\n      <img src="${imageUrl}" class="card-img-top" alt="${imageAlt}">`;
+    };
     const renderCard = (c, i, scrollable) => {
         const title = escapeHtml(c.title);
         const body = sanitizeRich(c.body);
@@ -814,18 +868,28 @@ const buildCardRow = (cards) => {
         const btnVariant = escapeHtml(c.btnVariant) || 'primary';
         const imageUrl = escapeHtml((c.imageUrl || '').trim());
         const imageAlt = escapeHtml(c.imageAlt) || escapeHtml(fmt(str.card_default, i + 1));
-        const img = imageUrl
-            ? `\n      <img src="${imageUrl}" class="card-img-top" alt="${imageAlt}">`
-            : '';
+        const img = cardImage(imageUrl, imageAlt);
         const btn = btnText
             ? `\n        <a class="btn btn-${btnVariant} mt-3 align-self-start" href="${btnHref}" role="button">${btnText}</a>`
             : '';
-        // The flex-basis with min() keeps each card near a phone-width single
-        // column on small screens and about a third of a wide container on
-        // desktop, without needing media queries in the plugin stylesheet.
-        const style = scrollable ? ' style="flex:0 0 min(85vw, 320px);scroll-snap-align:start;"' : '';
-        return `    <div class="card h-100"${style}>${img}
-      <div class="card-body d-flex flex-column">
+        // Size styles fix every card to the same width and height so the row is
+        // uniform; taller content is clipped by overflow:hidden. With no size
+        // set, fall back to the responsive flex-basis (a phone-width column on
+        // small screens, about a third of a wide container on desktop).
+        const sizeParts = [];
+        if (scrollable) {
+            sizeParts.push(width ? `flex:0 0 ${width}px` : 'flex:0 0 min(85vw, 320px)');
+            sizeParts.push('scroll-snap-align:start');
+        } else if (width) {
+            sizeParts.push(`width:${width}px`);
+        }
+        if (height) {
+            sizeParts.push(`height:${height}px`, 'overflow:hidden');
+        }
+        const style = [sizeParts.join(';'), look].filter(Boolean).join(';');
+        const bodyOverflow = height ? ' style="overflow:hidden;"' : '';
+        return `    <div class="card h-100"${style ? ` style="${style}"` : ''}>${img}
+      <div class="card-body d-flex flex-column"${bodyOverflow}>
         ${title ? `<h5 class="card-title">${title}</h5>` : ''}
         ${body ? `<div class="card-text">${body}</div>` : ''}${btn}
       </div>
@@ -839,29 +903,25 @@ const buildCardRow = (cards) => {
     }
     if (cards.length === 1) {
         return `<!-- Bootstrap 5 card -->
-<div class="d-flex justify-content-center" style="max-width:340px;margin:0 auto;">
+<div class="d-flex justify-content-center">
 ${renderCard(cards[0], 0, false)}
 </div>`;
     }
     const uid = 'bsRow' + Math.random().toString(36).slice(2, 9);
     const items = cards.map((c, i) => renderCard(c, i, true)).join('\n');
     const navBtn = (dir, label) => {
-        const path = dir === 'prev' ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6';
         const side = dir === 'prev' ? 'left:0.25rem;' : 'right:0.25rem;';
         const disc = `position:absolute;top:50%;transform:translateY(-50%);${side}z-index:2;`
             + 'display:inline-flex;align-items:center;justify-content:center;width:2.75rem;'
             + 'height:2.75rem;border:0;border-radius:50%;background:rgba(0,0,0,0.5);'
             + 'box-shadow:0 1px 4px rgba(0,0,0,0.35);cursor:pointer;text-decoration:none;';
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"`
-            + ` fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"`
-            + ` stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
         // Rendered as an anchor rather than a button. Moodle's output sanitiser
         // (HTMLPurifier) drops a user-content button that carries no recognised
         // data-bs-* toggle, unwrapping its icon, so a button-based control never
         // reaches the page. An anchor with role="button" survives; the view AMD
         // module handles its click and suppresses the href navigation.
         return `  <a href="#" role="button" class="tiny-bs-cardrow-nav" data-cardrow-nav="${dir}"`
-            + ` aria-label="${escapeHtml(label)}" style="${disc}">${svg}</a>`;
+            + ` aria-label="${escapeHtml(label)}" style="${disc}">${chevronIcon(dir)}</a>`;
     };
     // The scroll-padding-inline keeps a snapped card inset from the overlaid
     // arrows (the flex padding scrolls with the content, so it cannot reserve
@@ -1898,6 +1958,48 @@ const cardRowCardSection = (i, browseLabel) =>
         ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark']
             .map((v) => ({value: v, text: str[`colour_${v}`]})), 'primary');
 
+// Card Row size presets: card width, card height and the image band height, in
+// pixels. Keyed by the select value; used to build the dialog and to resolve
+// the chosen option on save.
+const CARDROW_SIZES = {
+    small: {width: 240, height: 300, imageHeight: 130},
+    medium: {width: 300, height: 380, imageHeight: 170},
+    large: {width: 340, height: 440, imageHeight: 200},
+};
+
+// Corner-rounding presets mapped to a CSS border-radius value.
+const CARDROW_RADII = {
+    none: '0',
+    small: '0.25rem',
+    medium: '0.5rem',
+    large: '1rem',
+};
+
+// Row-level styling controls shown once above the card slots: uniform card size,
+// per-card background/text/border colours (each with an enable toggle so an
+// unticked colour falls back to the theme default), corner rounding and a
+// drop-shadow toggle.
+const cardRowStyleSection = () =>
+    `<h6 class="mt-1 mb-2 text-muted text-uppercase small">${escapeHtml(str.cardrow_styling)}</h6>` +
+    selectField('cr_size', str.cardrow_size, [
+        {value: 'small', text: str.cardrow_size_small},
+        {value: 'medium', text: str.cardrow_size_medium},
+        {value: 'large', text: str.cardrow_size_large},
+    ], 'medium') +
+    selectField('cr_radius', str.cardrow_radius, [
+        {value: 'none', text: str.cardrow_radius_none},
+        {value: 'small', text: str.cardrow_size_small},
+        {value: 'medium', text: str.cardrow_size_medium},
+        {value: 'large', text: str.cardrow_size_large},
+    ], 'medium') +
+    checkboxField('cr_bg_on', str.cardrow_bg, true) +
+    colourField('cr_bg', str.cardrow_bg_colour, '#f3f0fa') +
+    checkboxField('cr_text_on', str.cardrow_text, false) +
+    colourField('cr_text', str.cardrow_text_colour, '#212529') +
+    checkboxField('cr_border_on', str.cardrow_border, false) +
+    colourField('cr_border', str.cardrow_border_colour, '#dee2e6') +
+    checkboxField('cr_shadow', str.cardrow_shadow, true);
+
 const openCardRowDialog = async(editor) => {
     const [title, insertLabel, browseLabel] = await Promise.all([
         getString('dialog_cardrow_title', component),
@@ -1905,10 +2007,12 @@ const openCardRowDialog = async(editor) => {
         getString('browse', component),
     ]);
 
-    // Render a fixed set of card slots; blank ones are dropped on insert, so the
-    // author fills as many (two to six) as they need without a re-rendering count.
+    // Render the shared styling controls, then a fixed set of card slots; blank
+    // ones are dropped on insert, so the author fills as many (two to six) as
+    // they need without a re-rendering count.
     const cardMax = 6;
-    const body = Array.from({length: cardMax}, (_, i) => cardRowCardSection(i + 1, browseLabel)).join('');
+    const body = cardRowStyleSection()
+        + Array.from({length: cardMax}, (_, i) => cardRowCardSection(i + 1, browseLabel)).join('');
 
     const modal = await openModal(title, body, insertLabel);
     const root = modal.getRoot()[0];
@@ -1927,7 +2031,21 @@ const openCardRowDialog = async(editor) => {
         // own so whitespace in one (e.g. a stray space in the title) does not
         // mask real content in another.
         })).filter((c) => [c.title, c.body, c.imageUrl, c.btnText].some((v) => (v || '').trim()));
-        editor.insertContent(buildCardRow(cards));
+        const size = CARDROW_SIZES[root.querySelector('[name="cr_size"]').value] || CARDROW_SIZES.medium;
+        const opts = {
+            width: size.width,
+            height: size.height,
+            imageHeight: size.imageHeight,
+            radius: CARDROW_RADII[root.querySelector('[name="cr_radius"]').value] || '',
+            bg: root.querySelector('[name="cr_bg_on"]').checked
+                ? root.querySelector('[name="cr_bg"]').value : '',
+            textColour: root.querySelector('[name="cr_text_on"]').checked
+                ? root.querySelector('[name="cr_text"]').value : '',
+            border: root.querySelector('[name="cr_border_on"]').checked
+                ? root.querySelector('[name="cr_border"]').value : '',
+            shadow: root.querySelector('[name="cr_shadow"]').checked,
+        };
+        editor.insertContent(buildCardRow(cards, opts));
     });
 };
 
