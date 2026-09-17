@@ -81,6 +81,9 @@ const onCardRowNav = (event) => {
     if (!btn) {
         return;
     }
+    // The control is an anchor (Moodle strips user-content buttons), so stop it
+    // following its placeholder href and jumping the page to the top.
+    event.preventDefault();
     const row = btn.closest('.tiny-bs-cardrow');
     const track = row && row.querySelector('[data-cardrow-track]');
     if (!track) {

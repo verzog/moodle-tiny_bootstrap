@@ -7,6 +7,18 @@ All notable changes to the **Bootstrap Scaffolding** TinyMCE plugin
 Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 `requires = 2025041400`). Requires **PHP 8.2+** and a Bootstrap 5 theme.
 
+## 1.4.7
+
+### Fixes
+- **Card Row arrows now work on view pages** — the prev/next controls were
+  rendered as `<button>` elements, which Moodle's output sanitiser strips from
+  saved content (leaving a bare chevron), so the arrows did nothing on a live
+  page. They are now anchors (`<a role="button">`), which survive the
+  sanitiser; native touch/trackpad scrolling was unaffected.
+- **Carousel prev/next and indicators** — rebuilt on the same anchor pattern so
+  the manual controls and slide dots survive the sanitiser and keep working on
+  view pages, not only inside the editor.
+
 ## 1.4.6
 
 ### Features
