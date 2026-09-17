@@ -7,6 +7,17 @@ All notable changes to the **Bootstrap Scaffolding** TinyMCE plugin
 Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 `requires = 2025041400`). Requires **PHP 8.2+** and a Bootstrap 5 theme.
 
+## 1.4.6
+
+### Features
+- **Card Row** — a new component that inserts a **horizontally scrolling row of
+  cards**, several visible at once (about three on a wide screen, fewer on a
+  phone), with prev/next arrows that scroll one card at a time and native
+  touch/trackpad swiping. Each card takes a heading, rich body text, an optional
+  image, and an optional button (text, link, colour). Fill in as many cards as
+  you need (blank cards are dropped). Ideal for "upcoming intakes"-style
+  card strips where you want more than one card in view at once.
+
 ## 1.4.5
 
 ### Fixes
