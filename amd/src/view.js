@@ -74,6 +74,25 @@ const onFullscreenClick = (event) => {
     }
 };
 
+// Scroll a card row by roughly one card when its prev/next control is clicked.
+// The row is natively swipeable/scrollable; the arrows are a convenience.
+const onCardRowNav = (event) => {
+    const btn = event.target.closest('[data-cardrow-nav]');
+    if (!btn) {
+        return;
+    }
+    const row = btn.closest('.tiny-bs-cardrow');
+    const track = row && row.querySelector('[data-cardrow-track]');
+    if (!track) {
+        return;
+    }
+    const direction = btn.getAttribute('data-cardrow-nav') === 'prev' ? -1 : 1;
+    const card = track.querySelector('.card');
+    // Step by one card width plus the gap, or most of the viewport as a fallback.
+    const step = card ? card.getBoundingClientRect().width + 16 : track.clientWidth * 0.8;
+    track.scrollBy({left: direction * step, behavior: 'smooth'});
+};
+
 export const init = () => {
     if (window.tinyBootstrapViewInit) {
         return;
@@ -81,4 +100,5 @@ export const init = () => {
     window.tinyBootstrapViewInit = true;
     document.addEventListener('hidden.bs.modal', onHidden, true);
     document.addEventListener('click', onFullscreenClick, false);
+    document.addEventListener('click', onCardRowNav, false);
 };

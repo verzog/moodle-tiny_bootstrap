@@ -51,6 +51,13 @@ const SVG = {
         + '<rect x="9.25" y="5" width="5.5" height="14" rx="1"/>'
         + '<rect x="15.5" y="5" width="5.5" height="14" rx="1"/>'
         + '</svg>',
+    cardrow: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" '
+        + 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
+        + 'stroke-linejoin="round" aria-hidden="true">'
+        + '<rect x="2.5" y="7" width="7" height="10" rx="1"/>'
+        + '<rect x="11" y="7" width="7" height="10" rx="1"/>'
+        + '<path d="M20 9.5l2 2.5-2 2.5"/>'
+        + '</svg>',
     image: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" '
         + 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
         + 'stroke-linejoin="round" aria-hidden="true">'
@@ -785,6 +792,62 @@ ${carouselControl(uid, 'next', str.next)}
 </div>`;
 };
 
+// A horizontally scrolling row of Bootstrap cards. Several cards are visible at
+// once (about three on a wide screen, fewer on a phone), and the prev/next
+// controls scroll the row by one card. Everything is styled inline so it renders
+// on view pages without the plugin stylesheet; the arrows use the view AMD
+// module. cards is a list of {title, body, imageUrl, imageAlt, btnText, btnUrl,
+// btnVariant}.
+const buildCardRow = (cards) => {
+    const uid = 'bsRow' + Math.random().toString(36).slice(2, 9);
+    const items = cards.map((c, i) => {
+        const title = escapeHtml(c.title);
+        const body = sanitizeRich(c.body);
+        const btnText = escapeHtml(c.btnText);
+        const btnHref = escapeHtml((c.btnUrl || '').trim()) || '#';
+        const btnVariant = escapeHtml(c.btnVariant) || 'primary';
+        const imageUrl = escapeHtml((c.imageUrl || '').trim());
+        const imageAlt = escapeHtml(c.imageAlt) || escapeHtml(fmt(str.card_default, i + 1));
+        const img = imageUrl
+            ? `\n      <img src="${imageUrl}" class="card-img-top" alt="${imageAlt}">`
+            : '';
+        const btn = btnText
+            ? `\n        <a class="btn btn-${btnVariant} mt-3 align-self-start" href="${btnHref}" role="button">${btnText}</a>`
+            : '';
+        // The flex-basis with min() keeps each card near a phone-width single
+        // column on small screens and about a third of a wide container on
+        // desktop, without needing media queries in the plugin stylesheet.
+        return `    <div class="card h-100" style="flex:0 0 min(85vw, 320px);scroll-snap-align:start;">${img}
+      <div class="card-body d-flex flex-column">
+        ${title ? `<h5 class="card-title">${title}</h5>` : ''}
+        ${body ? `<div class="card-text">${body}</div>` : ''}${btn}
+      </div>
+    </div>`;
+    }).join('\n');
+    const navBtn = (dir, label) => {
+        const path = dir === 'prev' ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6';
+        const side = dir === 'prev' ? 'left:0.25rem;' : 'right:0.25rem;';
+        const disc = `position:absolute;top:50%;transform:translateY(-50%);${side}z-index:2;`
+            + 'display:inline-flex;align-items:center;justify-content:center;width:2.75rem;'
+            + 'height:2.75rem;border:0;border-radius:50%;background:rgba(0,0,0,0.5);'
+            + 'box-shadow:0 1px 4px rgba(0,0,0,0.35);cursor:pointer;';
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"`
+            + ` fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"`
+            + ` stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
+        return `  <button type="button" class="tiny-bs-cardrow-nav" data-cardrow-nav="${dir}"`
+            + ` aria-label="${escapeHtml(label)}" style="${disc}">${svg}</button>`;
+    };
+    return `<!-- Bootstrap 5 scrolling card row -->
+<div class="tiny-bs-cardrow" id="${uid}" style="position:relative;">
+${navBtn('prev', str.previous)}
+  <div class="tiny-bs-cardrow-track" data-cardrow-track style="display:flex;gap:1rem;`
+        + `overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:0.5rem 3.25rem;">
+${items}
+  </div>
+${navBtn('next', str.next)}
+</div>`;
+};
+
 const buildAccordion = (sections) => {
     const uid = 'bsAcc' + Math.random().toString(36).slice(2, 9);
     const items = sections.map((s, i) => {
@@ -1301,7 +1364,7 @@ const componentTile = (value, label, svg) =>
 const openPicker = async(editor) => {
     const [
         dialogTitle, gridLabel, headingLabel, cardsLabel, imageLabel,
-        jumbotronLabel, carouselLabel, accordionLabel, tableLabel,
+        jumbotronLabel, carouselLabel, cardrowLabel, accordionLabel, tableLabel,
         imagetextLabel, videotextLabel, dropdownLabel, cheatsheetLabel,
     ] = await Promise.all([
         getString('dialog_title', component),
@@ -1311,6 +1374,7 @@ const openPicker = async(editor) => {
         getString('component_image', component),
         getString('component_jumbotron', component),
         getString('component_carousel', component),
+        getString('component_cardrow', component),
         getString('component_accordion', component),
         getString('component_table', component),
         getString('component_imagetext', component),
@@ -1326,6 +1390,7 @@ const openPicker = async(editor) => {
         ${componentTile('image', imageLabel, SVG.image)}
         ${componentTile('jumbotron', jumbotronLabel, SVG.jumbotron)}
         ${componentTile('carousel', carouselLabel, SVG.carousel)}
+        ${componentTile('cardrow', cardrowLabel, SVG.cardrow)}
         ${componentTile('accordion', accordionLabel, SVG.accordion)}
         ${componentTile('table', tableLabel, SVG.table)}
         ${componentTile('imagetext', imagetextLabel, SVG.imagetext)}
@@ -1353,6 +1418,7 @@ const openPicker = async(editor) => {
                 case 'image': openImageDialog(editor); break;
                 case 'jumbotron': openJumbotronDialog(editor); break;
                 case 'carousel': openCarouselDialog(editor); break;
+                case 'cardrow': openCardRowDialog(editor); break;
                 case 'accordion': openAccordionDialog(editor); break;
                 case 'table': openTableDialog(editor); break;
                 case 'imagetext': openImageTextDialog(editor); break;
@@ -1785,6 +1851,49 @@ const openCarouselDialog = async(editor) => {
             opacity: root.querySelector('[name="caption_bg_opacity"]').value,
         };
         editor.insertContent(buildCarousel(slides, ratio, autoslide, captionBg));
+    });
+};
+
+const cardRowCardSection = (i, browseLabel) =>
+    `<h6 class="mt-3 mb-2 text-muted text-uppercase small">${escapeHtml(fmt(str.card_default, i))}</h6>` +
+    textField(`cr_title_${i}`, str.card_title, fmt(str.card_default, i)) +
+    richField(`cr_body_${i}`, str.body_text, str.card_placeholder_body) +
+    urlField(`cr_img_${i}`, str.image_url, browseLabel, '') +
+    textField(`cr_alt_${i}`, str.alt_text, str.describe_image) +
+    textField(`cr_btn_text_${i}`, str.slide_button, str.jumbotron_button_placeholder) +
+    textField(`cr_btn_url_${i}`, str.slide_button_url, str.item_link_placeholder) +
+    selectField(`cr_btn_variant_${i}`, str.slide_button_colour,
+        ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark']
+            .map((v) => ({value: v, text: str[`colour_${v}`]})), 'primary');
+
+const openCardRowDialog = async(editor) => {
+    const [title, insertLabel, browseLabel] = await Promise.all([
+        getString('dialog_cardrow_title', component),
+        getString('insert', component),
+        getString('browse', component),
+    ]);
+
+    // Render a fixed set of card slots; blank ones are dropped on insert, so the
+    // author fills as many (two to six) as they need without a re-rendering count.
+    const cardMax = 6;
+    const body = Array.from({length: cardMax}, (_, i) => cardRowCardSection(i + 1, browseLabel)).join('');
+
+    const modal = await openModal(title, body, insertLabel);
+    const root = modal.getRoot()[0];
+    wireBrowseButtons(editor, root);
+    wireRichEditors(root);
+    modal.getRoot().on(ModalEvents.save, () => {
+        const cards = Array.from({length: cardMax}, (_, i) => ({
+            title: root.querySelector(`[name="cr_title_${i + 1}"]`).value,
+            body: getRich(root, `cr_body_${i + 1}`),
+            imageUrl: root.querySelector(`[name="cr_img_${i + 1}"]`).value,
+            imageAlt: root.querySelector(`[name="cr_alt_${i + 1}"]`).value,
+            btnText: root.querySelector(`[name="cr_btn_text_${i + 1}"]`).value,
+            btnUrl: root.querySelector(`[name="cr_btn_url_${i + 1}"]`).value,
+            btnVariant: root.querySelector(`[name="cr_btn_variant_${i + 1}"]`).value,
+        // Keep only cards the author actually filled in.
+        })).filter((c) => (c.title || c.body || c.imageUrl || c.btnText).trim());
+        editor.insertContent(buildCardRow(cards));
     });
 };
 

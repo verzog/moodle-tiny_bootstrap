@@ -12,7 +12,8 @@ ready-made Bootstrap 5 HTML components without writing any code.
 | **Card Group** | 2–4 equal-width Bootstrap cards, each with an image, title, and body |
 | **Image with Zoom Modal** | A thumbnail that opens a full-size Bootstrap 5 modal with an optional caption and a left/centre/right alignment choice |
 | **Jumbotron** | A hero/banner section with title, lead text, and a call-to-action button |
-| **Carousel** | A Bootstrap 5 image slideshow/carousel |
+| **Carousel** | A Bootstrap 5 image slideshow/carousel (one slide at a time) |
+| **Card Row** | A horizontally scrolling row of cards — several visible at once (≈3 on desktop, fewer on mobile) with prev/next arrows and swipe; each card has a heading, body, optional image and optional button |
 | **Accordion** | A collapsible accordion with a configurable number of sections |
 | **Responsive Table** | A Bootstrap-wrapped table with optional header row and caption |
 | **Image and Text** | A zoomable image beside a heading and body text — image left/text right or image right/text left |
