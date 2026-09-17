@@ -83,3 +83,9 @@
     content: attr(data-placeholder);
     color: #6c757d;
 }
+
+/* Raw HTML source view for the rich-text fields — monospaced for editing markup. */
+.tiny-bs-rich-source {
+    font-family: var(--bs-font-monospace, monospace);
+    font-size: 0.85rem;
+}

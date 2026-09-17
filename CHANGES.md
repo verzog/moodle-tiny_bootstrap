@@ -7,6 +7,17 @@ All notable changes to the **Bootstrap Scaffolding** TinyMCE plugin
 Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 `requires = 2025041400`). Requires **PHP 8.2+** and a Bootstrap 5 theme.
 
+## 1.4.3
+
+### Features
+- **Per-slide carousel button** — each carousel slide can now show an optional
+  call-to-action button (button text, link and a Bootstrap colour) in its
+  caption.
+- **HTML source view** on the rich-text content fields — a `</>` toggle lets you
+  view and edit the raw HTML and paste in preformatted markup. Pasted HTML is
+  kept (headings, tables, styled blocks, links, images) and cleaned by Moodle's
+  output sanitiser when the page renders.
+
 ## 1.4.2
 
 ### Compatibility

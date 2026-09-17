@@ -169,63 +169,109 @@ const STRING_KEYS = [
     'cheatsheet_tables', 'cheatsheet_nav', 'cheatsheet_link',
     'cheatsheet_accordion', 'placeholder_button',
     'rich_bold', 'rich_italic', 'rich_link', 'rich_unlink', 'rich_link_prompt',
-    'videotext_open_modal', 'videotext_fullscreen', 'cancel',
+    'rich_source', 'videotext_open_modal', 'videotext_fullscreen', 'cancel',
+    'slide_button', 'slide_button_url', 'slide_button_colour',
 ];
 
-// Tags allowed in the lightweight rich-text fields, with their permitted
-// attributes. Everything else is unwrapped (kept as text) or dropped. This is
-// a defence-in-depth client-side pass; Moodle re-filters the saved HTML through
-// its own text sanitiser when the content is displayed.
+// Structural and formatting tags allowed in the rich-text fields, with any
+// tag-specific attributes. This is broad on purpose so authors can paste
+// preformatted HTML (headings, tables, styled blocks, links, images); it is a
+// client-side safety pass only — Moodle re-filters the saved HTML through its
+// own text sanitiser (HTMLPurifier) when the content is displayed.
 const RICH_ALLOWED = {
-    A: ['href'], B: [], STRONG: [], I: [], EM: [], U: [], BR: [], P: [], DIV: [],
+    A: ['href', 'target', 'rel'], ABBR: [], ADDRESS: [], B: [], BLOCKQUOTE: [],
+    BR: [], CAPTION: [], CODE: [], COL: ['span'], COLGROUP: ['span'], DD: [],
+    DIV: [], DL: [], DT: [], EM: [], FIGCAPTION: [], FIGURE: [], H1: [], H2: [],
+    H3: [], H4: [], H5: [], H6: [], HR: [], I: [], IMG: ['src', 'alt', 'width', 'height'],
+    LI: ['value'], MARK: [], OL: ['start', 'type'], P: [], PRE: [], S: [], SMALL: [],
+    SPAN: [], STRONG: [], SUB: [], SUP: [], TABLE: [], TBODY: [],
+    TD: ['colspan', 'rowspan'], TFOOT: [], TH: ['colspan', 'rowspan', 'scope'],
+    THEAD: [], TR: [], U: [], UL: [],
 };
 
-// Sanitise rich-text field HTML down to the RICH_ALLOWED whitelist. Disallowed
-// elements are unwrapped so their text survives; disallowed attributes are
-// stripped; link targets are restricted to safe URL schemes.
+// Attributes allowed on any permitted element (plus aria-*/data-* by prefix).
+const RICH_GLOBAL_ATTRS = ['class', 'style', 'id', 'title', 'role', 'lang', 'dir'];
+
+// Elements removed entirely, along with their contents (never just unwrapped).
+const RICH_DROP = ['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'FORM', 'INPUT',
+    'BUTTON', 'SELECT', 'TEXTAREA', 'OPTION', 'LINK', 'META', 'BASE', 'NOSCRIPT',
+    'TITLE', 'SVG', 'MATH'];
+
+// Sanitise rich-text field HTML. Dangerous elements are dropped with their
+// contents; unknown-but-harmless elements are unwrapped (their text/children
+// survive); event-handler attributes and unsafe URL schemes are stripped.
 const sanitizeRich = (html) => {
     const tmp = document.createElement('div');
     tmp.innerHTML = html || '';
     const walk = (node) => {
         Array.prototype.slice.call(node.childNodes).forEach((child) => {
-            if (child.nodeType === 1) {
-                const tag = child.tagName;
-                if (!RICH_ALLOWED[tag]) {
-                    walk(child);
-                    while (child.firstChild) {
-                        node.insertBefore(child.firstChild, child);
-                    }
-                    node.removeChild(child);
+            if (child.nodeType === 8) {
+                node.removeChild(child);
+                return;
+            }
+            if (child.nodeType !== 1) {
+                return;
+            }
+            const tag = child.tagName;
+            if (RICH_DROP.indexOf(tag) !== -1) {
+                node.removeChild(child);
+                return;
+            }
+            if (!RICH_ALLOWED[tag]) {
+                // Keep the content of unknown but non-dangerous wrappers.
+                walk(child);
+                while (child.firstChild) {
+                    node.insertBefore(child.firstChild, child);
+                }
+                node.removeChild(child);
+                return;
+            }
+            Array.prototype.slice.call(child.attributes).forEach((attr) => {
+                const name = attr.name.toLowerCase();
+                const permitted = name.indexOf('aria-') === 0 || name.indexOf('data-') === 0
+                    || RICH_GLOBAL_ATTRS.indexOf(name) !== -1
+                    || RICH_ALLOWED[tag].indexOf(name) !== -1;
+                if (!permitted || name.indexOf('on') === 0) {
+                    child.removeAttribute(attr.name);
                     return;
                 }
-                Array.prototype.slice.call(child.attributes).forEach((attr) => {
-                    if (RICH_ALLOWED[tag].indexOf(attr.name.toLowerCase()) === -1) {
+                const value = (attr.value || '').trim();
+                if (name === 'href') {
+                    if (!/^(https?:|mailto:|tel:|\/|#)/i.test(value)) {
                         child.removeAttribute(attr.name);
-                    }
-                });
-                if (tag === 'A') {
-                    const href = (child.getAttribute('href') || '').trim();
-                    // Only permit safe schemes and relative or anchor links.
-                    if (!/^(https?:|mailto:|\/|#)/i.test(href)) {
-                        child.removeAttribute('href');
                     } else {
                         child.setAttribute('rel', 'noopener noreferrer');
                     }
+                } else if (name === 'src') {
+                    if (!/^(https?:|\/|data:image\/)/i.test(value)) {
+                        child.removeAttribute(attr.name);
+                    }
+                } else if (name === 'style' && /(javascript:|expression\s*\(|url\s*\(\s*['"]?\s*javascript:)/i.test(value)) {
+                    child.removeAttribute(attr.name);
                 }
-                walk(child);
-            } else if (child.nodeType === 8) {
-                node.removeChild(child);
-            }
+            });
+            walk(child);
         });
     };
     walk(tmp);
     return tmp.innerHTML.trim();
 };
 
-// Read the raw HTML from a rich-text field within a container (empty if absent).
+// Read the current HTML from a rich-text field element, honouring whichever
+// view (WYSIWYG or raw HTML source) is active.
+const readRichEl = (el) => {
+    const wrap = el.closest('[data-rich-wrap]');
+    const source = wrap && wrap.querySelector('[data-rich-source]');
+    if (wrap && wrap.dataset.richMode === 'source' && source) {
+        return source.value;
+    }
+    return el.innerHTML;
+};
+
+// Read the raw HTML from a named rich-text field within a container.
 const getRich = (root, name) => {
     const el = root.querySelector(`[data-rich="${name}"]`);
-    return el ? el.innerHTML : '';
+    return el ? readRichEl(el) : '';
 };
 
 const loadStrings = async() => {
@@ -630,10 +676,16 @@ const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => 
         const alt = escapeHtml(s.imageAlt) || escapeHtml(fmt(str.slide_default, i + 1));
         const caption = escapeHtml(s.captionTitle);
         const text = sanitizeRich(s.captionText);
-        const captionHtml = (caption || text)
+        const btnText = escapeHtml(s.btnText);
+        const btnHref = escapeHtml((s.btnUrl || '').trim()) || '#';
+        const btnVariant = escapeHtml(s.btnVariant) || 'primary';
+        const btnHtml = btnText
+            ? `\n        <a class="btn btn-${btnVariant}" href="${btnHref}" role="button">${btnText}</a>`
+            : '';
+        const captionHtml = (caption || text || btnText)
             ? `\n      <div class="carousel-caption d-none d-md-block"${capStyle}>
         ${caption ? `<h5>${caption}</h5>` : ''}
-        ${text ? `<div>${text}</div>` : ''}
+        ${text ? `<div>${text}</div>` : ''}${btnHtml}
       </div>`
             : '';
         return `    <div class="carousel-item${i === 0 ? ' active' : ''}">
@@ -919,8 +971,8 @@ const textField = (name, label, placeholder = '') =>
     </div>`;
 
 // A lightweight rich-text field: a contenteditable box with a small toolbar
-// (bold, italic, insert/remove link) so authors can embed hyperlinks in body
-// and caption text. The value is read with getRich() and sanitised on insert.
+// (bold, italic, insert/remove link, and an HTML source toggle for pasting
+// preformatted HTML). The value is read with getRich() and sanitised on insert.
 const richField = (name, label, placeholder = '') =>
     `<div class="form-group mb-3">
         <label for="${name}" class="form-label">${escapeHtml(label)}</label>
@@ -935,6 +987,8 @@ const richField = (name, label, placeholder = '') =>
                             title="${escapeHtml(str.rich_link)}">&#128279;</button>
                     <button type="button" class="btn btn-outline-secondary" data-rich-cmd="unlink"
                             title="${escapeHtml(str.rich_unlink)}">&#9741;</button>
+                    <button type="button" class="btn btn-outline-secondary" data-rich-cmd="source"
+                            title="${escapeHtml(str.rich_source)}">&lt;/&gt;</button>
                 </div>
             </div>
             <div class="input-group input-group-sm mb-1 d-none" data-rich-linkrow>
@@ -946,6 +1000,8 @@ const richField = (name, label, placeholder = '') =>
             <div id="${name}" data-rich="${name}" class="form-control tiny-bs-rich-input"
                  contenteditable="true" role="textbox" aria-multiline="true"
                  aria-label="${escapeHtml(label)}" data-placeholder="${escapeHtml(placeholder)}"></div>
+            <textarea class="form-control tiny-bs-rich-source d-none" data-rich-source rows="6"
+                      spellcheck="false" aria-label="${escapeHtml(label)}"></textarea>
         </div>
     </div>`;
 
@@ -1033,9 +1089,27 @@ const wireRichEditors = (root) => {
         }
         wrap.dataset.richWired = '1';
         const editable = wrap.querySelector('[data-rich]');
+        const source = wrap.querySelector('[data-rich-source]');
         const linkRow = wrap.querySelector('[data-rich-linkrow]');
         const linkUrl = wrap.querySelector('[data-rich-linkurl]');
         let savedRange = null;
+
+        // Toggle between the WYSIWYG box and the raw HTML source textarea,
+        // syncing content across in both directions so either view is current.
+        const toggleSource = () => {
+            if (wrap.dataset.richMode === 'source') {
+                editable.innerHTML = source.value;
+                source.classList.add('d-none');
+                editable.classList.remove('d-none');
+                wrap.dataset.richMode = 'wysiwyg';
+            } else {
+                source.value = editable.innerHTML;
+                editable.classList.add('d-none');
+                source.classList.remove('d-none');
+                linkRow.classList.add('d-none');
+                wrap.dataset.richMode = 'source';
+            }
+        };
 
         const exec = (cmd, value = null) => {
             editable.focus();
@@ -1069,6 +1143,15 @@ const wireRichEditors = (root) => {
             btn.addEventListener('mousedown', (e) => e.preventDefault());
             btn.addEventListener('click', () => {
                 const cmd = btn.dataset.richCmd;
+                if (cmd === 'source') {
+                    toggleSource();
+                    btn.classList.toggle('active', wrap.dataset.richMode === 'source');
+                    return;
+                }
+                // Formatting commands only apply to the WYSIWYG view.
+                if (wrap.dataset.richMode === 'source') {
+                    return;
+                }
                 if (cmd === 'createLink') {
                     const sel = window.getSelection();
                     savedRange = (sel && sel.rangeCount) ? sel.getRangeAt(0).cloneRange() : null;
@@ -1299,7 +1382,7 @@ const openCardDialog = async(editor) => {
             snapshot.inputs[el.name] = el.value;
         });
         cardsRegion.querySelectorAll('[data-rich]').forEach((el) => {
-            snapshot.rich[el.dataset.rich] = el.innerHTML;
+            snapshot.rich[el.dataset.rich] = readRichEl(el);
         });
         return snapshot;
     };
@@ -1536,7 +1619,12 @@ const carouselSlideSection = (i, browseLabel) =>
     urlField(`slide_url_${i}`, str.image_url, browseLabel, 'https://placehold.co/1200x500?text=Slide+Image') +
     textField(`slide_alt_${i}`, str.alt_text, str.describe_image) +
     textField(`slide_title_${i}`, str.caption_title, fmt(str.slide_default, i)) +
-    richField(`slide_text_${i}`, str.caption_text, str.caption_text_placeholder);
+    richField(`slide_text_${i}`, str.caption_text, str.caption_text_placeholder) +
+    textField(`slide_btn_text_${i}`, str.slide_button, str.jumbotron_button_placeholder) +
+    textField(`slide_btn_url_${i}`, str.slide_button_url, str.item_link_placeholder) +
+    selectField(`slide_btn_variant_${i}`, str.slide_button_colour,
+        ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark']
+            .map((v) => ({value: v, text: str[`colour_${v}`]})), 'primary');
 
 const openCarouselDialog = async(editor) => {
     const [
@@ -1600,6 +1688,9 @@ const openCarouselDialog = async(editor) => {
             imageAlt: root.querySelector(`[name="slide_alt_${i + 1}"]`).value,
             captionTitle: root.querySelector(`[name="slide_title_${i + 1}"]`).value,
             captionText: getRich(root, `slide_text_${i + 1}`),
+            btnText: root.querySelector(`[name="slide_btn_text_${i + 1}"]`).value,
+            btnUrl: root.querySelector(`[name="slide_btn_url_${i + 1}"]`).value,
+            btnVariant: root.querySelector(`[name="slide_btn_variant_${i + 1}"]`).value,
         }));
         const ratio = root.querySelector('[name="carousel_ratio"]').value;
         const autoslide = root.querySelector('[name="carousel_autoslide"]').value;
@@ -1644,7 +1735,7 @@ const openAccordionDialog = async(editor) => {
             out.inputs[el.name] = el.value;
         });
         region.querySelectorAll('[data-rich]').forEach((el) => {
-            out.rich[el.dataset.rich] = el.innerHTML;
+            out.rich[el.dataset.rich] = readRichEl(el);
         });
         return out;
     };
