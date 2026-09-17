@@ -7,6 +7,17 @@ All notable changes to the **Bootstrap Scaffolding** TinyMCE plugin
 Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 `requires = 2025041400`). Requires **PHP 8.2+** and a Bootstrap 5 theme.
 
+## 1.4.5
+
+### Fixes
+- **Carousel content cards** — a slide left without an image now renders as a
+  content card whose height fits its caption/card content (and shows on every
+  screen size), instead of forcing a full-height stretched background. Paste a
+  styled card into a slide with no image to get a compact card carousel.
+- **Natural-height slides no longer upscale small images** — in "natural" (size
+  based on picture) mode a small picture keeps its own size, centred and capped
+  at 100% width, rather than being stretched to a tall full-width block.
+
 ## 1.4.4
 
 ### Fixes

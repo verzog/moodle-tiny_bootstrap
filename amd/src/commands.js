@@ -718,8 +718,7 @@ const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => 
         + ` aria-label="${escapeHtml(fmt(str.slide_default, i + 1))}"></button>`
     ).join('\n');
     const inner = slides.map((s, i) => {
-        const src = escapeHtml(s.imageUrl) || `https://placehold.co/1200x500?text=Slide+${i + 1}`;
-        const alt = escapeHtml(s.imageAlt) || escapeHtml(fmt(str.slide_default, i + 1));
+        const active = i === 0 ? ' active' : '';
         const caption = escapeHtml(s.captionTitle);
         const text = sanitizeRich(s.captionText);
         const btnText = escapeHtml(s.btnText);
@@ -728,6 +727,21 @@ const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => 
         const btnHtml = btnText
             ? `\n        <a class="btn btn-${btnVariant}" href="${btnHref}" role="button">${btnText}</a>`
             : '';
+        // Content-only slide: with no image the slide height follows the
+        // caption/card content (e.g. a pasted course-intake card) instead of a
+        // stretched background image. The content stays in normal flow and is
+        // shown on every breakpoint, not hidden below md like an overlay.
+        if (!s.imageUrl) {
+            const body = `${caption ? `<h5>${caption}</h5>` : ''}
+          ${text ? `<div>${text}</div>` : ''}${btnHtml}`;
+            return `    <div class="carousel-item${active}">
+      <div class="d-flex justify-content-center align-items-center text-center p-4"${capStyle}>
+        <div>${body}</div>
+      </div>
+    </div>`;
+        }
+        const src = escapeHtml(s.imageUrl);
+        const alt = escapeHtml(s.imageAlt) || escapeHtml(fmt(str.slide_default, i + 1));
         const captionHtml = (caption || text || btnText)
             ? `\n      <div class="carousel-caption d-none d-md-block"${capStyle}>
         ${caption ? `<h5>${caption}</h5>` : ''}
@@ -743,8 +757,12 @@ const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => 
         <a class="btn btn-${btnVariant}" href="${btnHref}" role="button">${btnText}</a>
       </div>`
             : '';
-        return `    <div class="carousel-item${i === 0 ? ' active' : ''}">
-      <img src="${src}" class="d-block w-100"${ratioCss} alt="${alt}">${captionHtml}${mobileBtn}
+        // Fixed-ratio slides fill the width and crop with object-fit. Natural
+        // mode keeps the image at its own size (capped at 100% and centred) so a
+        // small picture is not stretched up to a tall full-width block.
+        const imgClass = ratioCss ? 'd-block w-100' : 'd-block img-fluid mx-auto';
+        return `    <div class="carousel-item${active}">
+      <img src="${src}" class="${imgClass}"${ratioCss} alt="${alt}">${captionHtml}${mobileBtn}
     </div>`;
     }).join('\n');
     return `<!-- Bootstrap 5 carousel -->
