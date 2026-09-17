@@ -712,14 +712,20 @@ const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => 
     const rideAttrs = intervals[autoslide]
         ? ` data-bs-ride="carousel" data-bs-interval="${intervals[autoslide]}"`
         : ' data-bs-interval="false"';
+    // A slide with no image — and every slide in natural (non-fixed-ratio) mode —
+    // renders its content in normal flow rather than overlaid on a full-width
+    // image. When any such slide is present the white indicators can sit over a
+    // light page or card, so give them a dark hairline so they stay visible.
+    const fixedRatio = !!ratioCss;
+    const inflowPresent = !fixedRatio || slides.some((s) => !s.imageUrl);
+    const indStyle = inflowPresent ? ' style="box-shadow:0 0 0 1px rgba(0, 0, 0, 0.55);"' : '';
     const indicators = slides.map((_, i) =>
         `    <button type="button" data-bs-target="#${uid}" data-bs-slide-to="${i}"`
-        + `${i === 0 ? ' class="active" aria-current="true"' : ''}`
+        + `${i === 0 ? ' class="active" aria-current="true"' : ''}${indStyle}`
         + ` aria-label="${escapeHtml(fmt(str.slide_default, i + 1))}"></button>`
     ).join('\n');
     const inner = slides.map((s, i) => {
-        const src = escapeHtml(s.imageUrl) || `https://placehold.co/1200x500?text=Slide+${i + 1}`;
-        const alt = escapeHtml(s.imageAlt) || escapeHtml(fmt(str.slide_default, i + 1));
+        const active = i === 0 ? ' active' : '';
         const caption = escapeHtml(s.captionTitle);
         const text = sanitizeRich(s.captionText);
         const btnText = escapeHtml(s.btnText);
@@ -728,23 +734,42 @@ const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => 
         const btnHtml = btnText
             ? `\n        <a class="btn btn-${btnVariant}" href="${btnHref}" role="button">${btnText}</a>`
             : '';
-        const captionHtml = (caption || text || btnText)
-            ? `\n      <div class="carousel-caption d-none d-md-block"${capStyle}>
+        const alt = escapeHtml(s.imageAlt) || escapeHtml(fmt(str.slide_default, i + 1));
+        // Fixed-ratio image slide: the image fills a known-height box, so the
+        // caption can overlay it (hidden below md, with a mobile CTA bar). The
+        // Bootstrap caption keeps its own contrasting white text.
+        if (s.imageUrl && fixedRatio) {
+            const captionHtml = (caption || text || btnText)
+                ? `\n      <div class="carousel-caption d-none d-md-block"${capStyle}>
         ${caption ? `<h5>${caption}</h5>` : ''}
         ${text ? `<div>${text}</div>` : ''}${btnHtml}
       </div>`
-            : '';
-        // The caption is hidden below the md breakpoint, so the call-to-action
-        // is repeated in an always-visible bar for small screens (only one copy
-        // shows at a time).
-        const mobileBtn = btnText
-            ? `\n      <div class="d-md-none text-center"
+                : '';
+            const mobileBtn = btnText
+                ? `\n      <div class="d-md-none text-center"
            style="position:absolute;left:0;right:0;bottom:2rem;z-index:5;">
         <a class="btn btn-${btnVariant}" href="${btnHref}" role="button">${btnText}</a>
       </div>`
+                : '';
+            return `    <div class="carousel-item${active}">
+      <img src="${escapeHtml(s.imageUrl)}" class="d-block w-100"${ratioCss} alt="${alt}">${captionHtml}${mobileBtn}
+    </div>`;
+        }
+        // Natural-mode image slide, or a content-only slide: the image (at its
+        // own size, capped at 100%) and the caption both sit in normal flow, so
+        // the slide height follows the content and nothing is clipped, and the
+        // content shows on every breakpoint. Side padding keeps content out of
+        // the 15% side gutters where the nav controls sit, and no caption
+        // background is forced — a pasted card brings its own, and plain caption
+        // text keeps the theme's readable colour on the page.
+        const img = s.imageUrl
+            ? `\n        <img src="${escapeHtml(s.imageUrl)}" class="d-block img-fluid mx-auto mb-3" alt="${alt}">`
             : '';
-        return `    <div class="carousel-item${i === 0 ? ' active' : ''}">
-      <img src="${src}" class="d-block w-100"${ratioCss} alt="${alt}">${captionHtml}${mobileBtn}
+        const body = `${img}${caption ? `\n        <h5>${caption}</h5>` : ''}`
+            + `${text ? `\n        <div>${text}</div>` : ''}${btnHtml}`;
+        return `    <div class="carousel-item${active}">
+      <div class="text-center" style="padding:1.5rem 15%;">${body}
+      </div>
     </div>`;
     }).join('\n');
     return `<!-- Bootstrap 5 carousel -->

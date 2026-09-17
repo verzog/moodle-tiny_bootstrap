@@ -25,7 +25,7 @@ ready-made Bootstrap 5 HTML components without writing any code.
 - **Image with Zoom Modal** — choose an **alignment**: centred (default), left or right. Left/right float the image so surrounding text wraps alongside it, with a max-width that keeps a large image from overflowing a narrow content area (such as a quiz answer box).
 - **Card Group** — choose the **spacing between cards** and toggle **Include images** off for text-only cards.
 - **Jumbotron** — the call-to-action button now takes a **link (URL)**, and the background image/video field has a working **Browse repositories…** button.
-- **Carousel** — choose an **aspect ratio** (16:9, 4:3, 1:1, 21:9 or natural) so mismatched images line up, set a **caption background colour** with an opacity so overlaid text stays readable, add an optional **call-to-action button** (text, link and colour) per slide, and use the modernised prev/next controls.
+- **Carousel** — choose an **aspect ratio** (16:9, 4:3, 1:1, 21:9 or natural) so mismatched images line up, set a **caption background colour** with an opacity so overlaid text stays readable, add an optional **call-to-action button** (text, link and colour) per slide, and use the modernised prev/next controls. Leave a slide's image blank to get a **content card** slide whose height fits its content (e.g. a pasted "course intake" card) — useful for a compact card carousel with no background image. In **natural** ratio a small image keeps its own size instead of being stretched to full width.
 - **Responsive Table** — pick a **table colour** and **header colour** (Bootstrap contextual variants) and toggle **striped**, **bordered**, **hover** and **compact** styles.
 
 ### Rich text in content fields
