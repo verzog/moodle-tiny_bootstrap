@@ -62,6 +62,7 @@ $string['cardrow_border'] = 'Add a border to each card';
 $string['cardrow_border_colour'] = 'Border colour';
 $string['cardrow_radius'] = 'Corner rounding';
 $string['cardrow_radius_none'] = 'None';
+$string['cardrow_shadow'] = 'Add a drop shadow to each card';
 $string['cardrow_size'] = 'Card size';
 $string['cardrow_size_large'] = 'Large';
 $string['cardrow_size_medium'] = 'Medium';

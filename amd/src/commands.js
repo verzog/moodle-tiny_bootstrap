@@ -849,14 +849,14 @@ const buildCardRow = (cards, opts = {}) => {
         if (!imageUrl) {
             return '';
         }
-        // With a fixed card size the image sits in a fixed-height band and is
-        // cropped by a clipping wrapper rather than object-fit (whose support in
-        // the output sanitiser is not guaranteed), so a small or oddly shaped
-        // picture still fills the band without being distorted.
+        // With a fixed card size the image fills a fixed-height band and is
+        // centre-cropped with object-fit:cover so a differently shaped picture
+        // covers the band without distortion or empty strips. (The carousel
+        // aspect-ratio feature already relies on object-fit surviving the output
+        // sanitiser, so it is safe here too.)
         if (imageBand) {
-            return `\n      <div style="height:${imageBand}px;overflow:hidden;display:flex;`
-                + `align-items:center;justify-content:center;">`
-                + `<img src="${imageUrl}" alt="${imageAlt}" style="width:100%;height:auto;display:block;"></div>`;
+            return `\n      <img src="${imageUrl}" class="card-img-top" alt="${imageAlt}"`
+                + ` style="width:100%;height:${imageBand}px;object-fit:cover;">`;
         }
         return `\n      <img src="${imageUrl}" class="card-img-top" alt="${imageAlt}">`;
     };
@@ -888,7 +888,11 @@ const buildCardRow = (cards, opts = {}) => {
         }
         const style = [sizeParts.join(';'), look].filter(Boolean).join(';');
         const bodyOverflow = height ? ' style="overflow:hidden;"' : '';
-        return `    <div class="card h-100"${style ? ` style="${style}"` : ''}>${img}
+        // Keep the h-100 equal-height utility only when no explicit height is
+        // set; otherwise its "height:100% !important" overrides the preset card
+        // height and the row is no longer uniform.
+        const cardClass = height ? 'card' : 'card h-100';
+        return `    <div class="${cardClass}"${style ? ` style="${style}"` : ''}>${img}
       <div class="card-body d-flex flex-column"${bodyOverflow}>
         ${title ? `<h5 class="card-title">${title}</h5>` : ''}
         ${body ? `<div class="card-text">${body}</div>` : ''}${btn}
@@ -925,13 +929,16 @@ ${renderCard(cards[0], 0, false)}
     };
     // The scroll-padding-inline keeps a snapped card inset from the overlaid
     // arrows (the flex padding scrolls with the content, so it cannot reserve
-    // that gutter on its own once the row has been scrolled).
+    // that gutter on its own once the row has been scrolled). Setting overflow-x
+    // to auto also clips the vertical axis, so when the cards carry a drop
+    // shadow the track needs a taller vertical gutter or the shadow is cut off.
+    const trackPadY = shadow ? '1.5rem' : '0.5rem';
     return `<!-- Bootstrap 5 scrolling card row -->
 <div class="tiny-bs-cardrow" id="${uid}" style="position:relative;">
 ${navBtn('prev', str.previous)}
   <div class="tiny-bs-cardrow-track" data-cardrow-track style="display:flex;gap:1rem;`
         + `overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:3.25rem;`
-        + `scroll-behavior:smooth;padding:0.5rem 3.25rem;">
+        + `scroll-behavior:smooth;padding:${trackPadY} 3.25rem;">
 ${items}
   </div>
 ${navBtn('next', str.next)}
