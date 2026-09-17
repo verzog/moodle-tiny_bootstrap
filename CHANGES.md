@@ -15,8 +15,13 @@ Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
   screen size), instead of forcing a full-height stretched background. Paste a
   styled card into a slide with no image to get a compact card carousel.
 - **Natural-height slides no longer upscale small images** — in "natural" (size
-  based on picture) mode a small picture keeps its own size, centred and capped
-  at 100% width, rather than being stretched to a tall full-width block.
+  based on picture) mode the image and caption sit in normal flow, so a small
+  picture keeps its own size (centred, capped at 100% width) and the caption
+  is never clipped by a too-short slide.
+- Content and natural-mode slides keep the caption text readable (no forced
+  dark background behind theme text), reserve the side gutters so buttons and
+  links do not fall under the prev/next controls, and give the slide indicators
+  a hairline so they stay visible over a light page or card.
 
 ## 1.4.4
 
