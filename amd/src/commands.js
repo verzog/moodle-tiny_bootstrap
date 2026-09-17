@@ -695,10 +695,14 @@ const carouselControl = (uid, dir, label) => {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"`
         + ` fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"`
         + ` stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
-    return `  <button class="carousel-control-${dir}" type="button" data-bs-target="#${uid}" data-bs-slide="${dir}">
+    // An anchor, not a button: Moodle's output sanitiser drops a user-content
+    // button that carries no data-bs-* toggle (data-bs-slide is not one), so a
+    // button control is stripped from the page. Bootstrap's carousel data API
+    // drives an anchor control natively and suppresses its href navigation.
+    return `  <a class="carousel-control-${dir}" href="#" role="button" data-bs-target="#${uid}" data-bs-slide="${dir}">
     <span aria-hidden="true" style="${disc}">${svg}</span>
     <span class="visually-hidden">${escapeHtml(label)}</span>
-  </button>`;
+  </a>`;
 };
 
 // The ratio argument is '' (natural image height) or a CAROUSEL_RATIOS key
@@ -726,10 +730,13 @@ const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => 
     const fixedRatio = !!ratioCss;
     const inflowPresent = !fixedRatio || slides.some((s) => !s.imageUrl);
     const indStyle = inflowPresent ? ' style="box-shadow:0 0 0 1px rgba(0, 0, 0, 0.55);"' : '';
+    // Anchors, not buttons, for the same sanitiser reason as the controls
+    // above; the flex indicators container blockifies them so their bar size
+    // still applies, and the carousel data API drives them natively.
     const indicators = slides.map((_, i) =>
-        `    <button type="button" data-bs-target="#${uid}" data-bs-slide-to="${i}"`
+        `    <a href="#" role="button" data-bs-target="#${uid}" data-bs-slide-to="${i}"`
         + `${i === 0 ? ' class="active" aria-current="true"' : ''}${indStyle}`
-        + ` aria-label="${escapeHtml(fmt(str.slide_default, i + 1))}"></button>`
+        + ` aria-label="${escapeHtml(fmt(str.slide_default, i + 1))}"></a>`
     ).join('\n');
     const inner = slides.map((s, i) => {
         const active = i === 0 ? ' active' : '';
@@ -844,12 +851,17 @@ ${renderCard(cards[0], 0, false)}
         const disc = `position:absolute;top:50%;transform:translateY(-50%);${side}z-index:2;`
             + 'display:inline-flex;align-items:center;justify-content:center;width:2.75rem;'
             + 'height:2.75rem;border:0;border-radius:50%;background:rgba(0,0,0,0.5);'
-            + 'box-shadow:0 1px 4px rgba(0,0,0,0.35);cursor:pointer;';
+            + 'box-shadow:0 1px 4px rgba(0,0,0,0.35);cursor:pointer;text-decoration:none;';
         const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"`
             + ` fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"`
             + ` stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
-        return `  <button type="button" class="tiny-bs-cardrow-nav" data-cardrow-nav="${dir}"`
-            + ` aria-label="${escapeHtml(label)}" style="${disc}">${svg}</button>`;
+        // Rendered as an anchor rather than a button. Moodle's output sanitiser
+        // (HTMLPurifier) drops a user-content button that carries no recognised
+        // data-bs-* toggle, unwrapping its icon, so a button-based control never
+        // reaches the page. An anchor with role="button" survives; the view AMD
+        // module handles its click and suppresses the href navigation.
+        return `  <a href="#" role="button" class="tiny-bs-cardrow-nav" data-cardrow-nav="${dir}"`
+            + ` aria-label="${escapeHtml(label)}" style="${disc}">${svg}</a>`;
     };
     // The scroll-padding-inline keeps a snapped card inset from the overlaid
     // arrows (the flex padding scrolls with the content, so it cannot reserve
