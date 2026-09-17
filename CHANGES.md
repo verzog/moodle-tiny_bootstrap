@@ -13,6 +13,9 @@ Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 - **Security:** sanitise HTML when switching the source view back to WYSIWYG,
   parsing untrusted markup inertly (in a `<template>`) so pasted content such
   as `<img onerror>` can never run in the author's session.
+- **Security:** strip control characters from URLs before validating them, so
+  obfuscated schemes such as `java&#x09;script:` cannot slip through the
+  link/image scheme allowlist.
 - Preserve valid **relative image and link URLs** in pasted HTML (previously
   scheme-less paths like `images/photo.jpg` had their `src` stripped).
 - Drop pasted **`id` attributes** so components rendered twice (caption in a

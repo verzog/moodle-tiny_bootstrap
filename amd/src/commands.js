@@ -200,6 +200,19 @@ const RICH_DROP = ['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'FORM', 'INPU
     'BUTTON', 'SELECT', 'TEXTAREA', 'OPTION', 'LINK', 'META', 'BASE', 'NOSCRIPT',
     'TITLE', 'SVG', 'MATH'];
 
+// Remove C0 control characters and DEL from a string (browsers strip these
+// from URLs when navigating, so they must not survive scheme classification).
+const stripControlChars = (value) => {
+    let out = '';
+    for (let i = 0; i < value.length; i++) {
+        const code = value.charCodeAt(i);
+        if (code > 31 && code !== 127) {
+            out += value.charAt(i);
+        }
+    }
+    return out;
+};
+
 // Whether a URL value carries an explicit scheme, and if so which one.
 const richUrlScheme = (value) => {
     const m = /^([a-z][a-z0-9+.-]*):/i.exec(value);
@@ -253,7 +266,12 @@ const sanitizeRich = (html) => {
                     child.removeAttribute(attr.name);
                     return;
                 }
-                const value = (attr.value || '').trim();
+                // Strip C0 control characters and DEL before classifying URLs:
+                // browsers remove embedded tabs/newlines when navigating, so
+                // "java\tscript:" would otherwise slip past the scheme check as a
+                // relative link and then execute. The cleaned value is written
+                // back so the stored attribute matches what was validated.
+                const value = stripControlChars(attr.value || '').trim();
                 const scheme = richUrlScheme(value);
                 if (name === 'href') {
                     // Relative/anchor links (no scheme) are kept; only unsafe
@@ -261,13 +279,18 @@ const sanitizeRich = (html) => {
                     if (scheme && ['https', 'http', 'mailto', 'tel'].indexOf(scheme) === -1) {
                         child.removeAttribute(attr.name);
                     } else if (value) {
+                        child.setAttribute(attr.name, value);
                         child.setAttribute('rel', 'noopener noreferrer');
+                    } else {
+                        child.removeAttribute(attr.name);
                     }
                 } else if (name === 'src') {
                     // Keep relative image paths; reject unsafe schemes but allow
                     // http(s) and inline data:image payloads.
                     if (scheme && scheme !== 'https' && scheme !== 'http' && !/^data:image\//i.test(value)) {
                         child.removeAttribute(attr.name);
+                    } else if (value) {
+                        child.setAttribute(attr.name, value);
                     }
                 } else if (name === 'style' && /(javascript:|expression\s*\(|url\s*\(\s*['"]?\s*javascript:)/i.test(value)) {
                     child.removeAttribute(attr.name);
