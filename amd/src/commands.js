@@ -799,8 +799,7 @@ ${carouselControl(uid, 'next', str.next)}
 // module. cards is a list of {title, body, imageUrl, imageAlt, btnText, btnUrl,
 // btnVariant}.
 const buildCardRow = (cards) => {
-    const uid = 'bsRow' + Math.random().toString(36).slice(2, 9);
-    const items = cards.map((c, i) => {
+    const renderCard = (c, i, scrollable) => {
         const title = escapeHtml(c.title);
         const body = sanitizeRich(c.body);
         const btnText = escapeHtml(c.btnText);
@@ -817,13 +816,28 @@ const buildCardRow = (cards) => {
         // The flex-basis with min() keeps each card near a phone-width single
         // column on small screens and about a third of a wide container on
         // desktop, without needing media queries in the plugin stylesheet.
-        return `    <div class="card h-100" style="flex:0 0 min(85vw, 320px);scroll-snap-align:start;">${img}
+        const style = scrollable ? ' style="flex:0 0 min(85vw, 320px);scroll-snap-align:start;"' : '';
+        return `    <div class="card h-100"${style}>${img}
       <div class="card-body d-flex flex-column">
         ${title ? `<h5 class="card-title">${title}</h5>` : ''}
         ${body ? `<div class="card-text">${body}</div>` : ''}${btn}
       </div>
     </div>`;
-    }).join('\n');
+    };
+    // Nothing to insert if no card was filled in. A single card cannot scroll,
+    // so render it as a plain centred card with no track or arrows; the
+    // scrolling row and its controls are only used for two or more cards.
+    if (!cards.length) {
+        return '';
+    }
+    if (cards.length === 1) {
+        return `<!-- Bootstrap 5 card -->
+<div class="d-flex justify-content-center" style="max-width:340px;margin:0 auto;">
+${renderCard(cards[0], 0, false)}
+</div>`;
+    }
+    const uid = 'bsRow' + Math.random().toString(36).slice(2, 9);
+    const items = cards.map((c, i) => renderCard(c, i, true)).join('\n');
     const navBtn = (dir, label) => {
         const path = dir === 'prev' ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6';
         const side = dir === 'prev' ? 'left:0.25rem;' : 'right:0.25rem;';
@@ -837,11 +851,15 @@ const buildCardRow = (cards) => {
         return `  <button type="button" class="tiny-bs-cardrow-nav" data-cardrow-nav="${dir}"`
             + ` aria-label="${escapeHtml(label)}" style="${disc}">${svg}</button>`;
     };
+    // The scroll-padding-inline keeps a snapped card inset from the overlaid
+    // arrows (the flex padding scrolls with the content, so it cannot reserve
+    // that gutter on its own once the row has been scrolled).
     return `<!-- Bootstrap 5 scrolling card row -->
 <div class="tiny-bs-cardrow" id="${uid}" style="position:relative;">
 ${navBtn('prev', str.previous)}
   <div class="tiny-bs-cardrow-track" data-cardrow-track style="display:flex;gap:1rem;`
-        + `overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:0.5rem 3.25rem;">
+        + `overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:3.25rem;`
+        + `scroll-behavior:smooth;padding:0.5rem 3.25rem;">
 ${items}
   </div>
 ${navBtn('next', str.next)}
@@ -1188,10 +1206,12 @@ const wireBrowseButtons = (editor, root) => {
                 target.value = params.url;
                 // Mirror alt text into the matching alt field if present. The
                 // single-image dialog uses url/alt; the card group uses
-                // img_url_N/img_alt_N; the carousel uses slide_url_N/slide_alt_N.
+                // img_url_N/img_alt_N; the carousel uses slide_url_N/slide_alt_N;
+                // the card row uses cr_img_N/cr_alt_N.
                 const altName = btn.dataset.target
                     .replace(/^img_url_/, 'img_alt_')
                     .replace(/^slide_url_/, 'slide_alt_')
+                    .replace(/^cr_img_/, 'cr_alt_')
                     .replace(/^url$/, 'alt');
                 if (altName === btn.dataset.target) {
                     return;
@@ -1891,8 +1911,10 @@ const openCardRowDialog = async(editor) => {
             btnText: root.querySelector(`[name="cr_btn_text_${i + 1}"]`).value,
             btnUrl: root.querySelector(`[name="cr_btn_url_${i + 1}"]`).value,
             btnVariant: root.querySelector(`[name="cr_btn_variant_${i + 1}"]`).value,
-        // Keep only cards the author actually filled in.
-        })).filter((c) => (c.title || c.body || c.imageUrl || c.btnText).trim());
+        // Keep only cards the author actually filled in. Trim each field on its
+        // own so whitespace in one (e.g. a stray space in the title) does not
+        // mask real content in another.
+        })).filter((c) => [c.title, c.body, c.imageUrl, c.btnText].some((v) => (v || '').trim()));
         editor.insertContent(buildCardRow(cards));
     });
 };

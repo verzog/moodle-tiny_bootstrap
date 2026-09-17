@@ -86,11 +86,15 @@ const onCardRowNav = (event) => {
     if (!track) {
         return;
     }
-    const direction = btn.getAttribute('data-cardrow-nav') === 'prev' ? -1 : 1;
+    const forward = btn.getAttribute('data-cardrow-nav') !== 'prev';
     const card = track.querySelector('.card');
     // Step by one card width plus the gap, or most of the viewport as a fallback.
     const step = card ? card.getBoundingClientRect().width + 16 : track.clientWidth * 0.8;
-    track.scrollBy({left: direction * step, behavior: 'smooth'});
+    // In a right-to-left row the scroll axis is reversed, so moving to a later
+    // card is a negative scrollLeft delta on the browsers used here.
+    const rtl = window.getComputedStyle(track).direction === 'rtl';
+    const sign = (forward ? 1 : -1) * (rtl ? -1 : 1);
+    track.scrollBy({left: sign * step, behavior: 'smooth'});
 };
 
 export const init = () => {
