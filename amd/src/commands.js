@@ -190,19 +190,44 @@ const RICH_ALLOWED = {
 };
 
 // Attributes allowed on any permitted element (plus aria-*/data-* by prefix).
-const RICH_GLOBAL_ATTRS = ['class', 'style', 'id', 'title', 'role', 'lang', 'dir'];
+// Note: 'id' is deliberately excluded — some content is rendered twice (a
+// caption in both the figure and its zoom modal, a card body in both the card
+// and its modal), so preserving pasted ids would create duplicate document ids.
+const RICH_GLOBAL_ATTRS = ['class', 'style', 'title', 'role', 'lang', 'dir'];
 
 // Elements removed entirely, along with their contents (never just unwrapped).
 const RICH_DROP = ['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'FORM', 'INPUT',
     'BUTTON', 'SELECT', 'TEXTAREA', 'OPTION', 'LINK', 'META', 'BASE', 'NOSCRIPT',
     'TITLE', 'SVG', 'MATH'];
 
+// Remove C0 control characters and DEL from a string (browsers strip these
+// from URLs when navigating, so they must not survive scheme classification).
+const stripControlChars = (value) => {
+    let out = '';
+    for (let i = 0; i < value.length; i++) {
+        const code = value.charCodeAt(i);
+        if (code > 31 && code !== 127) {
+            out += value.charAt(i);
+        }
+    }
+    return out;
+};
+
+// Whether a URL value carries an explicit scheme, and if so which one.
+const richUrlScheme = (value) => {
+    const m = /^([a-z][a-z0-9+.-]*):/i.exec(value);
+    return m ? m[1].toLowerCase() : null;
+};
+
 // Sanitise rich-text field HTML. Dangerous elements are dropped with their
 // contents; unknown-but-harmless elements are unwrapped (their text/children
-// survive); event-handler attributes and unsafe URL schemes are stripped.
+// survive); event-handler attributes, the editor's reserved data-rich* hooks,
+// and unsafe URL schemes are stripped. Parsing happens inside a <template> so
+// that untrusted markup does not load resources or run handlers while it is
+// being cleaned.
 const sanitizeRich = (html) => {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = html || '';
+    const tpl = document.createElement('template');
+    tpl.innerHTML = html || '';
     const walk = (node) => {
         Array.prototype.slice.call(node.childNodes).forEach((child) => {
             if (child.nodeType === 8) {
@@ -228,6 +253,12 @@ const sanitizeRich = (html) => {
             }
             Array.prototype.slice.call(child.attributes).forEach((attr) => {
                 const name = attr.name.toLowerCase();
+                // Reserve the editor's own hooks so pasted markup cannot collide
+                // with the dialog's field selectors.
+                if (name.indexOf('data-rich') === 0) {
+                    child.removeAttribute(attr.name);
+                    return;
+                }
                 const permitted = name.indexOf('aria-') === 0 || name.indexOf('data-') === 0
                     || RICH_GLOBAL_ATTRS.indexOf(name) !== -1
                     || RICH_ALLOWED[tag].indexOf(name) !== -1;
@@ -235,16 +266,31 @@ const sanitizeRich = (html) => {
                     child.removeAttribute(attr.name);
                     return;
                 }
-                const value = (attr.value || '').trim();
+                // Strip C0 control characters and DEL before classifying URLs:
+                // browsers remove embedded tabs/newlines when navigating, so
+                // "java\tscript:" would otherwise slip past the scheme check as a
+                // relative link and then execute. The cleaned value is written
+                // back so the stored attribute matches what was validated.
+                const value = stripControlChars(attr.value || '').trim();
+                const scheme = richUrlScheme(value);
                 if (name === 'href') {
-                    if (!/^(https?:|mailto:|tel:|\/|#)/i.test(value)) {
+                    // Relative/anchor links (no scheme) are kept; only unsafe
+                    // explicit schemes are rejected.
+                    if (scheme && ['https', 'http', 'mailto', 'tel'].indexOf(scheme) === -1) {
                         child.removeAttribute(attr.name);
-                    } else {
+                    } else if (value) {
+                        child.setAttribute(attr.name, value);
                         child.setAttribute('rel', 'noopener noreferrer');
+                    } else {
+                        child.removeAttribute(attr.name);
                     }
                 } else if (name === 'src') {
-                    if (!/^(https?:|\/|data:image\/)/i.test(value)) {
+                    // Keep relative image paths; reject unsafe schemes but allow
+                    // http(s) and inline data:image payloads.
+                    if (scheme && scheme !== 'https' && scheme !== 'http' && !/^data:image\//i.test(value)) {
                         child.removeAttribute(attr.name);
+                    } else if (value) {
+                        child.setAttribute(attr.name, value);
                     }
                 } else if (name === 'style' && /(javascript:|expression\s*\(|url\s*\(\s*['"]?\s*javascript:)/i.test(value)) {
                     child.removeAttribute(attr.name);
@@ -253,8 +299,8 @@ const sanitizeRich = (html) => {
             walk(child);
         });
     };
-    walk(tmp);
-    return tmp.innerHTML.trim();
+    walk(tpl.content);
+    return tpl.innerHTML.trim();
 };
 
 // Read the current HTML from a rich-text field element, honouring whichever
@@ -688,8 +734,17 @@ const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => 
         ${text ? `<div>${text}</div>` : ''}${btnHtml}
       </div>`
             : '';
+        // The caption is hidden below the md breakpoint, so the call-to-action
+        // is repeated in an always-visible bar for small screens (only one copy
+        // shows at a time).
+        const mobileBtn = btnText
+            ? `\n      <div class="d-md-none text-center"
+           style="position:absolute;left:0;right:0;bottom:2rem;z-index:5;">
+        <a class="btn btn-${btnVariant}" href="${btnHref}" role="button">${btnText}</a>
+      </div>`
+            : '';
         return `    <div class="carousel-item${i === 0 ? ' active' : ''}">
-      <img src="${src}" class="d-block w-100"${ratioCss} alt="${alt}">${captionHtml}
+      <img src="${src}" class="d-block w-100"${ratioCss} alt="${alt}">${captionHtml}${mobileBtn}
     </div>`;
     }).join('\n');
     return `<!-- Bootstrap 5 carousel -->
@@ -1098,7 +1153,13 @@ const wireRichEditors = (root) => {
         // syncing content across in both directions so either view is current.
         const toggleSource = () => {
             if (wrap.dataset.richMode === 'source') {
-                editable.innerHTML = source.value;
+                // Sanitise before it becomes live DOM — assigning untrusted
+                // source HTML to innerHTML would otherwise parse and run it
+                // (e.g. <img onerror>) in the author's session. Sync the
+                // cleaned value back so both views agree.
+                const clean = sanitizeRich(source.value);
+                editable.innerHTML = clean;
+                source.value = clean;
                 source.classList.add('d-none');
                 editable.classList.remove('d-none');
                 wrap.dataset.richMode = 'wysiwyg';
@@ -1381,7 +1442,7 @@ const openCardDialog = async(editor) => {
         cardsRegion.querySelectorAll('input, textarea').forEach((el) => {
             snapshot.inputs[el.name] = el.value;
         });
-        cardsRegion.querySelectorAll('[data-rich]').forEach((el) => {
+        cardsRegion.querySelectorAll('[data-rich-wrap] > [data-rich]').forEach((el) => {
             snapshot.rich[el.dataset.rich] = readRichEl(el);
         });
         return snapshot;
@@ -1734,7 +1795,7 @@ const openAccordionDialog = async(editor) => {
         region.querySelectorAll('input, textarea').forEach((el) => {
             out.inputs[el.name] = el.value;
         });
-        region.querySelectorAll('[data-rich]').forEach((el) => {
+        region.querySelectorAll('[data-rich-wrap] > [data-rich]').forEach((el) => {
             out.rich[el.dataset.rich] = readRichEl(el);
         });
         return out;

@@ -7,6 +7,27 @@ All notable changes to the **Bootstrap Scaffolding** TinyMCE plugin
 Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 `requires = 2025041400`). Requires **PHP 8.2+** and a Bootstrap 5 theme.
 
+## 1.4.4
+
+### Fixes
+- **Security:** sanitise HTML when switching the source view back to WYSIWYG,
+  parsing untrusted markup inertly (in a `<template>`) so pasted content such
+  as `<img onerror>` can never run in the author's session.
+- **Security:** strip control characters from URLs before validating them, so
+  obfuscated schemes such as `java&#x09;script:` cannot slip through the
+  link/image scheme allowlist.
+- Preserve valid **relative image and link URLs** in pasted HTML (previously
+  scheme-less paths like `images/photo.jpg` had their `src` stripped).
+- Drop pasted **`id` attributes** so components rendered twice (caption in a
+  figure and its zoom modal; card body in a card and its modal) cannot create
+  duplicate document ids.
+- Keep the **carousel call-to-action available on small screens** (the caption
+  is hidden below the `md` breakpoint, so the button is repeated in an
+  always-visible bar).
+- Strip the editor's reserved **`data-rich*`** hooks from pasted markup and
+  scope the dialog's field snapshots to the generated fields, so pasted HTML
+  cannot collide with the editor's own selectors.
+
 ## 1.4.3
 
 ### Features
