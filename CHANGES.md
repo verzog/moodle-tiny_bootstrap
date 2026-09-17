@@ -7,6 +7,22 @@ All notable changes to the **Bootstrap Scaffolding** TinyMCE plugin
 Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 `requires = 2025041400`). Requires **PHP 8.2+** and a Bootstrap 5 theme.
 
+## 1.4.8
+
+### Features
+- **Card Row styling and uniform size** — the Card Row dialog now has a **Card
+  styling** section: a **Card size** (Small / Medium / Large) that makes every
+  card an identical width and height (taller content is clipped so the row stays
+  even and images fill a fixed band without distortion), a per-card **background
+  colour**, optional **text colour** and **border colour** (each with a tick-box
+  to enable), **corner rounding**, and a **drop shadow** toggle.
+
+### Fixes
+- **Visible prev/next arrows on view pages** — the carousel and Card Row arrow
+  icons are now drawn with CSS instead of an inline SVG. Moodle's output
+  sanitiser strips an SVG's stroke/fill, which left the chevron invisible (a
+  bare dark circle); the CSS chevron always renders.
+
 ## 1.4.7
 
 ### Fixes
