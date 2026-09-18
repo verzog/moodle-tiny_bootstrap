@@ -698,11 +698,13 @@ const hexToRgba = (hex, alpha) => {
 // chevron invisible; a rotated bordered box survives (the transform is kept, as
 // the control disc's own translate is). Returns just the arrow glyph span.
 const chevronIcon = (dir) => {
-    const edges = dir === 'prev'
-        ? 'border-left:0.16rem solid #fff;border-bottom:0.16rem solid #fff;margin-left:0.2rem;'
-        : 'border-right:0.16rem solid #fff;border-top:0.16rem solid #fff;margin-right:0.2rem;';
-    return `<span aria-hidden="true" style="display:inline-block;width:0.6rem;height:0.6rem;`
-        + `${edges}transform:rotate(45deg);"></span>`;
+    // A text chevron glyph, not a CSS-border box. An element with no text
+    // content reads as empty and is dropped when the content is saved, which
+    // stripped the old bordered span and left the arrow a blank disc. A glyph
+    // keeps the span non-empty, so it survives the save and stays visible.
+    const glyph = dir === 'prev' ? '‹' : '›';
+    return `<span aria-hidden="true" style="color:#fff;font-size:1.6rem;`
+        + `line-height:1;font-weight:bold;">${glyph}</span>`;
 };
 
 // Modern circular prev/next control: a CSS chevron on a translucent disc, styled
