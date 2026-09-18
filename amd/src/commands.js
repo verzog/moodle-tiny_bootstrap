@@ -924,8 +924,14 @@ ${renderCard(cards[0], 0, false)}
         // data-bs-* toggle, unwrapping its icon, so a button-based control never
         // reaches the page. An anchor with role="button" survives; the view AMD
         // module handles its click and suppresses the href navigation.
+        // The visually-hidden label also gives the anchor real text content:
+        // an anchor whose only child is the empty chevron span reads as an
+        // empty link and is discarded when the content is saved, which left the
+        // arrows off the page. The carousel controls carry the same label and
+        // survive for this reason.
         return `  <a href="#" role="button" class="tiny-bs-cardrow-nav" data-cardrow-nav="${dir}"`
-            + ` aria-label="${escapeHtml(label)}" style="${disc}">${chevronIcon(dir)}</a>`;
+            + ` aria-label="${escapeHtml(label)}" style="${disc}">${chevronIcon(dir)}`
+            + `<span class="visually-hidden">${escapeHtml(label)}</span></a>`;
     };
     // The scroll-padding-inline keeps a snapped card inset from the overlaid
     // arrows (the flex padding scrolls with the content, so it cannot reserve

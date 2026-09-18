@@ -7,6 +7,17 @@ All notable changes to the **Bootstrap Scaffolding** TinyMCE plugin
 Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 `requires = 2025041400`). Requires **PHP 8.2+** and a Bootstrap 5 theme.
 
+## 1.4.9
+
+### Fixes
+- **Card Row prev/next arrows now stay on the page** — the arrow controls could
+  disappear from a saved card row, leaving no way to step through the cards with
+  the mouse (native swipe/scroll still worked). The arrow was an anchor whose
+  only content was the chevron shape, which reads as an empty link and is dropped
+  when the content is saved. The controls now carry a hidden text label (the same
+  approach the carousel arrows already use), so they are kept and render on view
+  pages.
+
 ## 1.4.8
 
 ### Features
