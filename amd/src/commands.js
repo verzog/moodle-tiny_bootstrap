@@ -182,7 +182,7 @@ const STRING_KEYS = [
     'cardrow_size_large', 'cardrow_bg', 'cardrow_bg_colour', 'cardrow_text',
     'cardrow_text_colour', 'cardrow_border', 'cardrow_border_colour',
     'cardrow_radius', 'cardrow_radius_none', 'cardrow_shadow',
-    'cardrow_btn_behaviour', 'cardrow_btn_samewindow', 'cardrow_btn_newwindow',
+    'btn_behaviour', 'btn_samewindow', 'btn_newwindow',
 ];
 
 // Structural and formatting tags allowed in the rich-text fields, with any
@@ -643,12 +643,16 @@ const buildJumbotronBackground = (bgType, bgUrl, bgAlt) => {
         + ` src="${escapeHtml(u)}" style="${cover}"></video>`;
 };
 
-const buildJumbotron = (title, lead, buttonText, buttonUrl, bgType, bgUrl, bgAlt, overlay) => {
+const buildJumbotron = (title, lead, buttonText, buttonUrl, buttonTarget, bgType, bgUrl, bgAlt, overlay) => {
     const titleSafe = escapeHtml(title) || escapeHtml(str.jumbotron_default_title);
     const leadSafe = sanitizeRich(lead) || escapeHtml(str.jumbotron_default_lead);
     const href = escapeHtml((buttonUrl || '').trim()) || '#';
+    // Open the button in a new tab when the author chose that behaviour.
+    // rel="noopener noreferrer" stops the new tab reaching the opener window
+    // and keeps the referrer from leaking.
+    const target = buttonTarget === '_blank' ? ' target="_blank" rel="noopener noreferrer"' : '';
     const btn = buttonText
-        ? `\n    <hr class="my-4">\n    <a class="btn btn-primary btn-lg" href="${href}" role="button">`
+        ? `\n    <hr class="my-4">\n    <a class="btn btn-primary btn-lg" href="${href}" role="button"${target}>`
             + `${escapeHtml(buttonText)}</a>`
         : '';
     const bg = buildJumbotronBackground(bgType, bgUrl, bgAlt);
@@ -758,8 +762,13 @@ const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => 
         const btnText = escapeHtml(s.btnText);
         const btnHref = escapeHtml((s.btnUrl || '').trim()) || '#';
         const btnVariant = escapeHtml(s.btnVariant) || 'primary';
+        // Open the button in a new tab when the author chose that behaviour.
+        // rel="noopener noreferrer" stops the new tab reaching the opener window
+        // and keeps the referrer from leaking.
+        const btnTarget = s.btnTarget === '_blank'
+            ? ' target="_blank" rel="noopener noreferrer"' : '';
         const btnHtml = btnText
-            ? `\n        <a class="btn btn-${btnVariant}" href="${btnHref}" role="button">${btnText}</a>`
+            ? `\n        <a class="btn btn-${btnVariant}" href="${btnHref}" role="button"${btnTarget}>${btnText}</a>`
             : '';
         const alt = escapeHtml(s.imageAlt) || escapeHtml(fmt(str.slide_default, i + 1));
         // Fixed-ratio image slide: the image fills a known-height box, so the
@@ -775,7 +784,7 @@ const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => 
             const mobileBtn = btnText
                 ? `\n      <div class="d-md-none text-center"
            style="position:absolute;left:0;right:0;bottom:2rem;z-index:5;">
-        <a class="btn btn-${btnVariant}" href="${btnHref}" role="button">${btnText}</a>
+        <a class="btn btn-${btnVariant}" href="${btnHref}" role="button"${btnTarget}>${btnText}</a>
       </div>`
                 : '';
             return `    <div class="carousel-item${active}">
@@ -1851,6 +1860,10 @@ const openJumbotronDialog = async(editor) => {
         richField('jt_lead', leadLabel, str.jumbotron_default_lead) +
         textField('jt_button', buttonLabel, str.jumbotron_button_placeholder) +
         textField('jt_button_url', buttonUrlLabel, str.jumbotron_button_url_placeholder) +
+        selectField('jt_button_target', str.btn_behaviour, [
+            {value: '', text: str.btn_samewindow},
+            {value: '_blank', text: str.btn_newwindow},
+        ], '') +
         selectField('jt_bg_type', bgTypeLabel, [
             {value: 'none', text: bgNoneLabel},
             {value: 'image', text: bgImageLabel},
@@ -1870,6 +1883,7 @@ const openJumbotronDialog = async(editor) => {
             getRich(root, 'jt_lead'),
             root.querySelector('[name="jt_button"]').value,
             root.querySelector('[name="jt_button_url"]').value,
+            root.querySelector('[name="jt_button_target"]').value,
             root.querySelector('[name="jt_bg_type"]').value,
             root.querySelector('[name="jt_bg_url"]').value,
             root.querySelector('[name="jt_bg_alt"]').value,
@@ -1888,7 +1902,11 @@ const carouselSlideSection = (i, browseLabel) =>
     textField(`slide_btn_url_${i}`, str.slide_button_url, str.item_link_placeholder) +
     selectField(`slide_btn_variant_${i}`, str.slide_button_colour,
         ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark']
-            .map((v) => ({value: v, text: str[`colour_${v}`]})), 'primary');
+            .map((v) => ({value: v, text: str[`colour_${v}`]})), 'primary') +
+    selectField(`slide_btn_target_${i}`, str.btn_behaviour, [
+        {value: '', text: str.btn_samewindow},
+        {value: '_blank', text: str.btn_newwindow},
+    ], '');
 
 const openCarouselDialog = async(editor) => {
     const [
@@ -1955,6 +1973,7 @@ const openCarouselDialog = async(editor) => {
             btnText: root.querySelector(`[name="slide_btn_text_${i + 1}"]`).value,
             btnUrl: root.querySelector(`[name="slide_btn_url_${i + 1}"]`).value,
             btnVariant: root.querySelector(`[name="slide_btn_variant_${i + 1}"]`).value,
+            btnTarget: root.querySelector(`[name="slide_btn_target_${i + 1}"]`).value,
         }));
         const ratio = root.querySelector('[name="carousel_ratio"]').value;
         const autoslide = root.querySelector('[name="carousel_autoslide"]').value;
@@ -1977,9 +1996,9 @@ const cardRowCardSection = (i, browseLabel) =>
     selectField(`cr_btn_variant_${i}`, str.slide_button_colour,
         ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark']
             .map((v) => ({value: v, text: str[`colour_${v}`]})), 'primary') +
-    selectField(`cr_btn_target_${i}`, str.cardrow_btn_behaviour, [
-        {value: '', text: str.cardrow_btn_samewindow},
-        {value: '_blank', text: str.cardrow_btn_newwindow},
+    selectField(`cr_btn_target_${i}`, str.btn_behaviour, [
+        {value: '', text: str.btn_samewindow},
+        {value: '_blank', text: str.btn_newwindow},
     ], '');
 
 // Card Row size presets: card width, card height and the image band height, in
