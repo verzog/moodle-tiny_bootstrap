@@ -37,9 +37,10 @@ Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 
 ### Fixes
 - **Visible prev/next arrows on view pages** — the carousel and Card Row arrow
-  icons are now drawn with CSS instead of an inline SVG. Moodle's output
-  sanitiser strips an SVG's stroke/fill, which left the chevron invisible (a
-  bare dark circle); the CSS chevron always renders.
+  icons are drawn with a text chevron glyph. Earlier attempts used an inline SVG
+  (whose stroke/fill the sanitiser strips) and then a CSS-border box (which the
+  save-time cleanup drops as an empty element, leaving a bare disc); a glyph is
+  non-empty text, so it survives and always renders.
 
 ## 1.4.7
 
