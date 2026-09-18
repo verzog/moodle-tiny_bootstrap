@@ -9,6 +9,12 @@ Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 
 ## 1.4.9
 
+### Features
+- **Card Row button behaviour** — each card's button now has an **Open in a new
+  tab / Open in the same tab** option in the insert dialog. New-tab links carry
+  `rel="noopener noreferrer"` so the opened page cannot reach back to the course
+  window.
+
 ### Fixes
 - **Card Row prev/next arrows now stay on the page** — the arrow controls could
   disappear from a saved card row, leaving no way to step through the cards with

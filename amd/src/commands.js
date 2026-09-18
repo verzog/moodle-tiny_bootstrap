@@ -182,6 +182,7 @@ const STRING_KEYS = [
     'cardrow_size_large', 'cardrow_bg', 'cardrow_bg_colour', 'cardrow_text',
     'cardrow_text_colour', 'cardrow_border', 'cardrow_border_colour',
     'cardrow_radius', 'cardrow_radius_none', 'cardrow_shadow',
+    'cardrow_btn_behaviour', 'cardrow_btn_samewindow', 'cardrow_btn_newwindow',
 ];
 
 // Structural and formatting tags allowed in the rich-text fields, with any
@@ -866,11 +867,17 @@ const buildCardRow = (cards, opts = {}) => {
         const btnText = escapeHtml(c.btnText);
         const btnHref = escapeHtml((c.btnUrl || '').trim()) || '#';
         const btnVariant = escapeHtml(c.btnVariant) || 'primary';
+        // Open the button in a new tab when the author chose that behaviour.
+        // rel="noopener noreferrer" keeps the new tab from reaching back to the
+        // opener window and stops the referrer leaking.
+        const btnTarget = c.btnTarget === '_blank'
+            ? ' target="_blank" rel="noopener noreferrer"' : '';
         const imageUrl = escapeHtml((c.imageUrl || '').trim());
         const imageAlt = escapeHtml(c.imageAlt) || escapeHtml(fmt(str.card_default, i + 1));
         const img = cardImage(imageUrl, imageAlt);
         const btn = btnText
-            ? `\n        <a class="btn btn-${btnVariant} mt-3 align-self-start" href="${btnHref}" role="button">${btnText}</a>`
+            ? `\n        <a class="btn btn-${btnVariant} mt-3 align-self-start" href="${btnHref}"`
+                + ` role="button"${btnTarget}>${btnText}</a>`
             : '';
         // Size styles fix every card to the same width and height so the row is
         // uniform; taller content is clipped by overflow:hidden. With no size
@@ -1969,7 +1976,11 @@ const cardRowCardSection = (i, browseLabel) =>
     textField(`cr_btn_url_${i}`, str.slide_button_url, str.item_link_placeholder) +
     selectField(`cr_btn_variant_${i}`, str.slide_button_colour,
         ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark']
-            .map((v) => ({value: v, text: str[`colour_${v}`]})), 'primary');
+            .map((v) => ({value: v, text: str[`colour_${v}`]})), 'primary') +
+    selectField(`cr_btn_target_${i}`, str.cardrow_btn_behaviour, [
+        {value: '', text: str.cardrow_btn_samewindow},
+        {value: '_blank', text: str.cardrow_btn_newwindow},
+    ], '');
 
 // Card Row size presets: card width, card height and the image band height, in
 // pixels. Keyed by the select value; used to build the dialog and to resolve
@@ -2040,6 +2051,7 @@ const openCardRowDialog = async(editor) => {
             btnText: root.querySelector(`[name="cr_btn_text_${i + 1}"]`).value,
             btnUrl: root.querySelector(`[name="cr_btn_url_${i + 1}"]`).value,
             btnVariant: root.querySelector(`[name="cr_btn_variant_${i + 1}"]`).value,
+            btnTarget: root.querySelector(`[name="cr_btn_target_${i + 1}"]`).value,
         // Keep only cards the author actually filled in. Trim each field on its
         // own so whitespace in one (e.g. a stray space in the title) does not
         // mask real content in another.
