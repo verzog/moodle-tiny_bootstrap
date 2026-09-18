@@ -182,6 +182,7 @@ const STRING_KEYS = [
     'cardrow_size_large', 'cardrow_bg', 'cardrow_bg_colour', 'cardrow_text',
     'cardrow_text_colour', 'cardrow_border', 'cardrow_border_colour',
     'cardrow_radius', 'cardrow_radius_none', 'cardrow_shadow',
+    'btn_behaviour', 'btn_samewindow', 'btn_newwindow',
 ];
 
 // Structural and formatting tags allowed in the rich-text fields, with any
@@ -642,12 +643,16 @@ const buildJumbotronBackground = (bgType, bgUrl, bgAlt) => {
         + ` src="${escapeHtml(u)}" style="${cover}"></video>`;
 };
 
-const buildJumbotron = (title, lead, buttonText, buttonUrl, bgType, bgUrl, bgAlt, overlay) => {
+const buildJumbotron = (title, lead, buttonText, buttonUrl, buttonTarget, bgType, bgUrl, bgAlt, overlay) => {
     const titleSafe = escapeHtml(title) || escapeHtml(str.jumbotron_default_title);
     const leadSafe = sanitizeRich(lead) || escapeHtml(str.jumbotron_default_lead);
     const href = escapeHtml((buttonUrl || '').trim()) || '#';
+    // Open the button in a new tab when the author chose that behaviour.
+    // rel="noopener noreferrer" stops the new tab reaching the opener window
+    // and keeps the referrer from leaking.
+    const target = buttonTarget === '_blank' ? ' target="_blank" rel="noopener noreferrer"' : '';
     const btn = buttonText
-        ? `\n    <hr class="my-4">\n    <a class="btn btn-primary btn-lg" href="${href}" role="button">`
+        ? `\n    <hr class="my-4">\n    <a class="btn btn-primary btn-lg" href="${href}" role="button"${target}>`
             + `${escapeHtml(buttonText)}</a>`
         : '';
     const bg = buildJumbotronBackground(bgType, bgUrl, bgAlt);
@@ -757,8 +762,13 @@ const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => 
         const btnText = escapeHtml(s.btnText);
         const btnHref = escapeHtml((s.btnUrl || '').trim()) || '#';
         const btnVariant = escapeHtml(s.btnVariant) || 'primary';
+        // Open the button in a new tab when the author chose that behaviour.
+        // rel="noopener noreferrer" stops the new tab reaching the opener window
+        // and keeps the referrer from leaking.
+        const btnTarget = s.btnTarget === '_blank'
+            ? ' target="_blank" rel="noopener noreferrer"' : '';
         const btnHtml = btnText
-            ? `\n        <a class="btn btn-${btnVariant}" href="${btnHref}" role="button">${btnText}</a>`
+            ? `\n        <a class="btn btn-${btnVariant}" href="${btnHref}" role="button"${btnTarget}>${btnText}</a>`
             : '';
         const alt = escapeHtml(s.imageAlt) || escapeHtml(fmt(str.slide_default, i + 1));
         // Fixed-ratio image slide: the image fills a known-height box, so the
@@ -774,7 +784,7 @@ const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => 
             const mobileBtn = btnText
                 ? `\n      <div class="d-md-none text-center"
            style="position:absolute;left:0;right:0;bottom:2rem;z-index:5;">
-        <a class="btn btn-${btnVariant}" href="${btnHref}" role="button">${btnText}</a>
+        <a class="btn btn-${btnVariant}" href="${btnHref}" role="button"${btnTarget}>${btnText}</a>
       </div>`
                 : '';
             return `    <div class="carousel-item${active}">
@@ -866,11 +876,17 @@ const buildCardRow = (cards, opts = {}) => {
         const btnText = escapeHtml(c.btnText);
         const btnHref = escapeHtml((c.btnUrl || '').trim()) || '#';
         const btnVariant = escapeHtml(c.btnVariant) || 'primary';
+        // Open the button in a new tab when the author chose that behaviour.
+        // rel="noopener noreferrer" keeps the new tab from reaching back to the
+        // opener window and stops the referrer leaking.
+        const btnTarget = c.btnTarget === '_blank'
+            ? ' target="_blank" rel="noopener noreferrer"' : '';
         const imageUrl = escapeHtml((c.imageUrl || '').trim());
         const imageAlt = escapeHtml(c.imageAlt) || escapeHtml(fmt(str.card_default, i + 1));
         const img = cardImage(imageUrl, imageAlt);
         const btn = btnText
-            ? `\n        <a class="btn btn-${btnVariant} mt-3 align-self-start" href="${btnHref}" role="button">${btnText}</a>`
+            ? `\n        <a class="btn btn-${btnVariant} mt-3 align-self-start" href="${btnHref}"`
+                + ` role="button"${btnTarget}>${btnText}</a>`
             : '';
         // Size styles fix every card to the same width and height so the row is
         // uniform; taller content is clipped by overflow:hidden. With no size
@@ -924,8 +940,14 @@ ${renderCard(cards[0], 0, false)}
         // data-bs-* toggle, unwrapping its icon, so a button-based control never
         // reaches the page. An anchor with role="button" survives; the view AMD
         // module handles its click and suppresses the href navigation.
+        // The visually-hidden label also gives the anchor real text content:
+        // an anchor whose only child is the empty chevron span reads as an
+        // empty link and is discarded when the content is saved, which left the
+        // arrows off the page. The carousel controls carry the same label and
+        // survive for this reason.
         return `  <a href="#" role="button" class="tiny-bs-cardrow-nav" data-cardrow-nav="${dir}"`
-            + ` aria-label="${escapeHtml(label)}" style="${disc}">${chevronIcon(dir)}</a>`;
+            + ` aria-label="${escapeHtml(label)}" style="${disc}">${chevronIcon(dir)}`
+            + `<span class="visually-hidden">${escapeHtml(label)}</span></a>`;
     };
     // The scroll-padding-inline keeps a snapped card inset from the overlaid
     // arrows (the flex padding scrolls with the content, so it cannot reserve
@@ -1838,6 +1860,10 @@ const openJumbotronDialog = async(editor) => {
         richField('jt_lead', leadLabel, str.jumbotron_default_lead) +
         textField('jt_button', buttonLabel, str.jumbotron_button_placeholder) +
         textField('jt_button_url', buttonUrlLabel, str.jumbotron_button_url_placeholder) +
+        selectField('jt_button_target', str.btn_behaviour, [
+            {value: '', text: str.btn_samewindow},
+            {value: '_blank', text: str.btn_newwindow},
+        ], '') +
         selectField('jt_bg_type', bgTypeLabel, [
             {value: 'none', text: bgNoneLabel},
             {value: 'image', text: bgImageLabel},
@@ -1857,6 +1883,7 @@ const openJumbotronDialog = async(editor) => {
             getRich(root, 'jt_lead'),
             root.querySelector('[name="jt_button"]').value,
             root.querySelector('[name="jt_button_url"]').value,
+            root.querySelector('[name="jt_button_target"]').value,
             root.querySelector('[name="jt_bg_type"]').value,
             root.querySelector('[name="jt_bg_url"]').value,
             root.querySelector('[name="jt_bg_alt"]').value,
@@ -1875,7 +1902,11 @@ const carouselSlideSection = (i, browseLabel) =>
     textField(`slide_btn_url_${i}`, str.slide_button_url, str.item_link_placeholder) +
     selectField(`slide_btn_variant_${i}`, str.slide_button_colour,
         ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark']
-            .map((v) => ({value: v, text: str[`colour_${v}`]})), 'primary');
+            .map((v) => ({value: v, text: str[`colour_${v}`]})), 'primary') +
+    selectField(`slide_btn_target_${i}`, str.btn_behaviour, [
+        {value: '', text: str.btn_samewindow},
+        {value: '_blank', text: str.btn_newwindow},
+    ], '');
 
 const openCarouselDialog = async(editor) => {
     const [
@@ -1942,6 +1973,7 @@ const openCarouselDialog = async(editor) => {
             btnText: root.querySelector(`[name="slide_btn_text_${i + 1}"]`).value,
             btnUrl: root.querySelector(`[name="slide_btn_url_${i + 1}"]`).value,
             btnVariant: root.querySelector(`[name="slide_btn_variant_${i + 1}"]`).value,
+            btnTarget: root.querySelector(`[name="slide_btn_target_${i + 1}"]`).value,
         }));
         const ratio = root.querySelector('[name="carousel_ratio"]').value;
         const autoslide = root.querySelector('[name="carousel_autoslide"]').value;
@@ -1963,7 +1995,11 @@ const cardRowCardSection = (i, browseLabel) =>
     textField(`cr_btn_url_${i}`, str.slide_button_url, str.item_link_placeholder) +
     selectField(`cr_btn_variant_${i}`, str.slide_button_colour,
         ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark']
-            .map((v) => ({value: v, text: str[`colour_${v}`]})), 'primary');
+            .map((v) => ({value: v, text: str[`colour_${v}`]})), 'primary') +
+    selectField(`cr_btn_target_${i}`, str.btn_behaviour, [
+        {value: '', text: str.btn_samewindow},
+        {value: '_blank', text: str.btn_newwindow},
+    ], '');
 
 // Card Row size presets: card width, card height and the image band height, in
 // pixels. Keyed by the select value; used to build the dialog and to resolve
@@ -2034,6 +2070,7 @@ const openCardRowDialog = async(editor) => {
             btnText: root.querySelector(`[name="cr_btn_text_${i + 1}"]`).value,
             btnUrl: root.querySelector(`[name="cr_btn_url_${i + 1}"]`).value,
             btnVariant: root.querySelector(`[name="cr_btn_variant_${i + 1}"]`).value,
+            btnTarget: root.querySelector(`[name="cr_btn_target_${i + 1}"]`).value,
         // Keep only cards the author actually filled in. Trim each field on its
         // own so whitespace in one (e.g. a stray space in the title) does not
         // mask real content in another.
