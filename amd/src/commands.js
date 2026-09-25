@@ -379,8 +379,9 @@ const buildZoomModal = (uid, src, alt, caption = '', title = null) => {
         ? `\n        <div class="mt-2 mb-0 text-muted">${capContent}</div>`
         : '';
     const displayTitle = title || alt;
-    // Use modal-xl + inline styles so the zoom works on regular view pages where
-    // the TinyMCE plugin CSS (styles.css) is not loaded.
+    // Use modal-xl + inline styles so the zoom works even under a theme that
+    // excludes plugin stylesheets. (Moodle normally bundles styles.css into the
+    // theme CSS on every page, view pages included.)
     // Setting width:100% + height:65vh + object-fit:contain makes the image fill
     // the modal body and scale up small images while preserving aspect ratio.
     return `<div class="modal fade tiny-bootstrap-modal" id="${uid}" tabindex="-1" aria-label="${alt}" aria-hidden="true">
@@ -573,7 +574,7 @@ const videoEmbed = (videoUrl) => {
 };
 
 // Title is pre-escaped (caller's responsibility). Inline styles only, so the
-// modal works on view pages where the plugin CSS is not loaded.
+// modal works even under a theme that excludes plugin stylesheets.
 const buildVideoModal = (uid, embedHtml, title) => {
     return `<div class="modal fade tiny-bootstrap-modal" id="${uid}" tabindex="-1" aria-label="${title}" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -637,7 +638,7 @@ ${cols}
 
 // Build the absolutely-positioned background layer for a jumbotron. Returns
 // an empty string when bgType is 'none' or bgUrl is blank. Inline styles only
-// so it renders correctly on view pages without the plugin CSS.
+// so it renders correctly even under a theme that excludes plugin stylesheets.
 const buildJumbotronBackground = (bgType, bgUrl, bgAlt) => {
     const u = (bgUrl || '').trim();
     if (!u || bgType === 'none') {
@@ -738,8 +739,8 @@ const chevronIcon = (dir) => {
 };
 
 // Modern circular prev/next control: a CSS chevron on a translucent disc, styled
-// inline so it renders on view pages without the plugin CSS (Bootstrap's default
-// control-icon background images do not always resolve).
+// inline so it renders even under a theme that excludes plugin stylesheets
+// (Bootstrap's default control-icon background images do not always resolve).
 const carouselControl = (uid, dir, label) => {
     const disc = 'display:inline-flex;align-items:center;justify-content:center;'
         + 'width:2.75rem;height:2.75rem;border-radius:50%;background:rgba(0,0,0,0.5);'
@@ -861,7 +862,7 @@ ${carouselControl(uid, 'next', str.next)}
 // A horizontally scrolling row of Bootstrap cards. Several cards are visible at
 // once (about three on a wide screen, fewer on a phone), and the prev/next
 // controls scroll the row by one card. Everything is styled inline so it renders
-// on view pages without the plugin stylesheet; the arrows use the view AMD
+// even under a theme that excludes plugin stylesheets; the arrows use the view AMD
 // module. cards is a list of {title, body, imageUrl, imageAlt, btnText, btnUrl,
 // btnVariant}. opts.hideName swaps each image's alt text for the neutral
 // "Card N" so a file name can't give away a quiz answer.

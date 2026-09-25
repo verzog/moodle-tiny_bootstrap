@@ -103,6 +103,13 @@
 }
 
 /*
+ * The rules below also repair content inserted by older versions. That works
+ * because Moodle bundles every plugin's styles.css into the theme CSS on every
+ * page, view pages included (theme_config::get_css_files()), not only on pages
+ * with an editor.
+ */
+
+/*
  * Card images set width:100% but not a height, so resizing one with the
  * editor's handles (which writes a height attribute) squashed it. Height auto
  * keeps the aspect ratio. A fixed-size Card Row image keeps its band because
