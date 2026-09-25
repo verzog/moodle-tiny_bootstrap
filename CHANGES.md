@@ -7,6 +7,29 @@ All notable changes to the **Bootstrap Scaffolding** TinyMCE plugin
 Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 `requires = 2025041400`). Requires **PHP 8.2+** and a Bootstrap 5 theme.
 
+## 1.4.10
+
+### Features
+- **Image size for Image with Zoom Modal** — the dialog now has an **Image size**
+  choice: Small (200px), Medium (300px, the default), Large (450px) or Full
+  width. The image keeps its shape at every size and still shrinks to fit a
+  narrow area such as a quiz question.
+- **Hide image name (for quizzes)** — a new tick-box on Image with Zoom Modal.
+  Picking a file fills the alt text with its file name, which was also shown as
+  the enlarged view's title — so a file called "seborrheic-keratosis.jpg" could
+  give away the answer. With the box ticked, the alt text and title show only
+  "Image". (The file name is still in the image link in the page source, so for
+  high-stakes questions also rename the file before uploading.)
+
+### Fixes
+- **Image no longer squashed in the editor** — the image used a fixed maximum
+  height, which fought TinyMCE's resize handles and stretched round images into
+  ovals. It now uses a width with automatic height, so it keeps its proportions.
+- **Floated images stay inside the quiz question box** — a left- or
+  right-aligned image hung out below the shaded question box because floats do
+  not stretch their container. The question box now grows to hold the image,
+  and the answers still sit beside it.
+
 ## 1.4.9
 
 ### Features

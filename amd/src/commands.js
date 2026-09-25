@@ -458,34 +458,43 @@ ${cardsHtml}
 </div>${modalsBlock}`;
 };
 
+// Display widths for the single image. The image is given a fixed width (capped
+// at 100% of its container) and height:auto, so it keeps its aspect ratio — a
+// max-height alone fought TinyMCE's resize handles and squashed the image.
+const IMAGE_SIZES = {small: '200px', medium: '300px', large: '450px', full: '100%'};
+
 // The align argument controls placement: 'center' (default) renders a centred
 // block figure; 'left'/'right' float the figure so following text wraps
 // alongside it. Floated figures get an inline max-width so a wide image can't
 // overflow a narrow content area (e.g. a quiz answer box), and img-fluid on the
-// image scales it down to fit. Only Bootstrap utility classes + inline styles
-// are used so the chosen alignment also renders on view pages where the plugin
-// CSS is not loaded.
-const buildImageModal = (imageUrl, imageAlt, caption, align = 'center') => {
+// image scales it down to fit. The tiny-bs-image class lets styles.css make a
+// quiz question box grow to contain a floated image. The size argument is an
+// IMAGE_SIZES key (default 'medium'). hideName replaces the alt text (and so the
+// zoom modal's title) with the neutral default, so a file name such as
+// "seborrheic-keratosis.jpg" can't give away a quiz answer.
+const buildImageModal = (imageUrl, imageAlt, caption, align = 'center', size = 'medium', hideName = false) => {
     const uid = 'bsModal' + Math.random().toString(36).slice(2, 9);
     const src = escapeHtml(imageUrl) || 'https://placehold.co/800x500?text=Image';
-    const alt = escapeHtml(imageAlt) || escapeHtml(str.default_alt);
+    const alt = (!hideName && escapeHtml(imageAlt)) || escapeHtml(str.default_alt);
+    const width = IMAGE_SIZES[size] || IMAGE_SIZES.medium;
     const capContent = sanitizeRich(caption);
     const figcaption = capContent
         ? `\n  <figcaption class="mt-1 text-muted small">${capContent}</figcaption>`
         : '';
-    let figClass = 'text-center';
+    let figClass = 'tiny-bs-image text-center';
     let figStyle = '';
     if (align === 'left') {
-        figClass = 'float-start me-3 mb-2';
+        figClass = 'tiny-bs-image tiny-bs-image-float float-start me-3 mb-2';
         figStyle = ' style="max-width:50%;"';
     } else if (align === 'right') {
-        figClass = 'float-end ms-3 mb-2';
+        figClass = 'tiny-bs-image tiny-bs-image-float float-end ms-3 mb-2';
         figStyle = ' style="max-width:50%;"';
     }
+    const imgStyle = `width:${width};max-width:100%;height:auto;object-fit:contain;cursor:zoom-in;`;
     return `<!-- Bootstrap 5 image with zoom modal -->
 <figure class="${figClass}"${figStyle}>
   <a href="#" data-bs-toggle="modal" data-bs-target="#${uid}" title="${escapeHtml(str.click_to_enlarge)}">
-    <img src="${src}" class="img-fluid img-thumbnail" style="max-height:250px;cursor:zoom-in;" alt="${alt}">
+    <img src="${src}" class="img-fluid img-thumbnail" style="${imgStyle}" alt="${alt}">
   </a>${figcaption}
 </figure>
 
@@ -1717,6 +1726,7 @@ const openImageDialog = async(editor) => {
     const [
         title, urlLabel, altLabel, captionLabel, insertLabel, browseLabel,
         alignLabel, alignCenter, alignLeft, alignRight,
+        sizeLabel, sizeSmall, sizeMedium, sizeLarge, sizeFull, hideNameLabel,
     ] = await Promise.all([
         getString('dialog_image_title', component),
         getString('image_url', component),
@@ -1728,6 +1738,12 @@ const openImageDialog = async(editor) => {
         getString('image_align_center', component),
         getString('image_align_left', component),
         getString('image_align_right', component),
+        getString('image_size', component),
+        getString('image_size_small', component),
+        getString('image_size_medium', component),
+        getString('image_size_large', component),
+        getString('image_size_full', component),
+        getString('image_hide_name', component),
     ]);
 
     const body =
@@ -1738,7 +1754,14 @@ const openImageDialog = async(editor) => {
             {value: 'center', text: alignCenter},
             {value: 'left', text: alignLeft},
             {value: 'right', text: alignRight},
-        ], 'center');
+        ], 'center') +
+        selectField('size', sizeLabel, [
+            {value: 'small', text: sizeSmall},
+            {value: 'medium', text: sizeMedium},
+            {value: 'large', text: sizeLarge},
+            {value: 'full', text: sizeFull},
+        ], 'medium') +
+        checkboxField('hide_name', hideNameLabel);
 
     const modal = await openModal(title, body, insertLabel);
     const root = modal.getRoot()[0];
@@ -1749,7 +1772,9 @@ const openImageDialog = async(editor) => {
         const alt = root.querySelector('[name="alt"]').value;
         const caption = getRich(root, 'caption');
         const align = root.querySelector('[name="align"]').value;
-        editor.insertContent(buildImageModal(url, alt, caption, align));
+        const size = root.querySelector('[name="size"]').value;
+        const hideName = root.querySelector('[name="hide_name"]').checked;
+        editor.insertContent(buildImageModal(url, alt, caption, align, size, hideName));
     });
 };
 
