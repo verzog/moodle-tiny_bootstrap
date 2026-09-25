@@ -101,3 +101,24 @@
 .que .outcome:has(.tiny-bs-image-float) {
     display: flow-root;
 }
+
+/*
+ * Card images set width:100% but not a height, so resizing one with the
+ * editor's handles (which writes a height attribute) squashed it. Height auto
+ * keeps the aspect ratio. A fixed-size Card Row image keeps its band because
+ * its inline height wins over this rule. Also fixes cards inserted earlier.
+ */
+.tiny-bs-card-img,
+.tiny-bs-cardrow .card-img-top {
+    height: auto;
+}
+
+/*
+ * Stop a Card Row's scrolling track counting towards its parent's minimum
+ * width. Boost lays a quiz question out with flexbox, so without this the row
+ * stretched the question box past the edge of the page on desktop. New rows
+ * carry this inline too; this rule also fixes rows inserted earlier.
+ */
+.tiny-bs-cardrow {
+    contain: inline-size;
+}

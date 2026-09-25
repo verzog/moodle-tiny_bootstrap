@@ -440,7 +440,7 @@ const buildCardGroup = (cards, opts = {}) => {
       <a href="#" class="tiny-bs-card-img-link" data-bs-toggle="modal"
          data-bs-target="#${uid}" title="${escapeHtml(str.click_to_enlarge)}">
         <img src="${imgSrc}" class="card-img-top tiny-bs-card-img"
-             style="cursor:zoom-in;" alt="${imgAlt}">
+             style="height:auto;cursor:zoom-in;" alt="${imgAlt}">
       </a>
       <div class="card-body">
         <h5 class="card-title">${title}</h5>
@@ -454,9 +454,14 @@ const buildCardGroup = (cards, opts = {}) => {
     const cardsHtml = rendered.map(r => r.cardHtml).join('\n');
     const modalsHtml = rendered.map(r => r.modalHtml).filter(Boolean).join('\n\n');
     const modalsBlock = modalsHtml ? `\n\n${modalsHtml}` : '';
+    // The row sits in an overflow-hidden wrapper: a .row's negative side margins
+    // otherwise make a scrolling parent (a quiz answer, Moodle's .no-overflow
+    // content boxes) show a horizontal scrollbar.
     return `<!-- Bootstrap 5 card group -->
+<div class="overflow-hidden">
 <div class="row ${rowCols} ${gap}">
 ${cardsHtml}
+</div>
 </div>${modalsBlock}`;
 };
 
@@ -529,9 +534,13 @@ const buildImageText = (layout, imageUrl, imageAlt, caption, heading, bodyText, 
     <div>${bodySafe}</div>
   </div>`;
     const cols = imageRight ? `${textCol}\n${imageCol}` : `${imageCol}\n${textCol}`;
+    // The overflow-hidden wrapper stops the row's negative margins adding a
+    // horizontal scrollbar to a scrolling parent such as a quiz answer.
     return `<!-- Bootstrap 5 image + text, image ${imageRight ? 'right' : 'left'} -->
+<div class="overflow-hidden">
 <div class="row align-items-center g-4 my-3">
 ${cols}
+</div>
 </div>
 
 ${buildZoomModal(uid, src, alt, caption, headingSafe)}`;
@@ -616,9 +625,13 @@ const buildVideoText = (layout, videoUrl, heading, bodyText) => {
     <div>${bodySafe}</div>
   </div>`;
     const cols = videoRight ? `${textCol}\n${videoCol}` : `${videoCol}\n${textCol}`;
+    // The overflow-hidden wrapper stops the row's negative margins adding a
+    // horizontal scrollbar to a scrolling parent such as a quiz answer.
     return `<!-- Bootstrap 5 video + text, video ${videoRight ? 'right' : 'left'} -->
+<div class="overflow-hidden">
 <div class="row align-items-center g-4 my-3">
 ${cols}
+</div>
 </div>${modalHtml}`;
 };
 
@@ -689,7 +702,7 @@ const buildJumbotron = (title, lead, buttonText, buttonUrl, buttonTarget, bgType
         : '';
     return `<!-- Bootstrap 5 jumbotron -->
 <div class="${wrapperClass}">${bg}${overlayHtml}
-  <div class="container-fluid py-3"${contentStyle}>
+  <div class="container-fluid py-3 text-break"${contentStyle}>
     <h1 class="display-5 fw-bold">${titleSafe}</h1>
     <div class="col-md-9 fs-5">${leadSafe}</div>${btn}
   </div>
@@ -890,7 +903,8 @@ const buildCardRow = (cards, opts = {}) => {
             return `\n      <img src="${imageUrl}" class="card-img-top" alt="${imageAlt}"`
                 + ` style="width:100%;height:${imageBand}px;object-fit:cover;">`;
         }
-        return `\n      <img src="${imageUrl}" class="card-img-top" alt="${imageAlt}">`;
+        // Height auto keeps the aspect ratio if the image is resized in the editor.
+        return `\n      <img src="${imageUrl}" class="card-img-top" style="height:auto;" alt="${imageAlt}">`;
     };
     const renderCard = (c, i, scrollable) => {
         const title = escapeHtml(c.title);
@@ -977,8 +991,11 @@ ${renderCard(cards[0], 0, false)}
     // to auto also clips the vertical axis, so when the cards carry a drop
     // shadow the track needs a taller vertical gutter or the shadow is cut off.
     const trackPadY = shadow ? '1.5rem' : '0.5rem';
+    // Contain:inline-size stops the track's full width counting towards the
+    // parent's minimum width. Without it the row stretched a quiz question box
+    // (a flex item in Boost) past the edge of the page on desktop.
     return `<!-- Bootstrap 5 scrolling card row -->
-<div class="tiny-bs-cardrow" id="${uid}" style="position:relative;">
+<div class="tiny-bs-cardrow" id="${uid}" style="position:relative;contain:inline-size;">
 ${navBtn('prev', str.previous)}
   <div class="tiny-bs-cardrow-track" data-cardrow-track style="display:flex;gap:1rem;`
         + `overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:3.25rem;`
