@@ -7,6 +7,15 @@ All notable changes to the **Bootstrap Scaffolding** TinyMCE plugin
 Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 `requires = 2025041400`). Requires **PHP 8.2+** and a Bootstrap 5 theme.
 
+## 1.4.11
+
+### Features
+- **Hide image name on Image and Text** — the **Hide image name (for quizzes)**
+  tick-box from Image with Zoom Modal is now on the Image and Text dialog too.
+  When ticked, the image's alt text is "Image" instead of the picked file name.
+  (The enlarged view's title is the heading you type, so it never showed the
+  file name.)
+
 ## 1.4.10
 
 ### Features

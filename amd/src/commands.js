@@ -508,11 +508,12 @@ ${buildZoomModal(uid, src, alt, caption)}`;
 
 // Layout 'image-right' puts the image on the right; anything else
 // (default) puts the image on the left. The image is zoomable via the
-// shared modal builder.
-const buildImageText = (layout, imageUrl, imageAlt, caption, heading, bodyText) => {
+// shared modal builder. hideName swaps the alt text for the neutral default so
+// a file name can't give away a quiz answer (the modal title is the heading).
+const buildImageText = (layout, imageUrl, imageAlt, caption, heading, bodyText, hideName = false) => {
     const uid = 'bsImgTxt' + Math.random().toString(36).slice(2, 9);
     const src = escapeHtml(imageUrl) || 'https://placehold.co/600x400?text=Image';
-    const alt = escapeHtml(imageAlt) || escapeHtml(str.default_alt);
+    const alt = (!hideName && escapeHtml(imageAlt)) || escapeHtml(str.default_alt);
     const headingSafe = escapeHtml(heading) || escapeHtml(str.default_heading);
     const bodySafe = sanitizeRich(bodyText) || escapeHtml(str.default_body);
     const imageRight = layout === 'image-right';
@@ -1786,7 +1787,7 @@ const openImageDialog = async(editor) => {
 const openImageTextDialog = async(editor) => {
     const [
         title, urlLabel, altLabel, captionLabel, headingLabel, bodyLabel,
-        layoutLabel, leftLabel, rightLabel, insertLabel, browseLabel,
+        layoutLabel, leftLabel, rightLabel, insertLabel, browseLabel, hideNameLabel,
     ] = await Promise.all([
         getString('dialog_imagetext_title', component),
         getString('image_url', component),
@@ -1799,6 +1800,7 @@ const openImageTextDialog = async(editor) => {
         getString('imagetext_layout_imageright', component),
         getString('insert', component),
         getString('browse', component),
+        getString('image_hide_name', component),
     ]);
 
     const body =
@@ -1808,6 +1810,7 @@ const openImageTextDialog = async(editor) => {
         ]) +
         urlField('url', urlLabel, browseLabel, 'https://placehold.co/600x400?text=Image') +
         textField('alt', altLabel, str.describe_image_sr) +
+        checkboxField('hide_name', hideNameLabel) +
         textField('it_heading', headingLabel, str.default_heading) +
         richField('it_body', bodyLabel, str.default_body) +
         richField('caption', captionLabel, str.imagetext_caption_placeholder);
@@ -1824,6 +1827,7 @@ const openImageTextDialog = async(editor) => {
             getRich(root, 'caption'),
             root.querySelector('[name="it_heading"]').value,
             getRich(root, 'it_body'),
+            root.querySelector('[name="hide_name"]').checked,
         ));
     });
 };

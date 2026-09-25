@@ -16,7 +16,7 @@ ready-made Bootstrap 5 HTML components without writing any code.
 | **Card Row** | A horizontally scrolling row of cards — several visible at once (≈3 on desktop, fewer on mobile) with prev/next arrows and swipe; each card has a heading, body, optional image and optional button |
 | **Accordion** | A collapsible accordion with a configurable number of sections |
 | **Responsive Table** | A Bootstrap-wrapped table with optional header row and caption |
-| **Image and Text** | A zoomable image beside a heading and body text — image left/text right or image right/text left |
+| **Image and Text** | A zoomable image beside a heading and body text — image left/text right or image right/text left, with an optional **Hide image name** for quizzes |
 | **Video and Text** | A video (YouTube, Vimeo or file) that plays in place, with an **Open in a larger view** button, beside a heading and body text — video left/text right or video right/text left |
 | **Dropdown** | A Bootstrap 5 dropdown button with a configurable colour, alignment, optional split caret, and 2–5 linked menu items |
 | **Cheatsheet** | A reference block of common Bootstrap 5 snippets (buttons, alerts, badges, list groups, progress, breadcrumb, pagination) to insert and trim down |
