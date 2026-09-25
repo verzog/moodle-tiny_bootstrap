@@ -182,7 +182,7 @@ const STRING_KEYS = [
     'cardrow_size_large', 'cardrow_bg', 'cardrow_bg_colour', 'cardrow_text',
     'cardrow_text_colour', 'cardrow_border', 'cardrow_border_colour',
     'cardrow_radius', 'cardrow_radius_none', 'cardrow_shadow',
-    'btn_behaviour', 'btn_samewindow', 'btn_newwindow',
+    'btn_behaviour', 'btn_samewindow', 'btn_newwindow', 'image_hide_name',
 ];
 
 // Structural and formatting tags allowed in the rich-text fields, with any
@@ -400,13 +400,15 @@ const buildZoomModal = (uid, src, alt, caption = '', title = null) => {
 </div>`;
 };
 
-// Opts: {gap, withImages}. gap is a Bootstrap gutter class ('g-0'…'g-5') that
-// sets the spacing between cards; withImages=false renders text-only cards
-// (no image, no zoom modal). The cards sit in a responsive .row so they wrap
+// Opts: {gap, withImages, hideName}. gap is a Bootstrap gutter class ('g-0'…'g-5')
+// that sets the spacing between cards; withImages=false renders text-only cards
+// (no image, no zoom modal); hideName=true swaps each image's alt text for the
+// neutral "Card N image" so a file name can't give away a quiz answer (the
+// zoom modal title is the card title). The cards sit in a responsive .row so they wrap
 // and keep equal heights (.h-100) with real spacing between them — unlike
 // .card-group, which butts the cards together with no gaps.
 const buildCardGroup = (cards, opts = {}) => {
-    const {gap = 'g-4', withImages = true} = opts;
+    const {gap = 'g-4', withImages = true, hideName = false} = opts;
     let rowCols = 'row-cols-1 row-cols-md-2';
     if (cards.length >= 4) {
         rowCols = 'row-cols-1 row-cols-sm-2 row-cols-lg-4';
@@ -431,7 +433,7 @@ const buildCardGroup = (cards, opts = {}) => {
         }
         const uid = 'bsCardImg' + Math.random().toString(36).slice(2, 9);
         const imgSrc = escapeHtml(card.imageUrl) || 'https://placehold.co/600x300?text=Image';
-        const imgAlt = escapeHtml(card.imageAlt) || escapeHtml(fmt(str.card_default_alt, i + 1));
+        const imgAlt = (!hideName && escapeHtml(card.imageAlt)) || escapeHtml(fmt(str.card_default_alt, i + 1));
         return {
             cardHtml: `  <div class="col">
     <div class="card h-100">
@@ -745,7 +747,9 @@ const carouselControl = (uid, dir, label) => {
 // autoslide is '' (off), 'slow' (~7s), or 'fast' (~2.5s).
 // captionBg is null, or {colour: '#rrggbb', opacity: 0-1} for a translucent
 // panel behind the caption so overlaid text stays readable.
-const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => {
+// hideName=true swaps each slide's alt text for the neutral "Slide N" so a file
+// name can't give away a quiz answer.
+const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null, hideName = false) => {
     const uid = 'bsCar' + Math.random().toString(36).slice(2, 9);
     const ratioCss = CAROUSEL_RATIOS[ratio]
         ? ` style="aspect-ratio:${CAROUSEL_RATIOS[ratio]};object-fit:cover;"` : '';
@@ -787,7 +791,7 @@ const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => 
         const btnHtml = btnText
             ? `\n        <a class="btn btn-${btnVariant}" href="${btnHref}" role="button"${btnTarget}>${btnText}</a>`
             : '';
-        const alt = escapeHtml(s.imageAlt) || escapeHtml(fmt(str.slide_default, i + 1));
+        const alt = (!hideName && escapeHtml(s.imageAlt)) || escapeHtml(fmt(str.slide_default, i + 1));
         // Fixed-ratio image slide: the image fills a known-height box, so the
         // caption can overlay it (hidden below md, with a mobile CTA bar). The
         // Bootstrap caption keeps its own contrasting white text.
@@ -843,7 +847,8 @@ ${carouselControl(uid, 'next', str.next)}
 // controls scroll the row by one card. Everything is styled inline so it renders
 // on view pages without the plugin stylesheet; the arrows use the view AMD
 // module. cards is a list of {title, body, imageUrl, imageAlt, btnText, btnUrl,
-// btnVariant}.
+// btnVariant}. opts.hideName swaps each image's alt text for the neutral
+// "Card N" so a file name can't give away a quiz answer.
 const buildCardRow = (cards, opts = {}) => {
     const width = Number(opts.width) || 0;
     const height = Number(opts.height) || 0;
@@ -899,7 +904,7 @@ const buildCardRow = (cards, opts = {}) => {
         const btnTarget = c.btnTarget === '_blank'
             ? ' target="_blank" rel="noopener noreferrer"' : '';
         const imageUrl = escapeHtml((c.imageUrl || '').trim());
-        const imageAlt = escapeHtml(c.imageAlt) || escapeHtml(fmt(str.card_default, i + 1));
+        const imageAlt = (!opts.hideName && escapeHtml(c.imageAlt)) || escapeHtml(fmt(str.card_default, i + 1));
         const img = cardImage(imageUrl, imageAlt);
         const btn = btnText
             ? `\n        <a class="btn btn-${btnVariant} mt-3 align-self-start" href="${btnHref}"`
@@ -1627,6 +1632,7 @@ const openCardDialog = async(editor) => {
     const [
         title, countLabel, insertLabel, browseLabel,
         imagesLabel, spacingLabel, spacingNone, spacingSmall, spacingMedium, spacingLarge,
+        hideNameLabel,
     ] = await Promise.all([
         getString('dialog_card_title', component),
         getString('card_count', component),
@@ -1638,6 +1644,7 @@ const openCardDialog = async(editor) => {
         getString('card_spacing_small', component),
         getString('card_spacing_medium', component),
         getString('card_spacing_large', component),
+        getString('image_hide_name', component),
     ]);
 
     // Default to 3 cards; select default must match so the dialog is consistent.
@@ -1658,6 +1665,7 @@ const openCardDialog = async(editor) => {
             {value: 'g-5', text: spacingLarge},
         ], 'g-4') +
         checkboxField('card_images', imagesLabel, true) +
+        checkboxField('hide_name', hideNameLabel) +
         `<div data-region="cards">${renderCards(cardCount)}</div>`;
 
     const modal = await openModal(title, body, insertLabel);
@@ -1724,6 +1732,7 @@ const openCardDialog = async(editor) => {
         editor.insertContent(buildCardGroup(cards, {
             gap: root.querySelector('[name="card_spacing"]').value,
             withImages,
+            hideName: root.querySelector('[name="hide_name"]').checked,
         }));
     });
 };
@@ -1994,6 +2003,7 @@ const openCarouselDialog = async(editor) => {
             {value: '0.75', text: opacityStrong},
             {value: '0', text: opacityNone},
         ], '0.5') +
+        checkboxField('hide_name', str.image_hide_name) +
         Array.from({length: slideCount}, (_, i) => carouselSlideSection(i + 1, browseLabel)).join('');
 
     const modal = await openModal(title, body, insertLabel);
@@ -2017,7 +2027,8 @@ const openCarouselDialog = async(editor) => {
             colour: root.querySelector('[name="caption_bg_colour"]').value,
             opacity: root.querySelector('[name="caption_bg_opacity"]').value,
         };
-        editor.insertContent(buildCarousel(slides, ratio, autoslide, captionBg));
+        const hideName = root.querySelector('[name="hide_name"]').checked;
+        editor.insertContent(buildCarousel(slides, ratio, autoslide, captionBg, hideName));
     });
 };
 
@@ -2091,6 +2102,7 @@ const openCardRowDialog = async(editor) => {
     // they need without a re-rendering count.
     const cardMax = 6;
     const body = cardRowStyleSection()
+        + checkboxField('hide_name', str.image_hide_name)
         + Array.from({length: cardMax}, (_, i) => cardRowCardSection(i + 1, browseLabel)).join('');
 
     const modal = await openModal(title, body, insertLabel);
@@ -2124,6 +2136,7 @@ const openCardRowDialog = async(editor) => {
             border: root.querySelector('[name="cr_border_on"]').checked
                 ? root.querySelector('[name="cr_border"]').value : '',
             shadow: root.querySelector('[name="cr_shadow"]').checked,
+            hideName: root.querySelector('[name="hide_name"]').checked,
         };
         editor.insertContent(buildCardRow(cards, opts));
     });

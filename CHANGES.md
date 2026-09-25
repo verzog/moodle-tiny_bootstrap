@@ -10,11 +10,22 @@ Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 ## 1.4.11
 
 ### Features
+- **Hide image name on every image component** — the **Hide image name (for
+  quizzes)** option now covers every component where picking a file fills in the
+  alt text. (Jumbotron is left out: its background alt text is never filled from
+  the file name.)
 - **Hide image name on Image and Text** — the **Hide image name (for quizzes)**
   tick-box from Image with Zoom Modal is now on the Image and Text dialog too.
   When ticked, the image's alt text is "Image" instead of the picked file name.
   (The enlarged view's title is the heading you type, so it never showed the
   file name.)
+- **Hide image name on Card Group** — one tick-box for the whole group. When
+  ticked, each card image's alt text is "Card 1 image", "Card 2 image" and so
+  on instead of the picked file name. (The enlarged view's title is the card
+  title you type.)
+- **Hide image name on Carousel and Card Row** — one tick-box for the whole
+  carousel or row. When ticked, image alt text is "Slide 1", "Slide 2"… or
+  "Card 1", "Card 2"… instead of the picked file name.
 
 ## 1.4.10
 

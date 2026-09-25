@@ -24,11 +24,21 @@ ready-made Bootstrap 5 HTML components without writing any code.
 ### Per-component options
 
 - **Image with Zoom Modal** — choose an **alignment**: centred (default), left or right. Left/right float the image so surrounding text wraps alongside it, with a max-width that keeps a large image from overflowing a narrow content area (such as a quiz answer box). Choose an **image size** — Small (200px), Medium (300px, default), Large (450px) or Full width; the image keeps its proportions and shrinks to fit narrow areas. In a quiz, the question box grows to contain a left/right-aligned image. Tick **Hide image name** in quiz questions so the file name is not shown as the alt text or enlarged-view title.
-- **Card Group** — choose the **spacing between cards** and toggle **Include images** off for text-only cards.
+- **Card Group** — choose the **spacing between cards**, toggle **Include images** off for text-only cards, and tick **Hide image name** in quiz questions so file names aren't used as the images' alt text.
 - **Card Row** — a **Card styling** section sets a uniform **Card size** (Small/Medium/Large — every card the same width and height, with images cropped to a fixed band), a per-card **background colour**, optional **text colour** and **border colour**, **corner rounding** and a **drop shadow**.
 - **Jumbotron** — the call-to-action button now takes a **link (URL)**, and the background image/video field has a working **Browse repositories…** button.
 - **Carousel** — choose an **aspect ratio** (16:9, 4:3, 1:1, 21:9 or natural) so mismatched images line up, set a **caption background colour** with an opacity so overlaid text stays readable, add an optional **call-to-action button** (text, link and colour) per slide, and use the modernised prev/next controls. Leave a slide's image blank to get a **content card** slide whose height fits its content (e.g. a pasted "course intake" card) — useful for a compact card carousel with no background image. In **natural** ratio a small image keeps its own size instead of being stretched to full width.
 - **Responsive Table** — pick a **table colour** and **header colour** (Bootstrap contextual variants) and toggle **striped**, **bordered**, **hover** and **compact** styles.
+
+### Hide image name (for quizzes)
+
+Picking an image with **Browse repositories…** fills its alt text with the file
+name, which can give away the answer in a quiz question (e.g.
+`seborrheic-keratosis.jpg`). **Image with Zoom Modal**, **Image and Text**,
+**Card Group**, **Carousel** and **Card Row** each have a **Hide image name**
+tick-box that replaces it with a neutral description ("Image", "Card 1 image",
+"Slide 1", "Card 1"). The file name is still part of the image's web address, so
+rename files for assessed questions before uploading.
 
 ### Rich text in content fields
 
