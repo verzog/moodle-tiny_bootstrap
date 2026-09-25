@@ -469,9 +469,11 @@ const IMAGE_SIZES = {small: '200px', medium: '300px', large: '450px', full: '100
 // overflow a narrow content area (e.g. a quiz answer box), and img-fluid on the
 // image scales it down to fit. The tiny-bs-image class lets styles.css make a
 // quiz question box grow to contain a floated image. The size argument is an
-// IMAGE_SIZES key (default 'medium'). hideName replaces the alt text (and so the
-// zoom modal's title) with the neutral default, so a file name such as
-// "seborrheic-keratosis.jpg" can't give away a quiz answer.
+// IMAGE_SIZES key (default 'medium'); 'full' fills the content area, so it
+// ignores left/right alignment rather than floating at half width. hideName
+// replaces the alt text (and so the zoom modal's title) with the neutral
+// default, so a file name such as "seborrheic-keratosis.jpg" can't give away
+// a quiz answer.
 const buildImageModal = (imageUrl, imageAlt, caption, align = 'center', size = 'medium', hideName = false) => {
     const uid = 'bsModal' + Math.random().toString(36).slice(2, 9);
     const src = escapeHtml(imageUrl) || 'https://placehold.co/800x500?text=Image';
@@ -483,7 +485,10 @@ const buildImageModal = (imageUrl, imageAlt, caption, align = 'center', size = '
         : '';
     let figClass = 'tiny-bs-image text-center';
     let figStyle = '';
-    if (align === 'left') {
+    if (size === 'full') {
+        // Keep the centred block figure: a full-width float has nothing to wrap beside it.
+        figClass = 'tiny-bs-image';
+    } else if (align === 'left') {
         figClass = 'tiny-bs-image tiny-bs-image-float float-start me-3 mb-2';
         figStyle = ' style="max-width:50%;"';
     } else if (align === 'right') {
