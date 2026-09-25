@@ -89,3 +89,15 @@
     font-family: var(--bs-font-monospace, monospace);
     font-size: 0.85rem;
 }
+
+/*
+ * A left/right-aligned "Image with Zoom Modal" is floated so the text (or quiz
+ * answers) wrap beside it. A float does not stretch its parent, so in a quiz
+ * question the image hung out below the shaded question box. flow-root makes
+ * the question box grow to contain the image, while the answers still sit
+ * beside it. Scoped to question boxes that actually hold one of our images.
+ */
+.que .formulation:has(.tiny-bs-image-float),
+.que .outcome:has(.tiny-bs-image-float) {
+    display: flow-root;
+}
