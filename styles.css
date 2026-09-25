@@ -122,3 +122,11 @@
 .tiny-bs-cardrow {
     contain: inline-size;
 }
+
+/*
+ * Cap each Card Row card at the row's visible width so a whole card fits on a
+ * narrow phone. New rows carry this inline; this also fixes older rows.
+ */
+.tiny-bs-cardrow-track > .card {
+    max-width: 100%;
+}

@@ -42,6 +42,18 @@ Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
   Image with Zoom Modal fix in 1.4.10). This also fixes cards already inserted.
 - **Long Jumbotron titles wrap** — a long word in a Jumbotron title ran off the
   side of the page on phones (and in a quiz question on desktop). It now wraps.
+- **Card Row fits on phones** — a card could be wider than the visible part of
+  the row on a phone (e.g. a 340px Large card in a 166px space), so no card was
+  ever fully visible. Cards are now capped at the row's width, and the arrow
+  gutter narrows on small screens. The width cap also fixes older rows.
+- **Carousel arrows stay inside on narrow phones** — at 360px and below the
+  round prev/next buttons stuck out past the carousel, adding a small
+  horizontal scrollbar.
+- **Wide tables no longer stretch a quiz question** — on tablet widths an
+  8-column table in a quiz question widened the question box past the page. It
+  now scrolls inside its own box as intended.
+- Checked every component at 320, 360, 414, 768, 1024, 1280 and 1920px wide,
+  in a quiz question (text and answers) and in ordinary page content.
 
 ## 1.4.10
 

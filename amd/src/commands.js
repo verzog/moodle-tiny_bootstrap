@@ -748,7 +748,10 @@ const carouselControl = (uid, dir, label) => {
     // button that carries no data-bs-* toggle (data-bs-slide is not one), so a
     // button control is stripped from the page. Bootstrap's carousel data API
     // drives an anchor control natively and suppresses its href navigation.
-    return `  <a class="carousel-control-${dir}" href="#" role="button" data-bs-target="#${uid}" data-bs-slide="${dir}">
+    // Bootstrap sizes the control at 15% of the carousel; the min-width keeps
+    // the 2.75rem disc inside it on a narrow phone, where 15% is smaller.
+    return `  <a class="carousel-control-${dir}" href="#" role="button" data-bs-target="#${uid}" data-bs-slide="${dir}"
+     style="min-width:3rem;">
     <span aria-hidden="true" style="${disc}">${chevronIcon(dir)}</span>
     <span class="visually-hidden">${escapeHtml(label)}</span>
   </a>`;
@@ -927,13 +930,15 @@ const buildCardRow = (cards, opts = {}) => {
         // Size styles fix every card to the same width and height so the row is
         // uniform; taller content is clipped by overflow:hidden. With no size
         // set, fall back to the responsive flex-basis (a phone-width column on
-        // small screens, about a third of a wide container on desktop).
+        // small screens, about a third of a wide container on desktop). The
+        // max-width caps a card at the row's visible width, so a whole card fits
+        // on a narrow phone instead of being cut off.
         const sizeParts = [];
         if (scrollable) {
             sizeParts.push(width ? `flex:0 0 ${width}px` : 'flex:0 0 min(85vw, 320px)');
-            sizeParts.push('scroll-snap-align:start');
+            sizeParts.push('max-width:100%', 'scroll-snap-align:start');
         } else if (width) {
-            sizeParts.push(`width:${width}px`);
+            sizeParts.push(`width:${width}px`, 'max-width:100%');
         }
         if (height) {
             sizeParts.push(`height:${height}px`, 'overflow:hidden');
@@ -991,6 +996,10 @@ ${renderCard(cards[0], 0, false)}
     // to auto also clips the vertical axis, so when the cards carry a drop
     // shadow the track needs a taller vertical gutter or the shadow is cut off.
     const trackPadY = shadow ? '1.5rem' : '0.5rem';
+    // The side gutter for the arrows shrinks on phones (8vw is 3.25rem at about
+    // 650px) so the cards get more of a narrow screen; there the arrows sit over
+    // the card edges, and swiping is the main way to scroll anyway.
+    const trackPadX = 'min(3.25rem, 8vw)';
     // Contain:inline-size stops the track's full width counting towards the
     // parent's minimum width. Without it the row stretched a quiz question box
     // (a flex item in Boost) past the edge of the page on desktop.
@@ -998,8 +1007,8 @@ ${renderCard(cards[0], 0, false)}
 <div class="tiny-bs-cardrow" id="${uid}" style="position:relative;contain:inline-size;">
 ${navBtn('prev', str.previous)}
   <div class="tiny-bs-cardrow-track" data-cardrow-track style="display:flex;gap:1rem;`
-        + `overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:3.25rem;`
-        + `scroll-behavior:smooth;padding:${trackPadY} 3.25rem;">
+        + `overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:${trackPadX};`
+        + `scroll-behavior:smooth;padding:${trackPadY} ${trackPadX};">
 ${items}
   </div>
 ${navBtn('next', str.next)}
@@ -1073,8 +1082,10 @@ const buildTable = (rows, cols, headerRow, caption, opts = {}) => {
     const bodyRows = Array.from({length: rows}, (_, r) =>
         `    <tr>\n${Array.from({length: cols}, (_, c) =>
             `      <td>${cellText(r, c)}</td>`).join('\n')}\n    </tr>`).join('\n');
+    // Contain:inline-size keeps a wide table's width from stretching a quiz
+    // question box (a flex item in Boost); the table scrolls inside instead.
     return `<!-- Bootstrap 5 responsive table -->
-<div class="table-responsive">
+<div class="table-responsive" style="contain:inline-size;">
   <table class="${classes.join(' ')}">${captionHtml}${headerHtml}
   <tbody>
 ${bodyRows}
