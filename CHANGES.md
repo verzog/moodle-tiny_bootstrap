@@ -7,6 +7,54 @@ All notable changes to the **Bootstrap Scaffolding** TinyMCE plugin
 Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 `requires = 2025041400`). Requires **PHP 8.2+** and a Bootstrap 5 theme.
 
+## 1.4.11
+
+### Features
+- **Hide image name on every image component** — the **Hide image name (for
+  quizzes)** option now covers every component where picking a file fills in the
+  alt text. (Jumbotron is left out: its background alt text is never filled from
+  the file name.)
+- **Hide image name on Image and Text** — the **Hide image name (for quizzes)**
+  tick-box from Image with Zoom Modal is now on the Image and Text dialog too.
+  When ticked, the image's alt text is "Image" instead of the picked file name.
+  (The enlarged view's title is the heading you type, so it never showed the
+  file name.)
+- **Hide image name on Card Group** — one tick-box for the whole group. When
+  ticked, each card image's alt text is "Card 1 image", "Card 2 image" and so
+  on instead of the picked file name. (The enlarged view's title is the card
+  title you type.)
+- **Hide image name on Carousel and Card Row** — one tick-box for the whole
+  carousel or row. When ticked, image alt text is "Slide 1", "Slide 2"… or
+  "Card 1", "Card 2"… instead of the picked file name.
+
+### Fixes
+- **Card Row no longer stretches a quiz question off the page** — on desktop, a
+  Card Row in a quiz question made the whole question box grow to fit every
+  card, pushing it hundreds of pixels past the edge of the page. The row now
+  stays the width of the question and scrolls inside it. This also fixes Card
+  Rows already inserted (through the plugin stylesheet).
+- **No stray scrollbar in quiz answers** — a Card Group, Image and Text or
+  Video and Text block used in an answer choice (or any other scrolling content
+  box) showed a small horizontal scrollbar. Re-insert older blocks to pick this
+  up.
+- **Card images keep their shape when resized** — resizing a Card Group or
+  Card Row image with the editor's handles squashed it (the same problem as the
+  Image with Zoom Modal fix in 1.4.10). This also fixes cards already inserted.
+- **Long Jumbotron titles wrap** — a long word in a Jumbotron title ran off the
+  side of the page on phones (and in a quiz question on desktop). It now wraps.
+- **Card Row fits on phones** — a card could be wider than the visible part of
+  the row on a phone (e.g. a 340px Large card in a 166px space), so no card was
+  ever fully visible. Cards are now capped at the row's width, and the arrow
+  gutter narrows on small screens. The width cap also fixes older rows.
+- **Carousel arrows stay inside on narrow phones** — at 360px and below the
+  round prev/next buttons stuck out past the carousel, adding a small
+  horizontal scrollbar.
+- **Wide tables no longer stretch a quiz question** — on tablet widths an
+  8-column table in a quiz question widened the question box past the page. It
+  now scrolls inside its own box as intended.
+- Checked every component at 320, 360, 414, 768, 1024, 1280 and 1920px wide,
+  in a quiz question (text and answers) and in ordinary page content.
+
 ## 1.4.10
 
 ### Features

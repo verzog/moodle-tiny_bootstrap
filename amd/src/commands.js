@@ -182,7 +182,7 @@ const STRING_KEYS = [
     'cardrow_size_large', 'cardrow_bg', 'cardrow_bg_colour', 'cardrow_text',
     'cardrow_text_colour', 'cardrow_border', 'cardrow_border_colour',
     'cardrow_radius', 'cardrow_radius_none', 'cardrow_shadow',
-    'btn_behaviour', 'btn_samewindow', 'btn_newwindow',
+    'btn_behaviour', 'btn_samewindow', 'btn_newwindow', 'image_hide_name',
 ];
 
 // Structural and formatting tags allowed in the rich-text fields, with any
@@ -379,8 +379,9 @@ const buildZoomModal = (uid, src, alt, caption = '', title = null) => {
         ? `\n        <div class="mt-2 mb-0 text-muted">${capContent}</div>`
         : '';
     const displayTitle = title || alt;
-    // Use modal-xl + inline styles so the zoom works on regular view pages where
-    // the TinyMCE plugin CSS (styles.css) is not loaded.
+    // Use modal-xl + inline styles so the zoom works even under a theme that
+    // excludes plugin stylesheets. (Moodle normally bundles styles.css into the
+    // theme CSS on every page, view pages included.)
     // Setting width:100% + height:65vh + object-fit:contain makes the image fill
     // the modal body and scale up small images while preserving aspect ratio.
     return `<div class="modal fade tiny-bootstrap-modal" id="${uid}" tabindex="-1" aria-label="${alt}" aria-hidden="true">
@@ -400,13 +401,15 @@ const buildZoomModal = (uid, src, alt, caption = '', title = null) => {
 </div>`;
 };
 
-// Opts: {gap, withImages}. gap is a Bootstrap gutter class ('g-0'…'g-5') that
-// sets the spacing between cards; withImages=false renders text-only cards
-// (no image, no zoom modal). The cards sit in a responsive .row so they wrap
+// Opts: {gap, withImages, hideName}. gap is a Bootstrap gutter class ('g-0'…'g-5')
+// that sets the spacing between cards; withImages=false renders text-only cards
+// (no image, no zoom modal); hideName=true swaps each image's alt text for the
+// neutral "Card N image" so a file name can't give away a quiz answer (the
+// zoom modal title is the card title). The cards sit in a responsive .row so they wrap
 // and keep equal heights (.h-100) with real spacing between them — unlike
 // .card-group, which butts the cards together with no gaps.
 const buildCardGroup = (cards, opts = {}) => {
-    const {gap = 'g-4', withImages = true} = opts;
+    const {gap = 'g-4', withImages = true, hideName = false} = opts;
     let rowCols = 'row-cols-1 row-cols-md-2';
     if (cards.length >= 4) {
         rowCols = 'row-cols-1 row-cols-sm-2 row-cols-lg-4';
@@ -431,14 +434,14 @@ const buildCardGroup = (cards, opts = {}) => {
         }
         const uid = 'bsCardImg' + Math.random().toString(36).slice(2, 9);
         const imgSrc = escapeHtml(card.imageUrl) || 'https://placehold.co/600x300?text=Image';
-        const imgAlt = escapeHtml(card.imageAlt) || escapeHtml(fmt(str.card_default_alt, i + 1));
+        const imgAlt = (!hideName && escapeHtml(card.imageAlt)) || escapeHtml(fmt(str.card_default_alt, i + 1));
         return {
             cardHtml: `  <div class="col">
     <div class="card h-100">
       <a href="#" class="tiny-bs-card-img-link" data-bs-toggle="modal"
          data-bs-target="#${uid}" title="${escapeHtml(str.click_to_enlarge)}">
         <img src="${imgSrc}" class="card-img-top tiny-bs-card-img"
-             style="cursor:zoom-in;" alt="${imgAlt}">
+             style="height:auto;cursor:zoom-in;" alt="${imgAlt}">
       </a>
       <div class="card-body">
         <h5 class="card-title">${title}</h5>
@@ -452,9 +455,14 @@ const buildCardGroup = (cards, opts = {}) => {
     const cardsHtml = rendered.map(r => r.cardHtml).join('\n');
     const modalsHtml = rendered.map(r => r.modalHtml).filter(Boolean).join('\n\n');
     const modalsBlock = modalsHtml ? `\n\n${modalsHtml}` : '';
+    // The row sits in an overflow-hidden wrapper: a .row's negative side margins
+    // otherwise make a scrolling parent (a quiz answer, Moodle's .no-overflow
+    // content boxes) show a horizontal scrollbar.
     return `<!-- Bootstrap 5 card group -->
+<div class="overflow-hidden">
 <div class="row ${rowCols} ${gap}">
 ${cardsHtml}
+</div>
 </div>${modalsBlock}`;
 };
 
@@ -508,11 +516,12 @@ ${buildZoomModal(uid, src, alt, caption)}`;
 
 // Layout 'image-right' puts the image on the right; anything else
 // (default) puts the image on the left. The image is zoomable via the
-// shared modal builder.
-const buildImageText = (layout, imageUrl, imageAlt, caption, heading, bodyText) => {
+// shared modal builder. hideName swaps the alt text for the neutral default so
+// a file name can't give away a quiz answer (the modal title is the heading).
+const buildImageText = (layout, imageUrl, imageAlt, caption, heading, bodyText, hideName = false) => {
     const uid = 'bsImgTxt' + Math.random().toString(36).slice(2, 9);
     const src = escapeHtml(imageUrl) || 'https://placehold.co/600x400?text=Image';
-    const alt = escapeHtml(imageAlt) || escapeHtml(str.default_alt);
+    const alt = (!hideName && escapeHtml(imageAlt)) || escapeHtml(str.default_alt);
     const headingSafe = escapeHtml(heading) || escapeHtml(str.default_heading);
     const bodySafe = sanitizeRich(bodyText) || escapeHtml(str.default_body);
     const imageRight = layout === 'image-right';
@@ -526,9 +535,13 @@ const buildImageText = (layout, imageUrl, imageAlt, caption, heading, bodyText) 
     <div>${bodySafe}</div>
   </div>`;
     const cols = imageRight ? `${textCol}\n${imageCol}` : `${imageCol}\n${textCol}`;
+    // The overflow-hidden wrapper stops the row's negative margins adding a
+    // horizontal scrollbar to a scrolling parent such as a quiz answer.
     return `<!-- Bootstrap 5 image + text, image ${imageRight ? 'right' : 'left'} -->
+<div class="overflow-hidden">
 <div class="row align-items-center g-4 my-3">
 ${cols}
+</div>
 </div>
 
 ${buildZoomModal(uid, src, alt, caption, headingSafe)}`;
@@ -561,7 +574,7 @@ const videoEmbed = (videoUrl) => {
 };
 
 // Title is pre-escaped (caller's responsibility). Inline styles only, so the
-// modal works on view pages where the plugin CSS is not loaded.
+// modal works even under a theme that excludes plugin stylesheets.
 const buildVideoModal = (uid, embedHtml, title) => {
     return `<div class="modal fade tiny-bootstrap-modal" id="${uid}" tabindex="-1" aria-label="${title}" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -613,15 +626,19 @@ const buildVideoText = (layout, videoUrl, heading, bodyText) => {
     <div>${bodySafe}</div>
   </div>`;
     const cols = videoRight ? `${textCol}\n${videoCol}` : `${videoCol}\n${textCol}`;
+    // The overflow-hidden wrapper stops the row's negative margins adding a
+    // horizontal scrollbar to a scrolling parent such as a quiz answer.
     return `<!-- Bootstrap 5 video + text, video ${videoRight ? 'right' : 'left'} -->
+<div class="overflow-hidden">
 <div class="row align-items-center g-4 my-3">
 ${cols}
+</div>
 </div>${modalHtml}`;
 };
 
 // Build the absolutely-positioned background layer for a jumbotron. Returns
 // an empty string when bgType is 'none' or bgUrl is blank. Inline styles only
-// so it renders correctly on view pages without the plugin CSS.
+// so it renders correctly even under a theme that excludes plugin stylesheets.
 const buildJumbotronBackground = (bgType, bgUrl, bgAlt) => {
     const u = (bgUrl || '').trim();
     if (!u || bgType === 'none') {
@@ -686,7 +703,7 @@ const buildJumbotron = (title, lead, buttonText, buttonUrl, buttonTarget, bgType
         : '';
     return `<!-- Bootstrap 5 jumbotron -->
 <div class="${wrapperClass}">${bg}${overlayHtml}
-  <div class="container-fluid py-3"${contentStyle}>
+  <div class="container-fluid py-3 text-break"${contentStyle}>
     <h1 class="display-5 fw-bold">${titleSafe}</h1>
     <div class="col-md-9 fs-5">${leadSafe}</div>${btn}
   </div>
@@ -722,8 +739,8 @@ const chevronIcon = (dir) => {
 };
 
 // Modern circular prev/next control: a CSS chevron on a translucent disc, styled
-// inline so it renders on view pages without the plugin CSS (Bootstrap's default
-// control-icon background images do not always resolve).
+// inline so it renders even under a theme that excludes plugin stylesheets
+// (Bootstrap's default control-icon background images do not always resolve).
 const carouselControl = (uid, dir, label) => {
     const disc = 'display:inline-flex;align-items:center;justify-content:center;'
         + 'width:2.75rem;height:2.75rem;border-radius:50%;background:rgba(0,0,0,0.5);'
@@ -732,7 +749,10 @@ const carouselControl = (uid, dir, label) => {
     // button that carries no data-bs-* toggle (data-bs-slide is not one), so a
     // button control is stripped from the page. Bootstrap's carousel data API
     // drives an anchor control natively and suppresses its href navigation.
-    return `  <a class="carousel-control-${dir}" href="#" role="button" data-bs-target="#${uid}" data-bs-slide="${dir}">
+    // Bootstrap sizes the control at 15% of the carousel; the min-width keeps
+    // the 2.75rem disc inside it on a narrow phone, where 15% is smaller.
+    return `  <a class="carousel-control-${dir}" href="#" role="button" data-bs-target="#${uid}" data-bs-slide="${dir}"
+     style="min-width:3rem;">
     <span aria-hidden="true" style="${disc}">${chevronIcon(dir)}</span>
     <span class="visually-hidden">${escapeHtml(label)}</span>
   </a>`;
@@ -744,7 +764,9 @@ const carouselControl = (uid, dir, label) => {
 // autoslide is '' (off), 'slow' (~7s), or 'fast' (~2.5s).
 // captionBg is null, or {colour: '#rrggbb', opacity: 0-1} for a translucent
 // panel behind the caption so overlaid text stays readable.
-const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => {
+// hideName=true swaps each slide's alt text for the neutral "Slide N" so a file
+// name can't give away a quiz answer.
+const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null, hideName = false) => {
     const uid = 'bsCar' + Math.random().toString(36).slice(2, 9);
     const ratioCss = CAROUSEL_RATIOS[ratio]
         ? ` style="aspect-ratio:${CAROUSEL_RATIOS[ratio]};object-fit:cover;"` : '';
@@ -786,7 +808,7 @@ const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null) => 
         const btnHtml = btnText
             ? `\n        <a class="btn btn-${btnVariant}" href="${btnHref}" role="button"${btnTarget}>${btnText}</a>`
             : '';
-        const alt = escapeHtml(s.imageAlt) || escapeHtml(fmt(str.slide_default, i + 1));
+        const alt = (!hideName && escapeHtml(s.imageAlt)) || escapeHtml(fmt(str.slide_default, i + 1));
         // Fixed-ratio image slide: the image fills a known-height box, so the
         // caption can overlay it (hidden below md, with a mobile CTA bar). The
         // Bootstrap caption keeps its own contrasting white text.
@@ -840,9 +862,10 @@ ${carouselControl(uid, 'next', str.next)}
 // A horizontally scrolling row of Bootstrap cards. Several cards are visible at
 // once (about three on a wide screen, fewer on a phone), and the prev/next
 // controls scroll the row by one card. Everything is styled inline so it renders
-// on view pages without the plugin stylesheet; the arrows use the view AMD
+// even under a theme that excludes plugin stylesheets; the arrows use the view AMD
 // module. cards is a list of {title, body, imageUrl, imageAlt, btnText, btnUrl,
-// btnVariant}.
+// btnVariant}. opts.hideName swaps each image's alt text for the neutral
+// "Card N" so a file name can't give away a quiz answer.
 const buildCardRow = (cards, opts = {}) => {
     const width = Number(opts.width) || 0;
     const height = Number(opts.height) || 0;
@@ -884,7 +907,8 @@ const buildCardRow = (cards, opts = {}) => {
             return `\n      <img src="${imageUrl}" class="card-img-top" alt="${imageAlt}"`
                 + ` style="width:100%;height:${imageBand}px;object-fit:cover;">`;
         }
-        return `\n      <img src="${imageUrl}" class="card-img-top" alt="${imageAlt}">`;
+        // Height auto keeps the aspect ratio if the image is resized in the editor.
+        return `\n      <img src="${imageUrl}" class="card-img-top" style="height:auto;" alt="${imageAlt}">`;
     };
     const renderCard = (c, i, scrollable) => {
         const title = escapeHtml(c.title);
@@ -898,7 +922,7 @@ const buildCardRow = (cards, opts = {}) => {
         const btnTarget = c.btnTarget === '_blank'
             ? ' target="_blank" rel="noopener noreferrer"' : '';
         const imageUrl = escapeHtml((c.imageUrl || '').trim());
-        const imageAlt = escapeHtml(c.imageAlt) || escapeHtml(fmt(str.card_default, i + 1));
+        const imageAlt = (!opts.hideName && escapeHtml(c.imageAlt)) || escapeHtml(fmt(str.card_default, i + 1));
         const img = cardImage(imageUrl, imageAlt);
         const btn = btnText
             ? `\n        <a class="btn btn-${btnVariant} mt-3 align-self-start" href="${btnHref}"`
@@ -907,13 +931,15 @@ const buildCardRow = (cards, opts = {}) => {
         // Size styles fix every card to the same width and height so the row is
         // uniform; taller content is clipped by overflow:hidden. With no size
         // set, fall back to the responsive flex-basis (a phone-width column on
-        // small screens, about a third of a wide container on desktop).
+        // small screens, about a third of a wide container on desktop). The
+        // max-width caps a card at the row's visible width, so a whole card fits
+        // on a narrow phone instead of being cut off.
         const sizeParts = [];
         if (scrollable) {
             sizeParts.push(width ? `flex:0 0 ${width}px` : 'flex:0 0 min(85vw, 320px)');
-            sizeParts.push('scroll-snap-align:start');
+            sizeParts.push('max-width:100%', 'scroll-snap-align:start');
         } else if (width) {
-            sizeParts.push(`width:${width}px`);
+            sizeParts.push(`width:${width}px`, 'max-width:100%');
         }
         if (height) {
             sizeParts.push(`height:${height}px`, 'overflow:hidden');
@@ -971,12 +997,19 @@ ${renderCard(cards[0], 0, false)}
     // to auto also clips the vertical axis, so when the cards carry a drop
     // shadow the track needs a taller vertical gutter or the shadow is cut off.
     const trackPadY = shadow ? '1.5rem' : '0.5rem';
+    // The side gutter for the arrows shrinks on phones (8vw is 3.25rem at about
+    // 650px) so the cards get more of a narrow screen; there the arrows sit over
+    // the card edges, and swiping is the main way to scroll anyway.
+    const trackPadX = 'min(3.25rem, 8vw)';
+    // Contain:inline-size stops the track's full width counting towards the
+    // parent's minimum width. Without it the row stretched a quiz question box
+    // (a flex item in Boost) past the edge of the page on desktop.
     return `<!-- Bootstrap 5 scrolling card row -->
-<div class="tiny-bs-cardrow" id="${uid}" style="position:relative;">
+<div class="tiny-bs-cardrow" id="${uid}" style="position:relative;contain:inline-size;">
 ${navBtn('prev', str.previous)}
   <div class="tiny-bs-cardrow-track" data-cardrow-track style="display:flex;gap:1rem;`
-        + `overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:3.25rem;`
-        + `scroll-behavior:smooth;padding:${trackPadY} 3.25rem;">
+        + `overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:${trackPadX};`
+        + `scroll-behavior:smooth;padding:${trackPadY} ${trackPadX};">
 ${items}
   </div>
 ${navBtn('next', str.next)}
@@ -1050,8 +1083,10 @@ const buildTable = (rows, cols, headerRow, caption, opts = {}) => {
     const bodyRows = Array.from({length: rows}, (_, r) =>
         `    <tr>\n${Array.from({length: cols}, (_, c) =>
             `      <td>${cellText(r, c)}</td>`).join('\n')}\n    </tr>`).join('\n');
+    // Contain:inline-size keeps a wide table's width from stretching a quiz
+    // question box (a flex item in Boost); the table scrolls inside instead.
     return `<!-- Bootstrap 5 responsive table -->
-<div class="table-responsive">
+<div class="table-responsive" style="contain:inline-size;">
   <table class="${classes.join(' ')}">${captionHtml}${headerHtml}
   <tbody>
 ${bodyRows}
@@ -1626,6 +1661,7 @@ const openCardDialog = async(editor) => {
     const [
         title, countLabel, insertLabel, browseLabel,
         imagesLabel, spacingLabel, spacingNone, spacingSmall, spacingMedium, spacingLarge,
+        hideNameLabel,
     ] = await Promise.all([
         getString('dialog_card_title', component),
         getString('card_count', component),
@@ -1637,6 +1673,7 @@ const openCardDialog = async(editor) => {
         getString('card_spacing_small', component),
         getString('card_spacing_medium', component),
         getString('card_spacing_large', component),
+        getString('image_hide_name', component),
     ]);
 
     // Default to 3 cards; select default must match so the dialog is consistent.
@@ -1657,6 +1694,7 @@ const openCardDialog = async(editor) => {
             {value: 'g-5', text: spacingLarge},
         ], 'g-4') +
         checkboxField('card_images', imagesLabel, true) +
+        checkboxField('hide_name', hideNameLabel) +
         `<div data-region="cards">${renderCards(cardCount)}</div>`;
 
     const modal = await openModal(title, body, insertLabel);
@@ -1723,6 +1761,7 @@ const openCardDialog = async(editor) => {
         editor.insertContent(buildCardGroup(cards, {
             gap: root.querySelector('[name="card_spacing"]').value,
             withImages,
+            hideName: root.querySelector('[name="hide_name"]').checked,
         }));
     });
 };
@@ -1786,7 +1825,7 @@ const openImageDialog = async(editor) => {
 const openImageTextDialog = async(editor) => {
     const [
         title, urlLabel, altLabel, captionLabel, headingLabel, bodyLabel,
-        layoutLabel, leftLabel, rightLabel, insertLabel, browseLabel,
+        layoutLabel, leftLabel, rightLabel, insertLabel, browseLabel, hideNameLabel,
     ] = await Promise.all([
         getString('dialog_imagetext_title', component),
         getString('image_url', component),
@@ -1799,6 +1838,7 @@ const openImageTextDialog = async(editor) => {
         getString('imagetext_layout_imageright', component),
         getString('insert', component),
         getString('browse', component),
+        getString('image_hide_name', component),
     ]);
 
     const body =
@@ -1808,6 +1848,7 @@ const openImageTextDialog = async(editor) => {
         ]) +
         urlField('url', urlLabel, browseLabel, 'https://placehold.co/600x400?text=Image') +
         textField('alt', altLabel, str.describe_image_sr) +
+        checkboxField('hide_name', hideNameLabel) +
         textField('it_heading', headingLabel, str.default_heading) +
         richField('it_body', bodyLabel, str.default_body) +
         richField('caption', captionLabel, str.imagetext_caption_placeholder);
@@ -1824,6 +1865,7 @@ const openImageTextDialog = async(editor) => {
             getRich(root, 'caption'),
             root.querySelector('[name="it_heading"]').value,
             getRich(root, 'it_body'),
+            root.querySelector('[name="hide_name"]').checked,
         ));
     });
 };
@@ -1990,6 +2032,7 @@ const openCarouselDialog = async(editor) => {
             {value: '0.75', text: opacityStrong},
             {value: '0', text: opacityNone},
         ], '0.5') +
+        checkboxField('hide_name', str.image_hide_name) +
         Array.from({length: slideCount}, (_, i) => carouselSlideSection(i + 1, browseLabel)).join('');
 
     const modal = await openModal(title, body, insertLabel);
@@ -2013,7 +2056,8 @@ const openCarouselDialog = async(editor) => {
             colour: root.querySelector('[name="caption_bg_colour"]').value,
             opacity: root.querySelector('[name="caption_bg_opacity"]').value,
         };
-        editor.insertContent(buildCarousel(slides, ratio, autoslide, captionBg));
+        const hideName = root.querySelector('[name="hide_name"]').checked;
+        editor.insertContent(buildCarousel(slides, ratio, autoslide, captionBg, hideName));
     });
 };
 
@@ -2087,6 +2131,7 @@ const openCardRowDialog = async(editor) => {
     // they need without a re-rendering count.
     const cardMax = 6;
     const body = cardRowStyleSection()
+        + checkboxField('hide_name', str.image_hide_name)
         + Array.from({length: cardMax}, (_, i) => cardRowCardSection(i + 1, browseLabel)).join('');
 
     const modal = await openModal(title, body, insertLabel);
@@ -2120,6 +2165,7 @@ const openCardRowDialog = async(editor) => {
             border: root.querySelector('[name="cr_border_on"]').checked
                 ? root.querySelector('[name="cr_border"]').value : '',
             shadow: root.querySelector('[name="cr_shadow"]').checked,
+            hideName: root.querySelector('[name="hide_name"]').checked,
         };
         editor.insertContent(buildCardRow(cards, opts));
     });
