@@ -7,7 +7,7 @@ ready-made Bootstrap 5 HTML components without writing any code.
 
 | Component | What it inserts |
 |-----------|-----------------|
-| **Page Grid Layout** | 1–4 equal-width responsive columns in a responsive container |
+| **Page Grid Layout** | 1–4 equal-width responsive columns, 1–4 rows deep, in a responsive container |
 | **Heading** | H1–H6 with typed text |
 | **Card Group** | 2–4 equal-width Bootstrap cards, each with an image, title, and body |
 | **Image with Zoom Modal** | A thumbnail that opens a full-size Bootstrap 5 modal with an optional caption and a left/centre/right alignment choice |
@@ -23,7 +23,7 @@ ready-made Bootstrap 5 HTML components without writing any code.
 
 ### Per-component options
 
-- **Image with Zoom Modal** — choose an **alignment**: centred (default), left or right. Left/right float the image so surrounding text wraps alongside it, with a max-width that keeps a large image from overflowing a narrow content area (such as a quiz answer box). Choose an **image size** — Small (200px), Medium (300px, default), Large (450px) or Full width; the image keeps its proportions and shrinks to fit narrow areas. In a quiz, the question box grows to contain a left/right-aligned image. Tick **Hide image name** in quiz questions so the file name is not shown as the alt text or enlarged-view title.
+- **Image with Zoom Modal** — type an optional **Modal title** to show above the enlarged image (left blank, the title is the alt text, or "Image" when **Hide image name** is ticked). Choose an **alignment**: centred (default), left or right. Left/right float the image so surrounding text wraps alongside it, with a max-width that keeps a large image from overflowing a narrow content area (such as a quiz answer box). Choose an **image size** — Small (200px), Medium (300px, default), Large (450px) or Full width; the image keeps its proportions and shrinks to fit narrow areas. In a quiz, the question box grows to contain a left/right-aligned image. Tick **Hide image name** in quiz questions so the file name is not shown as the alt text or enlarged-view title.
 - **Card Group** — choose the **spacing between cards**, toggle **Include images** off for text-only cards, and tick **Hide image name** in quiz questions so file names aren't used as the images' alt text.
 - **Card Row** — a **Card styling** section sets a uniform **Card size** (Small/Medium/Large — every card the same width and height, with images cropped to a fixed band), a per-card **background colour**, optional **text colour** and **border colour**, **corner rounding** and a **drop shadow**.
 - **Jumbotron** — the call-to-action button now takes a **link (URL)**, and the background image/video field has a working **Browse repositories…** button.
@@ -88,7 +88,7 @@ and click **Insert**.
 ### Grid layout tip
 
 The inserted grid uses standard Bootstrap 5 `.row` / `.col-*` classes.  
-To add extra rows, copy the `<div class="row g-3">…</div>` block in the
+Choose up to 4 rows in the dialog. To add more later, copy the `<div class="row g-3">…</div>` block in the
 HTML source view and paste it inside the same `.container-fluid`.
 
 ### Image modal tip

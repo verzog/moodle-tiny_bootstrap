@@ -379,12 +379,14 @@ const buildZoomModal = (uid, src, alt, caption = '', title = null) => {
         ? `\n        <div class="mt-2 mb-0 text-muted">${capContent}</div>`
         : '';
     const displayTitle = title || alt;
+    // The dialog is labelled by its visible title so screen readers announce
+    // the same text sighted users see.
     // Use modal-xl + inline styles so the zoom works even under a theme that
     // excludes plugin stylesheets. (Moodle normally bundles styles.css into the
     // theme CSS on every page, view pages included.)
     // Setting width:100% + height:65vh + object-fit:contain makes the image fill
     // the modal body and scale up small images while preserving aspect ratio.
-    return `<div class="modal fade tiny-bootstrap-modal" id="${uid}" tabindex="-1" aria-label="${alt}" aria-hidden="true">
+    return `<div class="modal fade tiny-bootstrap-modal" id="${uid}" tabindex="-1" aria-label="${displayTitle}" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header py-2">
@@ -481,11 +483,14 @@ const IMAGE_SIZES = {small: '200px', medium: '300px', large: '450px', full: '100
 // ignores left/right alignment rather than floating at half width. hideName
 // replaces the alt text (and so the zoom modal's title) with the neutral
 // default, so a file name such as "seborrheic-keratosis.jpg" can't give away
-// a quiz answer.
-const buildImageModal = (imageUrl, imageAlt, caption, align = 'center', size = 'medium', hideName = false) => {
+// a quiz answer. modalTitle, when typed, is the zoom modal's title; left blank,
+// the modal falls back to the alt text.
+const buildImageModal = (imageUrl, imageAlt, caption, align = 'center', size = 'medium', hideName = false,
+    modalTitle = '') => {
     const uid = 'bsModal' + Math.random().toString(36).slice(2, 9);
     const src = escapeHtml(imageUrl) || 'https://placehold.co/800x500?text=Image';
     const alt = (!hideName && escapeHtml(imageAlt)) || escapeHtml(str.default_alt);
+    const title = escapeHtml((modalTitle || '').trim()) || null;
     const width = IMAGE_SIZES[size] || IMAGE_SIZES.medium;
     const capContent = sanitizeRich(caption);
     const figcaption = capContent
@@ -511,7 +516,7 @@ const buildImageModal = (imageUrl, imageAlt, caption, align = 'center', size = '
   </a>${figcaption}
 </figure>
 
-${buildZoomModal(uid, src, alt, caption)}`;
+${buildZoomModal(uid, src, alt, caption, title)}`;
 };
 
 // Layout 'image-right' puts the image on the right; anything else
@@ -1603,9 +1608,11 @@ const openPicker = async(editor) => {
 };
 
 const openGridDialog = async(editor) => {
-    const [title, colsLabel, insertLabel] = await Promise.all([
+    const [title, colsLabel, rowsLabel, oneRow, insertLabel] = await Promise.all([
         getString('dialog_grid_title', component),
         getString('grid_columns', component),
+        getString('grid_rows', component),
+        getString('grid_rows_1', component),
         getString('insert', component),
     ]);
 
@@ -1614,12 +1621,17 @@ const openGridDialog = async(editor) => {
         {value: '2', text: str.grid_2col},
         {value: '3', text: str.grid_3col},
         {value: '4', text: str.grid_4col},
-    ]);
+    ]) + selectField('rows', rowsLabel, [
+        {value: '1', text: oneRow},
+        ...[2, 3, 4].map(n => ({value: String(n), text: fmt(str.rows_n, n)})),
+    ], '1');
 
     const modal = await openModal(title, body, insertLabel);
     modal.getRoot().on(ModalEvents.save, () => {
-        const cols = modal.getRoot()[0].querySelector('[name="cols"]').value;
-        editor.insertContent(buildGrid(parseInt(cols, 10)));
+        const root = modal.getRoot()[0];
+        const cols = root.querySelector('[name="cols"]').value;
+        const rows = root.querySelector('[name="rows"]').value;
+        editor.insertContent(buildGrid(parseInt(cols, 10), parseInt(rows, 10)));
     });
 };
 
@@ -1771,6 +1783,7 @@ const openImageDialog = async(editor) => {
         title, urlLabel, altLabel, captionLabel, insertLabel, browseLabel,
         alignLabel, alignCenter, alignLeft, alignRight,
         sizeLabel, sizeSmall, sizeMedium, sizeLarge, sizeFull, hideNameLabel,
+        modalTitleLabel, modalTitlePlaceholder,
     ] = await Promise.all([
         getString('dialog_image_title', component),
         getString('image_url', component),
@@ -1788,11 +1801,14 @@ const openImageDialog = async(editor) => {
         getString('image_size_large', component),
         getString('image_size_full', component),
         getString('image_hide_name', component),
+        getString('image_modal_title', component),
+        getString('image_modal_title_placeholder', component),
     ]);
 
     const body =
         urlField('url', urlLabel, browseLabel, 'https://placehold.co/800x500?text=Image') +
         textField('alt', altLabel, str.describe_image_sr) +
+        textField('modal_title', modalTitleLabel, modalTitlePlaceholder) +
         richField('caption', captionLabel, str.image_caption_placeholder) +
         selectField('align', alignLabel, [
             {value: 'center', text: alignCenter},
@@ -1818,7 +1834,8 @@ const openImageDialog = async(editor) => {
         const align = root.querySelector('[name="align"]').value;
         const size = root.querySelector('[name="size"]').value;
         const hideName = root.querySelector('[name="hide_name"]').checked;
-        editor.insertContent(buildImageModal(url, alt, caption, align, size, hideName));
+        const modalTitle = root.querySelector('[name="modal_title"]').value;
+        editor.insertContent(buildImageModal(url, alt, caption, align, size, hideName, modalTitle));
     });
 };
 
