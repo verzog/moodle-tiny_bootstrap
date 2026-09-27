@@ -15,6 +15,25 @@ Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
   button and duplicate card labels). Nothing on screen changes; translators
   have less to translate.
 
+## 1.4.12
+
+### Features
+- **Modal title for Image with Zoom Modal** — a new **Modal title (optional)**
+  field sets the title shown above the enlarged image. Before, the title was
+  always the alt text, or just "Image" when **Hide image name** was ticked, with
+  no way to change it. Left blank, it works as before.
+- **Rows for Page Grid Layout** — a new **Number of rows** choice (1–4) inserts
+  several rows of columns at once. The grid could already build extra rows, but
+  the dialog never offered the choice.
+- **Slide count for Carousel** — a new **Number of slides** choice (2–6)
+  replaces the fixed three slides. Anything already typed into a slide is kept
+  when you change the number.
+
+### Fixes
+- **Enlarged views are labelled by their title** — screen readers now announce
+  an enlarged image (Image with Zoom Modal, Card Group, Image and Text) by the
+  title shown at the top of it, not the image's alt text.
+
 ## 1.4.11
 
 ### Features
