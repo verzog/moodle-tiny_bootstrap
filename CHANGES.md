@@ -17,6 +17,9 @@ Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 - **Rows for Page Grid Layout** — a new **Number of rows** choice (1–4) inserts
   several rows of columns at once. The grid could already build extra rows, but
   the dialog never offered the choice.
+- **Slide count for Carousel** — a new **Number of slides** choice (2–6)
+  replaces the fixed three slides. Anything already typed into a slide is kept
+  when you change the number.
 
 ### Fixes
 - **Enlarged views are labelled by their title** — screen readers now announce

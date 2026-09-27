@@ -12,7 +12,7 @@ ready-made Bootstrap 5 HTML components without writing any code.
 | **Card Group** | 2–4 equal-width Bootstrap cards, each with an image, title, and body |
 | **Image with Zoom Modal** | A thumbnail that opens a full-size Bootstrap 5 modal with an optional caption and a left/centre/right alignment choice |
 | **Jumbotron** | A hero/banner section with title, lead text, and a call-to-action button |
-| **Carousel** | A Bootstrap 5 image slideshow/carousel (one slide at a time) |
+| **Carousel** | A Bootstrap 5 image slideshow/carousel of 2–6 slides (one slide at a time) |
 | **Card Row** | A horizontally scrolling row of cards — several visible at once (≈3 on desktop, fewer on mobile) with prev/next arrows and swipe; each card has a heading, body, optional image and optional button |
 | **Accordion** | A collapsible accordion with a configurable number of sections |
 | **Responsive Table** | A Bootstrap-wrapped table with optional header row and caption |
@@ -27,7 +27,7 @@ ready-made Bootstrap 5 HTML components without writing any code.
 - **Card Group** — choose the **spacing between cards**, toggle **Include images** off for text-only cards, and tick **Hide image name** in quiz questions so file names aren't used as the images' alt text.
 - **Card Row** — a **Card styling** section sets a uniform **Card size** (Small/Medium/Large — every card the same width and height, with images cropped to a fixed band), a per-card **background colour**, optional **text colour** and **border colour**, **corner rounding** and a **drop shadow**.
 - **Jumbotron** — the call-to-action button now takes a **link (URL)**, and the background image/video field has a working **Browse repositories…** button.
-- **Carousel** — choose an **aspect ratio** (16:9, 4:3, 1:1, 21:9 or natural) so mismatched images line up, set a **caption background colour** with an opacity so overlaid text stays readable, add an optional **call-to-action button** (text, link and colour) per slide, and use the modernised prev/next controls. Leave a slide's image blank to get a **content card** slide whose height fits its content (e.g. a pasted "course intake" card) — useful for a compact card carousel with no background image. In **natural** ratio a small image keeps its own size instead of being stretched to full width.
+- **Carousel** — choose the **number of slides** (2–6; anything already typed is kept when you change it), an **aspect ratio** (16:9, 4:3, 1:1, 21:9 or natural) so mismatched images line up, set a **caption background colour** with an opacity so overlaid text stays readable, add an optional **call-to-action button** (text, link and colour) per slide, and use the modernised prev/next controls. Leave a slide's image blank to get a **content card** slide whose height fits its content (e.g. a pasted "course intake" card) — useful for a compact card carousel with no background image. In **natural** ratio a small image keeps its own size instead of being stretched to full width.
 - **Responsive Table** — pick a **table colour** and **header colour** (Bootstrap contextual variants) and toggle **striped**, **bordered**, **hover** and **compact** styles.
 
 ### Hide image name (for quizzes)

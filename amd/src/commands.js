@@ -2006,6 +2006,7 @@ const openCarouselDialog = async(editor) => {
         autoslideLabel, autoslideOff, autoslideSlow, autoslideFast,
         captionBgLabel, captionOpacityLabel,
         opacityNone, opacityLight, opacityMedium, opacityStrong,
+        countLabel, slidesN,
     ] = await Promise.all([
         getString('dialog_carousel_title', component),
         getString('insert', component),
@@ -2026,10 +2027,16 @@ const openCarouselDialog = async(editor) => {
         getString('caption_bg_opacity_light', component),
         getString('caption_bg_opacity_medium', component),
         getString('caption_bg_opacity_strong', component),
+        getString('carousel_count', component),
+        getString('slides_n', component),
     ]);
 
-    const slideCount = 3;
+    // Default to 3 slides; the select default must match.
+    let slideCount = 3;
+    const renderSlides = (n) => Array.from({length: n}, (_, i) => carouselSlideSection(i + 1, browseLabel)).join('');
     const body =
+        selectField('carousel_count', countLabel,
+            [2, 3, 4, 5, 6].map((n) => ({value: String(n), text: fmt(slidesN, n)})), String(slideCount)) +
         selectField('carousel_ratio', ratioLabel, [
             {value: '16x9', text: ratio16x9},
             {value: '4x3', text: ratio4x3},
@@ -2050,22 +2057,62 @@ const openCarouselDialog = async(editor) => {
             {value: '0', text: opacityNone},
         ], '0.5') +
         checkboxField('hide_name', str.image_hide_name) +
-        Array.from({length: slideCount}, (_, i) => carouselSlideSection(i + 1, browseLabel)).join('');
+        `<div data-region="slides">${renderSlides(slideCount)}</div>`;
 
     const modal = await openModal(title, body, insertLabel);
     const root = modal.getRoot()[0];
+    const region = root.querySelector('[data-region="slides"]');
+
+    // Keep what the author has typed when the slide count changes: capture the
+    // fields, re-render the slots, then put the values back. Selects are
+    // included so each slide keeps its button colour and behaviour.
+    const snapshot = () => {
+        const out = {inputs: {}, rich: {}};
+        region.querySelectorAll('input, select').forEach((el) => {
+            out.inputs[el.name] = el.value;
+        });
+        region.querySelectorAll('[data-rich-wrap] > [data-rich]').forEach((el) => {
+            out.rich[el.dataset.rich] = readRichEl(el);
+        });
+        return out;
+    };
+    const restore = (data) => {
+        Object.entries(data.inputs).forEach(([name, value]) => {
+            const el = region.querySelector(`[name="${name}"]`);
+            if (el) {
+                el.value = value;
+            }
+        });
+        Object.entries(data.rich).forEach(([name, html]) => {
+            const el = region.querySelector(`[data-rich="${name}"]`);
+            if (el) {
+                el.innerHTML = sanitizeRich(html);
+            }
+        });
+    };
+
     wireBrowseButtons(editor, root);
     wireRichEditors(root);
+
+    root.querySelector('[name="carousel_count"]').addEventListener('change', (e) => {
+        const data = snapshot();
+        slideCount = parseInt(e.target.value, 10);
+        region.innerHTML = renderSlides(slideCount);
+        restore(data);
+        wireBrowseButtons(editor, region);
+        wireRichEditors(region);
+    });
+
     modal.getRoot().on(ModalEvents.save, () => {
         const slides = Array.from({length: slideCount}, (_, i) => ({
-            imageUrl: root.querySelector(`[name="slide_url_${i + 1}"]`).value,
-            imageAlt: root.querySelector(`[name="slide_alt_${i + 1}"]`).value,
-            captionTitle: root.querySelector(`[name="slide_title_${i + 1}"]`).value,
-            captionText: getRich(root, `slide_text_${i + 1}`),
-            btnText: root.querySelector(`[name="slide_btn_text_${i + 1}"]`).value,
-            btnUrl: root.querySelector(`[name="slide_btn_url_${i + 1}"]`).value,
-            btnVariant: root.querySelector(`[name="slide_btn_variant_${i + 1}"]`).value,
-            btnTarget: root.querySelector(`[name="slide_btn_target_${i + 1}"]`).value,
+            imageUrl: region.querySelector(`[name="slide_url_${i + 1}"]`).value,
+            imageAlt: region.querySelector(`[name="slide_alt_${i + 1}"]`).value,
+            captionTitle: region.querySelector(`[name="slide_title_${i + 1}"]`).value,
+            captionText: getRich(region, `slide_text_${i + 1}`),
+            btnText: region.querySelector(`[name="slide_btn_text_${i + 1}"]`).value,
+            btnUrl: region.querySelector(`[name="slide_btn_url_${i + 1}"]`).value,
+            btnVariant: region.querySelector(`[name="slide_btn_variant_${i + 1}"]`).value,
+            btnTarget: region.querySelector(`[name="slide_btn_target_${i + 1}"]`).value,
         }));
         const ratio = root.querySelector('[name="carousel_ratio"]').value;
         const autoslide = root.querySelector('[name="carousel_autoslide"]').value;
