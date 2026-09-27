@@ -7,12 +7,12 @@ ready-made Bootstrap 5 HTML components without writing any code.
 
 | Component | What it inserts |
 |-----------|-----------------|
-| **Page Grid Layout** | 1–4 equal-width responsive columns in a responsive container |
+| **Page Grid Layout** | 1–4 equal-width responsive columns, 1–4 rows deep, in a responsive container |
 | **Heading** | H1–H6 with typed text |
 | **Card Group** | 2–4 equal-width Bootstrap cards, each with an image, title, and body |
 | **Image with Zoom Modal** | A thumbnail that opens a full-size Bootstrap 5 modal with an optional caption and a left/centre/right alignment choice |
 | **Jumbotron** | A hero/banner section with title, lead text, and a call-to-action button |
-| **Carousel** | A Bootstrap 5 image slideshow/carousel (one slide at a time) |
+| **Carousel** | A Bootstrap 5 image slideshow/carousel of 2–6 slides (one slide at a time) |
 | **Card Row** | A horizontally scrolling row of cards — several visible at once (≈3 on desktop, fewer on mobile) with prev/next arrows and swipe; each card has a heading, body, optional image and optional button |
 | **Accordion** | A collapsible accordion with a configurable number of sections |
 | **Responsive Table** | A Bootstrap-wrapped table with optional header row and caption |
@@ -23,11 +23,11 @@ ready-made Bootstrap 5 HTML components without writing any code.
 
 ### Per-component options
 
-- **Image with Zoom Modal** — choose an **alignment**: centred (default), left or right. Left/right float the image so surrounding text wraps alongside it, with a max-width that keeps a large image from overflowing a narrow content area (such as a quiz answer box). Choose an **image size** — Small (200px), Medium (300px, default), Large (450px) or Full width; the image keeps its proportions and shrinks to fit narrow areas. In a quiz, the question box grows to contain a left/right-aligned image. Tick **Hide image name** in quiz questions so the file name is not shown as the alt text or enlarged-view title.
+- **Image with Zoom Modal** — type an optional **Modal title** to show above the enlarged image (left blank, the title is the alt text, or "Image" when **Hide image name** is ticked). Choose an **alignment**: centred (default), left or right. Left/right float the image so surrounding text wraps alongside it, with a max-width that keeps a large image from overflowing a narrow content area (such as a quiz answer box). Choose an **image size** — Small (200px), Medium (300px, default), Large (450px) or Full width; the image keeps its proportions and shrinks to fit narrow areas. In a quiz, the question box grows to contain a left/right-aligned image. Tick **Hide image name** in quiz questions so the file name is not shown as the alt text or enlarged-view title.
 - **Card Group** — choose the **spacing between cards**, toggle **Include images** off for text-only cards, and tick **Hide image name** in quiz questions so file names aren't used as the images' alt text.
 - **Card Row** — a **Card styling** section sets a uniform **Card size** (Small/Medium/Large — every card the same width and height, with images cropped to a fixed band), a per-card **background colour**, optional **text colour** and **border colour**, **corner rounding** and a **drop shadow**.
 - **Jumbotron** — the call-to-action button now takes a **link (URL)**, and the background image/video field has a working **Browse repositories…** button.
-- **Carousel** — choose an **aspect ratio** (16:9, 4:3, 1:1, 21:9 or natural) so mismatched images line up, set a **caption background colour** with an opacity so overlaid text stays readable, add an optional **call-to-action button** (text, link and colour) per slide, and use the modernised prev/next controls. Leave a slide's image blank to get a **content card** slide whose height fits its content (e.g. a pasted "course intake" card) — useful for a compact card carousel with no background image. In **natural** ratio a small image keeps its own size instead of being stretched to full width.
+- **Carousel** — choose the **number of slides** (2–6; anything already typed is kept when you change it), an **aspect ratio** (16:9, 4:3, 1:1, 21:9 or natural) so mismatched images line up, set a **caption background colour** with an opacity so overlaid text stays readable, add an optional **call-to-action button** (text, link and colour) per slide, and use the modernised prev/next controls. Leave a slide's image blank to get a **content card** slide whose height fits its content (e.g. a pasted "course intake" card) — useful for a compact card carousel with no background image. In **natural** ratio a small image keeps its own size instead of being stretched to full width.
 - **Responsive Table** — pick a **table colour** and **header colour** (Bootstrap contextual variants) and toggle **striped**, **bordered**, **hover** and **compact** styles.
 
 ### Hide image name (for quizzes)
@@ -88,7 +88,7 @@ and click **Insert**.
 ### Grid layout tip
 
 The inserted grid uses standard Bootstrap 5 `.row` / `.col-*` classes.  
-To add extra rows, copy the `<div class="row g-3">…</div>` block in the
+Choose up to 4 rows in the dialog. To add more later, copy the `<div class="row g-3">…</div>` block in the
 HTML source view and paste it inside the same `.container-fluid`.
 
 ### Image modal tip
