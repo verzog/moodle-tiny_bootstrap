@@ -10,7 +10,7 @@ Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 ## 1.4.13
 
 ### Maintenance
-- **Removed 12 unused language strings** left behind by earlier changes
+- **Removed 15 unused language strings** left behind by earlier changes
   (e.g. the old video poster and display options, the "Add another row" grid
   button and duplicate card labels). Nothing on screen changes; translators
   have less to translate.
