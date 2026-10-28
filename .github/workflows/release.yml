@@ -1,0 +1,23 @@
+name: Release zip
+
+# When a release is published, build an installable zip and attach it to the release, using the shared workflow in
+# https://github.com/verzog/moodle-ci-workflows. It checks the tag matches $plugin->release in version.php and names the
+# zip's top folder after the plugin's directory, as Moodle's "Install plugins" page expects.
+# To rebuild the zip for an existing release, run this workflow by hand from the Actions tab and enter its tag.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to rebuild the zip for
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    uses: verzog/moodle-ci-workflows/.github/workflows/release-zip.yml@v1
+    with:
+      tag: ${{ inputs.tag }}
