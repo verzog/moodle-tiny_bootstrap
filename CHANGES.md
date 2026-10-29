@@ -7,6 +7,15 @@ All notable changes to the **Bootstrap Scaffolding** TinyMCE plugin
 Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 `requires = 2025041400`). Requires **PHP 8.2+** and a Bootstrap 5 theme.
 
+## 1.5.1
+
+### Maintenance
+- **Licence and copyright** — the plugin stays under the GNU GPL v3 or later,
+  and the copyright holder is now Vernon Spain in every file header, the README
+  and the notices. The full GPLv3 text is now included as `LICENSE`. The short
+  copyright and third-party (Bootstrap) notices moved from `LICENCE.md` to
+  `NOTICE.md`.
+
 ## 1.5.0
 
 ### Features

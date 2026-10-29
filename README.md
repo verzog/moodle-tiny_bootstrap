@@ -120,7 +120,7 @@ CI runs automatically on push via GitHub Actions (see `.github/workflows/moodle-
 ## Licence
 
 This plugin is released under the **GNU General Public License v3 or later** —
-see [LICENCE.md](LICENCE.md) for the full text.
+see [LICENSE](LICENSE) for the full text.
 
 ### Bootstrap 5 (third-party)
 
@@ -128,8 +128,8 @@ This plugin generates HTML markup that targets the **Bootstrap 5** CSS
 framework (provided by the active Moodle theme — Bootstrap is **not** bundled
 in this plugin). Bootstrap 5 is copyright © 2011–2024 The Bootstrap Authors
 and is distributed under the **MIT License** — see the Bootstrap notice in
-[LICENCE.md](LICENCE.md).
+[NOTICE.md](NOTICE.md).
 
 ## Copyright
 
-2025 Skin Cancer College of Australasia — <https://skincancercollege.org>
+2025 Vernon Spain

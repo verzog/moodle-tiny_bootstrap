@@ -1,8 +1,8 @@
-# Licence
+# Notices
 
 ## Plugin licence
 
-Copyright © 2025 Skin Cancer College of Australasia <admin@skincancercollege.org>
+Copyright © 2025 Vernon Spain
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the **GNU General Public License** as published by the Free
@@ -15,7 +15,8 @@ ANY WARRANTY**; without even the implied warranty of **MERCHANTABILITY** or
 more details.
 
 You should have received a copy of the GNU General Public License along with
-this program. If not, see <https://www.gnu.org/licenses/>.
+this program. If not, see <https://www.gnu.org/licenses/>. The full licence
+text is in [LICENSE](LICENSE).
 
 ---
 
