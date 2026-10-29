@@ -18,7 +18,7 @@
  * Hook callbacks for tiny_bootstrap.
  *
  * @package    tiny_bootstrap
- * @copyright  2025-2026 Skin Cancer College of Australasia <admin@skincancercollege.org>
+ * @copyright  2025 Vernon Spain
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

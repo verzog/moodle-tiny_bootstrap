@@ -18,15 +18,15 @@
  * TinyMCE Bootstrap Scaffolding plugin version info.
  *
  * @package    tiny_bootstrap
- * @copyright  2025-2026 Skin Cancer College of Australasia <admin@skincancercollege.org>
+ * @copyright  2025 Vernon Spain
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tiny_bootstrap';
-$plugin->version   = 2026102900;
+$plugin->version   = 2026102901;
 $plugin->requires  = 2025041400; // Moodle 5.0+.
 $plugin->supported = [500, 502]; // Moodle 5.0–5.2.
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.5.0';
+$plugin->release   = '1.5.1';
