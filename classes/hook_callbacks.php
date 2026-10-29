@@ -42,25 +42,25 @@ class hook_callbacks {
     }
 
     /**
-     * Inject the admin-defined branding CSS into the page head so it applies
-     * both inside the editor and on view pages where the components render.
+     * Inject the admin-defined heading colours and branding CSS into the page
+     * head so they apply on view pages where the components render. The heading
+     * colours come first so the custom CSS can still override them. The editor
+     * gets the same CSS through plugininfo, as its content is in an iframe.
      *
      * @param \core\hook\output\before_standard_head_html_generation $hook
      */
     public static function before_standard_head_html_generation(
         \core\hook\output\before_standard_head_html_generation $hook
     ): void {
-        $css = trim((string) get_config('tiny_bootstrap', 'customcss'));
+        $headingcss = local\styles::heading_css();
+        if ($headingcss !== '') {
+            $hook->add_html('<style id="tiny-bootstrap-heading-css">' . "\n" . $headingcss . "\n" . '</style>');
+        }
+
+        $css = local\styles::custom_css();
         if ($css === '') {
             return;
         }
-        // Neutralise any closing style tag so the admin CSS cannot break out of
-        // the element it is placed in. Only "</style" followed by whitespace,
-        // "/" or ">" (or the end of input) is a real end tag to the HTML
-        // parser, so match exactly those cases — this blocks the breakout
-        // variants without corrupting legitimate CSS such as
-        // content: "</styles".
-        $css = preg_replace('#</style(?=[\s/>]|$)#i', '', $css);
         $hook->add_html('<style id="tiny-bootstrap-custom-css">' . "\n" . $css . "\n" . '</style>');
     }
 }

@@ -27,12 +27,13 @@ namespace tiny_bootstrap;
 use context;
 use editor_tiny\plugin;
 use editor_tiny\plugin_with_buttons;
+use editor_tiny\plugin_with_configuration;
 use editor_tiny\plugin_with_menuitems;
 
 /**
  * TinyMCE Bootstrap Scaffolding plugin.
  */
-class plugininfo extends plugin implements plugin_with_buttons, plugin_with_menuitems {
+class plugininfo extends plugin implements plugin_with_buttons, plugin_with_configuration, plugin_with_menuitems {
     /**
      * Checks whether this plugin is enabled for the given context.
      *
@@ -70,6 +71,28 @@ class plugininfo extends plugin implements plugin_with_buttons, plugin_with_menu
     public static function get_available_menuitems(): array {
         return [
             'tiny_bootstrap/tiny_bootstrap_bootstrap',
+        ];
+    }
+
+    /**
+     * Pass the admin-set default component colours, default padding and editor CSS to the editor.
+     *
+     * @param context $context
+     * @param array $options
+     * @param array $fpoptions
+     * @param \editor_tiny\editor|null $editor
+     * @return array
+     */
+    public static function get_plugin_configuration_for_context(
+        context $context,
+        array $options,
+        array $fpoptions,
+        ?\editor_tiny\editor $editor = null
+    ): array {
+        return [
+            'colourdefaults' => local\styles::colour_defaults(),
+            'defaultpadding' => local\styles::default_padding(),
+            'editorcss' => local\styles::editor_css(),
         ];
     }
 }

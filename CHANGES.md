@@ -8,6 +8,36 @@ Supported Moodle: **5.1 to 5.3** (`$plugin->supported = [501, 503]`,
 `requires = 2025100600`). Requires **PHP 8.2+** (8.3+ on Moodle 5.2 and 5.3)
 and a Bootstrap 5 theme.
 
+## 1.7.0
+
+### Features
+- **Heading colours** — new admin settings set a colour for each heading level
+  (H1–H6). They apply to headings inserted with the Heading component (which now
+  carry a `tiny-bs-heading` class), both in the editor and on the page, and
+  override the theme's heading colour on those headings only. Blank keeps the
+  theme colour.
+- **Default component colours** — new admin settings set the colours the Ad
+  Banner and Card Row dialogs start with, so an organisation can set its brand
+  once. Authors can still change them per component.
+- **Ad Banner and Jumbotron padding** — the Ad Banner and Jumbotron dialogs have
+  a new **Padding** choice (Standard, None, Small, Medium or Large) for the space
+  inside the box, and a new admin setting sets the choice they start with.
+  Standard keeps each component's built-in padding, so nothing changes until a
+  different choice is made.
+
+### Fixes
+- **Custom CSS now applies inside the editor.** The admin's custom CSS was only
+  added to the page, not to the editor's content area (an iframe that loads only
+  the theme's editor stylesheet), so components did not look branded while
+  editing. The custom CSS and heading colours are now added to the editor too.
+
+### Changes
+- The Ad Banner and Card Row dialogs no longer start with purple and orange.
+  Until an admin sets defaults they start with neutral Bootstrap colours: Ad
+  Banner dark grey `#212529` background, blue `#0d6efd` accent, grey `#6c757d`
+  speaker box and white text; Card Row light grey `#f8f9fa` card background.
+  Components already inserted keep their colours.
+
 ## 1.6.0
 
 ### Maintenance

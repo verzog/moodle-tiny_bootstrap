@@ -25,6 +25,56 @@
 defined('MOODLE_INTERNAL') || die();
 
 if ($ADMIN->fulltree) {
+    // Heading colours: one colour picker per level, applied only to headings
+    // inserted with the Heading component. Blank keeps the theme colour.
+    $settings->add(new admin_setting_heading(
+        'tiny_bootstrap/headingcolours',
+        get_string('headingcolours', 'tiny_bootstrap'),
+        get_string('headingcolours_desc', 'tiny_bootstrap')
+    ));
+    for ($level = 1; $level <= 6; $level++) {
+        $settings->add(new admin_setting_configcolourpicker(
+            'tiny_bootstrap/headingcolour' . $level,
+            get_string('headingcolour', 'tiny_bootstrap', $level),
+            get_string('headingcolour_desc', 'tiny_bootstrap', $level),
+            ''
+        ));
+    }
+
+    // Component defaults: the colours the Ad Banner and Card Row dialogs and the
+    // padding the Ad Banner and Jumbotron dialogs start with. Authors can still
+    // change them for each component.
+    $settings->add(new admin_setting_heading(
+        'tiny_bootstrap/defaultcolours',
+        get_string('defaultcolours', 'tiny_bootstrap'),
+        get_string('defaultcolours_desc', 'tiny_bootstrap')
+    ));
+    foreach (\tiny_bootstrap\local\styles::DEFAULT_COLOURS as $name => $default) {
+        $settings->add(new admin_setting_configcolourpicker(
+            'tiny_bootstrap/' . $name,
+            get_string($name, 'tiny_bootstrap'),
+            '',
+            $default
+        ));
+    }
+
+    $paddingchoices = [];
+    foreach (\tiny_bootstrap\local\styles::PADDING_CHOICES as $choice) {
+        $paddingchoices[$choice] = get_string('padding_' . $choice, 'tiny_bootstrap');
+    }
+    $settings->add(new admin_setting_configselect(
+        'tiny_bootstrap/default_padding',
+        get_string('default_padding', 'tiny_bootstrap'),
+        get_string('default_padding_desc', 'tiny_bootstrap'),
+        'standard',
+        $paddingchoices
+    ));
+
+    $settings->add(new admin_setting_heading(
+        'tiny_bootstrap/customcssheading',
+        get_string('customcss', 'tiny_bootstrap'),
+        ''
+    ));
     $settings->add(new admin_setting_configtextarea(
         'tiny_bootstrap/customcss',
         get_string('customcss', 'tiny_bootstrap'),

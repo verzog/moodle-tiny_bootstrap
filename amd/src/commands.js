@@ -27,6 +27,7 @@ import ModalSaveCancel from 'core/modal_save_cancel';
 import ModalCancel from 'core/modal_cancel';
 import ModalEvents from 'core/modal_events';
 import {buttonName, component, icon} from './common';
+import {getColourDefaults, getDefaultPadding} from './options';
 
 // Inline SVGs for the component picker tiles. 24px, currentColor stroke so
 // they inherit text colour and look at home next to the label.
@@ -191,6 +192,7 @@ const STRING_KEYS = [
     'cardrow_radius', 'cardrow_radius_none', 'cardrow_shadow',
     'btn_behaviour', 'btn_samewindow', 'btn_newwindow', 'image_hide_name',
     'adbanner_default_title', 'adbanner_date_sr', 'adbanner_time_sr',
+    'padding', 'padding_standard', 'padding_none', 'padding_small', 'padding_medium', 'padding_large',
 ];
 
 // Structural and formatting tags allowed in the rich-text fields, with any
@@ -377,7 +379,7 @@ const buildHeading = (level, text) => {
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;') || escapeHtml(fmt(str.heading_default, level));
-    return `<h${level}>${safe}</h${level}>`;
+    return `<h${level} class="tiny-bs-heading">${safe}</h${level}>`;
 };
 
 // Title is pre-escaped (caller's responsibility); caption is raw and escaped here.
@@ -687,7 +689,7 @@ const buildJumbotronBackground = (bgType, bgUrl, bgAlt) => {
         + ` src="${escapeHtml(u)}" style="${cover}"></video>`;
 };
 
-const buildJumbotron = (title, lead, buttonText, buttonUrl, buttonTarget, bgType, bgUrl, bgAlt, overlay) => {
+const buildJumbotron = (title, lead, buttonText, buttonUrl, buttonTarget, bgType, bgUrl, bgAlt, overlay, padding = 5) => {
     const titleSafe = escapeHtml(title) || escapeHtml(str.jumbotron_default_title);
     const leadSafe = sanitizeRich(lead) || escapeHtml(str.jumbotron_default_lead);
     const href = escapeHtml((buttonUrl || '').trim()) || '#';
@@ -709,8 +711,8 @@ const buildJumbotron = (title, lead, buttonText, buttonUrl, buttonTarget, bgType
     // shows through, add overflow:hidden so the cover layer is clipped to
     // rounded corners, and force readable light text over the media.
     const wrapperClass = hasBg
-        ? 'position-relative overflow-hidden p-5 mb-4 rounded-3 border'
-        : 'p-5 mb-4 bg-body-tertiary rounded-3 border';
+        ? `position-relative overflow-hidden p-${padding} mb-4 rounded-3 border`
+        : `p-${padding} mb-4 bg-body-tertiary rounded-3 border`;
     const contentStyle = hasBg
         ? ' style="position:relative;z-index:2;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.5);"'
         : '';
@@ -727,6 +729,25 @@ const buildJumbotron = (title, lead, buttonText, buttonUrl, buttonTarget, bgType
 // stray value can never break out of the inline style attribute.
 const safeColour = (value, fallback) => (/^#[0-9a-f]{6}$/i.test((value || '').trim()) ? value.trim() : fallback);
 
+// Neutral Bootstrap colours used when the admin has not set a default colour
+// (Site administration > Plugins > Text editors > TinyMCE editor > Bootstrap Scaffolding).
+const NEUTRAL_COLOURS = {
+    'default_adbanner_bg': '#212529',
+    'default_adbanner_accent': '#0d6efd',
+    'default_adbanner_speakerbg': '#6c757d',
+    'default_adbanner_text': '#ffffff',
+    'default_cardrow_bg': '#f8f9fa',
+};
+
+/**
+ * Get the colour a dialog's colour picker starts with: the admin-set default, or the neutral fallback.
+ *
+ * @param {TinyMCE} editor
+ * @param {string} name Setting name, e.g. 'default_adbanner_bg'.
+ * @returns {string} A #rrggbb colour.
+ */
+const colourDefault = (editor, name) => safeColour(getColourDefaults(editor)[name], NEUTRAL_COLOURS[name]);
+
 // Event-style advertising banner: a coloured band with the title and an
 // optional speaker box (photo + name) on one side, and an optional logo, date,
 // time on the other, above an accent strip that the call-to-action button
@@ -734,11 +755,13 @@ const safeColour = (value, fallback) => (/^#[0-9a-f]{6}$/i.test((value || '').tr
 // screens; on a phone both sides stack (title first). Colours are inline so the
 // banner keeps its look under any theme; layout uses Bootstrap utilities.
 const buildAdBanner = (opts) => {
-    const bg = safeColour(opts.bg, '#46287f');
-    const accent = safeColour(opts.accent, '#ff7a2f');
-    const speakerBg = safeColour(opts.speakerBg, '#9b87c7');
-    const text = safeColour(opts.textColour, '#ffffff');
+    const bg = safeColour(opts.bg, NEUTRAL_COLOURS.default_adbanner_bg);
+    const accent = safeColour(opts.accent, NEUTRAL_COLOURS.default_adbanner_accent);
+    const speakerBg = safeColour(opts.speakerBg, NEUTRAL_COLOURS.default_adbanner_speakerbg);
+    const text = safeColour(opts.textColour, NEUTRAL_COLOURS.default_adbanner_text);
     const detailsLeft = opts.layout === 'details-left';
+    // Bootstrap spacing level for the inner padding, from paddingLevel().
+    const pad = opts.padding;
     const titleSafe = escapeHtml(opts.title) || escapeHtml(str.adbanner_default_title);
 
     const photoUrl = (opts.photoUrl || '').trim();
@@ -779,7 +802,7 @@ const buildAdBanner = (opts) => {
     // The button sits in the accent strip under the details column and is pulled
     // up by a negative top margin so it overlaps the band above it.
     const strip = btnText
-        ? `\n  <div class="px-4" style="background:${accent};">
+        ? `\n  <div class="px-${pad}" style="background:${accent};">
     <div class="row gx-4">
       <div class="col-12 col-md-4${detailsLeft ? '' : ' offset-md-8'}">
         <a class="btn btn-lg fw-bold text-uppercase position-relative shadow" href="${href}" role="button"${target}`
@@ -800,7 +823,7 @@ const buildAdBanner = (opts) => {
     // the strip's corners.
     return `<!-- Bootstrap 5 ad banner, details ${detailsLeft ? 'left' : 'right'} -->
 <div class="tiny-bs-adbanner overflow-hidden rounded-3 my-3" style="background:${bg};color:${text};">
-  <div class="px-4 pt-4 ${btnText ? 'pb-5' : 'pb-4'}">
+  <div class="px-${pad} pt-${pad} ${btnText ? 'pb-5' : `pb-${pad}`}">
 <div class="row g-4 align-items-center${detailsLeft ? ' flex-md-row-reverse' : ''}">
 ${textCol}${detailsCol}
 </div>
@@ -1422,6 +1445,31 @@ const colourField = (name, label, defaultValue = '#000000') =>
         <input type="color" id="${name}" name="${name}" class="form-control form-control-color"
                value="${escapeHtml(defaultValue)}">
     </div>`;
+
+// Bootstrap spacing level (the N in p-N) for each padding choice. 'standard'
+// is not listed: it keeps the component's own built-in padding.
+const PADDING_LEVELS = {none: 0, small: 3, medium: 4, large: 5};
+
+/**
+ * Get the Bootstrap spacing level for a padding choice.
+ *
+ * @param {string} choice 'standard', 'none', 'small', 'medium' or 'large'.
+ * @param {number} standard The component's built-in level, used for 'standard'.
+ * @returns {number} A level from 0 to 5.
+ */
+const paddingLevel = (choice, standard) =>
+    (Object.prototype.hasOwnProperty.call(PADDING_LEVELS, choice) ? PADDING_LEVELS[choice] : standard);
+
+/**
+ * Render the Padding dropdown, starting at the admin-set default.
+ *
+ * @param {TinyMCE} editor
+ * @param {string} name Field name.
+ * @returns {string} HTML for the field.
+ */
+const paddingField = (editor, name) => selectField(name, str.padding,
+    ['standard', 'none', 'small', 'medium', 'large'].map((value) => ({value, text: str[`padding_${value}`]})),
+    getDefaultPadding(editor));
 
 const selectField = (name, label, options, defaultValue = null) => {
     const opts = options.map((o) => {
@@ -2058,7 +2106,8 @@ const openJumbotronDialog = async(editor) => {
         ], 'none') +
         urlField('jt_bg_url', bgUrlLabel, browseLabel, 'https://placehold.co/1600x600?text=Background') +
         textField('jt_bg_alt', bgAltLabel, str.describe_bg_sr) +
-        checkboxField('jt_overlay', overlayLabel, true);
+        checkboxField('jt_overlay', overlayLabel, true) +
+        paddingField(editor, 'jt_padding');
 
     const modal = await openModal(title, body, insertLabel);
     const root = modal.getRoot()[0];
@@ -2075,6 +2124,7 @@ const openJumbotronDialog = async(editor) => {
             root.querySelector('[name="jt_bg_url"]').value,
             root.querySelector('[name="jt_bg_alt"]').value,
             root.querySelector('[name="jt_overlay"]').checked,
+            paddingLevel(root.querySelector('[name="jt_padding"]').value, 5),
         ));
     });
 };
@@ -2129,10 +2179,11 @@ const openAdBannerDialog = async(editor) => {
             {value: '', text: str.btn_samewindow},
             {value: '_blank', text: str.btn_newwindow},
         ], '') +
-        colourField('ab_bg', bgLabel, '#46287f') +
-        colourField('ab_accent', accentLabel, '#ff7a2f') +
-        colourField('ab_speaker_bg', speakerBgLabel, '#9b87c7') +
-        colourField('ab_text', textLabel, '#ffffff');
+        colourField('ab_bg', bgLabel, colourDefault(editor, 'default_adbanner_bg')) +
+        colourField('ab_accent', accentLabel, colourDefault(editor, 'default_adbanner_accent')) +
+        colourField('ab_speaker_bg', speakerBgLabel, colourDefault(editor, 'default_adbanner_speakerbg')) +
+        colourField('ab_text', textLabel, colourDefault(editor, 'default_adbanner_text')) +
+        paddingField(editor, 'ab_padding');
 
     const modal = await openModal(title, body, insertLabel);
     const root = modal.getRoot()[0];
@@ -2155,6 +2206,7 @@ const openAdBannerDialog = async(editor) => {
             accent: val('ab_accent'),
             speakerBg: val('ab_speaker_bg'),
             textColour: val('ab_text'),
+            padding: paddingLevel(val('ab_padding'), 4),
         }));
     });
 };
@@ -2338,7 +2390,7 @@ const CARDROW_RADII = {
 // per-card background/text/border colours (each with an enable toggle so an
 // unticked colour falls back to the theme default), corner rounding and a
 // drop-shadow toggle.
-const cardRowStyleSection = () =>
+const cardRowStyleSection = (editor) =>
     `<h6 class="mt-1 mb-2 text-muted text-uppercase small">${escapeHtml(str.cardrow_styling)}</h6>` +
     selectField('cr_size', str.cardrow_size, [
         {value: 'small', text: str.cardrow_size_small},
@@ -2352,7 +2404,7 @@ const cardRowStyleSection = () =>
         {value: 'large', text: str.cardrow_size_large},
     ], 'medium') +
     checkboxField('cr_bg_on', str.cardrow_bg, true) +
-    colourField('cr_bg', str.cardrow_bg_colour, '#f3f0fa') +
+    colourField('cr_bg', str.cardrow_bg_colour, colourDefault(editor, 'default_cardrow_bg')) +
     checkboxField('cr_text_on', str.cardrow_text, false) +
     colourField('cr_text', str.cardrow_text_colour, '#212529') +
     checkboxField('cr_border_on', str.cardrow_border, false) +
@@ -2370,7 +2422,7 @@ const openCardRowDialog = async(editor) => {
     // ones are dropped on insert, so the author fills as many (two to six) as
     // they need without a re-rendering count.
     const cardMax = 6;
-    const body = cardRowStyleSection()
+    const body = cardRowStyleSection(editor)
         + checkboxField('hide_name', str.image_hide_name)
         + Array.from({length: cardMax}, (_, i) => cardRowCardSection(i + 1, browseLabel)).join('');
 

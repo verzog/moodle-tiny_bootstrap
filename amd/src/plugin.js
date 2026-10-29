@@ -27,6 +27,7 @@ import {getPluginMetadata} from 'editor_tiny/utils';
 import {component, pluginName} from './common';
 import {getSetup as getCommandSetup} from './commands';
 import * as Configuration from './configuration';
+import * as Options from './options';
 
 // eslint-disable-next-line no-async-promise-executor
 export default new Promise(async(resolve) => {
@@ -41,7 +42,16 @@ export default new Promise(async(resolve) => {
     ]);
 
     tinyMCE.PluginManager.add(pluginName, (editor) => {
+        Options.register(editor);
         setupCommands(editor);
+        // The editor content sits in an iframe that only loads the theme's editor
+        // stylesheet, so add the admin's heading colours and custom CSS there too.
+        editor.on('init', () => {
+            const editorCss = Options.getEditorCss(editor);
+            if (editorCss) {
+                editor.dom.addStyle(editorCss);
+            }
+        });
         return pluginMetadata;
     });
 
