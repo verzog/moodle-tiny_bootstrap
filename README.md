@@ -48,7 +48,21 @@ Body, description, caption and lead fields (card body, accordion body, image/vid
 
 ## Branding (admin)
 
-Site administrators can add custom CSS that applies to every page — both inside
+All branding settings are under
+**Site administration → Plugins → Text editors → TinyMCE editor → Bootstrap Scaffolding**.
+
+- **Heading colours** — a colour for each heading level (H1–H6). They apply to
+  headings inserted with the Heading component, both in the editor and on the
+  page, and override the theme's heading colour on those headings only. Leave a
+  level blank to keep the theme colour. Headings inserted before version 1.7.0
+  keep the theme colour until they are inserted again.
+- **Default component colours** — the colours the Ad Banner (background, accent,
+  speaker box, text) and Card Row (card background) dialogs start with. They
+  start as neutral Bootstrap colours; set your organisation's colours once here
+  instead of in every dialog. Authors can still change them per component, and
+  changing them does not alter components already inserted.
+
+Site administrators can also add custom CSS that applies to every page — both inside
 the editor and on pages where the components render — under
 **Site administration → Plugins → Text editors → TinyMCE editor → Bootstrap Scaffolding**.
 Use it to override button, card or jumbotron colours so the inserted components

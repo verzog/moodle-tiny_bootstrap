@@ -42,14 +42,20 @@ class hook_callbacks {
     }
 
     /**
-     * Inject the admin-defined branding CSS into the page head so it applies
-     * both inside the editor and on view pages where the components render.
+     * Inject the admin-defined heading colours and branding CSS into the page
+     * head so they apply on view pages where the components render. The heading
+     * colours come first so the custom CSS can still override them.
      *
      * @param \core\hook\output\before_standard_head_html_generation $hook
      */
     public static function before_standard_head_html_generation(
         \core\hook\output\before_standard_head_html_generation $hook
     ): void {
+        $headingcss = local\styles::heading_css();
+        if ($headingcss !== '') {
+            $hook->add_html('<style id="tiny-bootstrap-heading-css">' . "\n" . $headingcss . "\n" . '</style>');
+        }
+
         $css = trim((string) get_config('tiny_bootstrap', 'customcss'));
         if ($css === '') {
             return;

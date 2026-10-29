@@ -27,6 +27,7 @@ import ModalSaveCancel from 'core/modal_save_cancel';
 import ModalCancel from 'core/modal_cancel';
 import ModalEvents from 'core/modal_events';
 import {buttonName, component, icon} from './common';
+import {getColourDefaults} from './options';
 
 // Inline SVGs for the component picker tiles. 24px, currentColor stroke so
 // they inherit text colour and look at home next to the label.
@@ -377,7 +378,7 @@ const buildHeading = (level, text) => {
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;') || escapeHtml(fmt(str.heading_default, level));
-    return `<h${level}>${safe}</h${level}>`;
+    return `<h${level} class="tiny-bs-heading">${safe}</h${level}>`;
 };
 
 // Title is pre-escaped (caller's responsibility); caption is raw and escaped here.
@@ -727,6 +728,25 @@ const buildJumbotron = (title, lead, buttonText, buttonUrl, buttonTarget, bgType
 // stray value can never break out of the inline style attribute.
 const safeColour = (value, fallback) => (/^#[0-9a-f]{6}$/i.test((value || '').trim()) ? value.trim() : fallback);
 
+// Neutral Bootstrap colours used when the admin has not set a default colour
+// (Site administration > Plugins > Text editors > TinyMCE editor > Bootstrap Scaffolding).
+const NEUTRAL_COLOURS = {
+    'default_adbanner_bg': '#212529',
+    'default_adbanner_accent': '#0d6efd',
+    'default_adbanner_speakerbg': '#6c757d',
+    'default_adbanner_text': '#ffffff',
+    'default_cardrow_bg': '#f8f9fa',
+};
+
+/**
+ * Get the colour a dialog's colour picker starts with: the admin-set default, or the neutral fallback.
+ *
+ * @param {TinyMCE} editor
+ * @param {string} name Setting name, e.g. 'default_adbanner_bg'.
+ * @returns {string} A #rrggbb colour.
+ */
+const colourDefault = (editor, name) => safeColour(getColourDefaults(editor)[name], NEUTRAL_COLOURS[name]);
+
 // Event-style advertising banner: a coloured band with the title and an
 // optional speaker box (photo + name) on one side, and an optional logo, date,
 // time on the other, above an accent strip that the call-to-action button
@@ -734,10 +754,10 @@ const safeColour = (value, fallback) => (/^#[0-9a-f]{6}$/i.test((value || '').tr
 // screens; on a phone both sides stack (title first). Colours are inline so the
 // banner keeps its look under any theme; layout uses Bootstrap utilities.
 const buildAdBanner = (opts) => {
-    const bg = safeColour(opts.bg, '#46287f');
-    const accent = safeColour(opts.accent, '#ff7a2f');
-    const speakerBg = safeColour(opts.speakerBg, '#9b87c7');
-    const text = safeColour(opts.textColour, '#ffffff');
+    const bg = safeColour(opts.bg, NEUTRAL_COLOURS.default_adbanner_bg);
+    const accent = safeColour(opts.accent, NEUTRAL_COLOURS.default_adbanner_accent);
+    const speakerBg = safeColour(opts.speakerBg, NEUTRAL_COLOURS.default_adbanner_speakerbg);
+    const text = safeColour(opts.textColour, NEUTRAL_COLOURS.default_adbanner_text);
     const detailsLeft = opts.layout === 'details-left';
     const titleSafe = escapeHtml(opts.title) || escapeHtml(str.adbanner_default_title);
 
@@ -2129,10 +2149,10 @@ const openAdBannerDialog = async(editor) => {
             {value: '', text: str.btn_samewindow},
             {value: '_blank', text: str.btn_newwindow},
         ], '') +
-        colourField('ab_bg', bgLabel, '#46287f') +
-        colourField('ab_accent', accentLabel, '#ff7a2f') +
-        colourField('ab_speaker_bg', speakerBgLabel, '#9b87c7') +
-        colourField('ab_text', textLabel, '#ffffff');
+        colourField('ab_bg', bgLabel, colourDefault(editor, 'default_adbanner_bg')) +
+        colourField('ab_accent', accentLabel, colourDefault(editor, 'default_adbanner_accent')) +
+        colourField('ab_speaker_bg', speakerBgLabel, colourDefault(editor, 'default_adbanner_speakerbg')) +
+        colourField('ab_text', textLabel, colourDefault(editor, 'default_adbanner_text'));
 
     const modal = await openModal(title, body, insertLabel);
     const root = modal.getRoot()[0];
@@ -2338,7 +2358,7 @@ const CARDROW_RADII = {
 // per-card background/text/border colours (each with an enable toggle so an
 // unticked colour falls back to the theme default), corner rounding and a
 // drop-shadow toggle.
-const cardRowStyleSection = () =>
+const cardRowStyleSection = (editor) =>
     `<h6 class="mt-1 mb-2 text-muted text-uppercase small">${escapeHtml(str.cardrow_styling)}</h6>` +
     selectField('cr_size', str.cardrow_size, [
         {value: 'small', text: str.cardrow_size_small},
@@ -2352,7 +2372,7 @@ const cardRowStyleSection = () =>
         {value: 'large', text: str.cardrow_size_large},
     ], 'medium') +
     checkboxField('cr_bg_on', str.cardrow_bg, true) +
-    colourField('cr_bg', str.cardrow_bg_colour, '#f3f0fa') +
+    colourField('cr_bg', str.cardrow_bg_colour, colourDefault(editor, 'default_cardrow_bg')) +
     checkboxField('cr_text_on', str.cardrow_text, false) +
     colourField('cr_text', str.cardrow_text_colour, '#212529') +
     checkboxField('cr_border_on', str.cardrow_border, false) +
@@ -2370,7 +2390,7 @@ const openCardRowDialog = async(editor) => {
     // ones are dropped on insert, so the author fills as many (two to six) as
     // they need without a re-rendering count.
     const cardMax = 6;
-    const body = cardRowStyleSection()
+    const body = cardRowStyleSection(editor)
         + checkboxField('hide_name', str.image_hide_name)
         + Array.from({length: cardMax}, (_, i) => cardRowCardSection(i + 1, browseLabel)).join('');
 
