@@ -106,4 +106,33 @@ class styles {
         }
         return implode("\n", $rules);
     }
+
+    /**
+     * The admin's custom CSS, made safe to place inside a style element.
+     *
+     * Any closing style tag is removed so the CSS cannot break out of the element
+     * it is placed in. Only "</style" followed by whitespace, "/" or ">" (or the
+     * end of input) is a real end tag to the HTML parser, so match exactly those
+     * cases. This blocks the breakout variants without corrupting legitimate CSS
+     * such as content: "</styles".
+     *
+     * @return string The CSS, or '' when none is set.
+     */
+    public static function custom_css(): string {
+        $css = trim((string) get_config('tiny_bootstrap', 'customcss'));
+        return preg_replace('#</style(?=[\s/>]|$)#i', '', $css);
+    }
+
+    /**
+     * CSS for the editor content area: the heading colours, then the custom CSS.
+     *
+     * The editor content sits in an iframe that only loads the theme's editor
+     * stylesheet, so the CSS added to the page head does not reach it. The order
+     * matches the page so the custom CSS can still override the heading colours.
+     *
+     * @return string The CSS, or '' when neither is set.
+     */
+    public static function editor_css(): string {
+        return implode("\n", array_filter([self::heading_css(), self::custom_css()], fn($css) => $css !== ''));
+    }
 }

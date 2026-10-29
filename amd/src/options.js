@@ -15,7 +15,7 @@
 
 /**
  * Editor options for tiny_bootstrap: the admin-set default component colours,
- * default padding and heading CSS passed from plugininfo::get_plugin_configuration_for_context().
+ * default padding and editor CSS passed from plugininfo::get_plugin_configuration_for_context().
  *
  * @module     tiny_bootstrap/options
  * @copyright  2026 Vernon Spain
@@ -27,7 +27,7 @@ import {pluginName} from './common';
 
 const colourDefaultsName = getPluginOptionName(pluginName, 'colourdefaults');
 const defaultPaddingName = getPluginOptionName(pluginName, 'defaultpadding');
-const headingCssName = getPluginOptionName(pluginName, 'headingcss');
+const editorCssName = getPluginOptionName(pluginName, 'editorcss');
 
 /**
  * Register the plugin's options with the editor.
@@ -44,7 +44,7 @@ export const register = (editor) => {
         processor: 'string',
         "default": 'standard',
     });
-    registerOption(headingCssName, {
+    registerOption(editorCssName, {
         processor: 'string',
         "default": '',
     });
@@ -67,9 +67,9 @@ export const getColourDefaults = (editor) => editor.options.get(colourDefaultsNa
 export const getDefaultPadding = (editor) => editor.options.get(defaultPaddingName) || 'standard';
 
 /**
- * Get the CSS that colours headings inserted with the Heading component.
+ * Get the CSS for the editor content area: the heading colours and the admin's custom CSS.
  *
  * @param {TinyMCE} editor
  * @returns {string}
  */
-export const getHeadingCss = (editor) => editor.options.get(headingCssName) || '';
+export const getEditorCss = (editor) => editor.options.get(editorCssName) || '';

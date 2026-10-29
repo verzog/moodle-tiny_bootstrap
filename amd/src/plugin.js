@@ -45,11 +45,11 @@ export default new Promise(async(resolve) => {
         Options.register(editor);
         setupCommands(editor);
         // The editor content sits in an iframe that only loads the theme's editor
-        // stylesheet, so add the admin's heading colours there as well.
+        // stylesheet, so add the admin's heading colours and custom CSS there too.
         editor.on('init', () => {
-            const headingCss = Options.getHeadingCss(editor);
-            if (headingCss) {
-                editor.dom.addStyle(headingCss);
+            const editorCss = Options.getEditorCss(editor);
+            if (editorCss) {
+                editor.dom.addStyle(editorCss);
             }
         });
         return pluginMetadata;

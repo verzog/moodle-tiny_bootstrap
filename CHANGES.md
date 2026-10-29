@@ -25,6 +25,12 @@ and a Bootstrap 5 theme.
   Standard keeps each component's built-in padding, so nothing changes until a
   different choice is made.
 
+### Fixes
+- **Custom CSS now applies inside the editor.** The admin's custom CSS was only
+  added to the page, not to the editor's content area (an iframe that loads only
+  the theme's editor stylesheet), so components did not look branded while
+  editing. The custom CSS and heading colours are now added to the editor too.
+
 ### Changes
 - The Ad Banner and Card Row dialogs no longer start with purple and orange.
   Until an admin sets defaults they start with neutral Bootstrap colours: Ad

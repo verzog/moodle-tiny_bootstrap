@@ -115,4 +115,34 @@ final class styles_test extends \advanced_testcase {
         set_config('headingcolour2', '</style><script>', 'tiny_bootstrap');
         $this->assertSame('', styles::heading_css());
     }
+
+    /**
+     * Custom CSS keeps legitimate content but loses any closing style tag.
+     */
+    public function test_custom_css(): void {
+        $this->resetAfterTest();
+
+        $this->assertSame('', styles::custom_css());
+
+        set_config('customcss', "  .btn { color: red; }\n.x::after { content: \"</styles\"; }  ", 'tiny_bootstrap');
+        $this->assertSame(".btn { color: red; }\n.x::after { content: \"</styles\"; }", styles::custom_css());
+
+        set_config('customcss', 'a {}</style><script>x</script></STYLE >', 'tiny_bootstrap');
+        $this->assertSame('a {}><script>x</script> >', styles::custom_css());
+    }
+
+    /**
+     * The editor gets the heading colours first, then the custom CSS.
+     */
+    public function test_editor_css(): void {
+        $this->resetAfterTest();
+
+        $this->assertSame('', styles::editor_css());
+
+        set_config('customcss', '.btn { color: red; }', 'tiny_bootstrap');
+        $this->assertSame('.btn { color: red; }', styles::editor_css());
+
+        set_config('headingcolour2', '#112233', 'tiny_bootstrap');
+        $this->assertSame("h2.tiny-bs-heading {\n    color: #112233;\n}\n.btn { color: red; }", styles::editor_css());
+    }
 }
