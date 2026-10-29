@@ -1,34 +1,35 @@
 # moodle-tiny_bootstrap — Bootstrap 5 Scaffolding for TinyMCE
 
-A TinyMCE plugin for Moodle 5.1+ that lets content authors insert
-ready-made Bootstrap 5 HTML components without writing any code.
+A TinyMCE plugin for **Moodle 5.1, 5.2 and 5.3** that lets content authors
+insert ready-made, responsive Bootstrap 5 components without writing any code.
+Pick a component, fill in a short form, and it's added to your page.
 
 ## Components
 
 | Component | What it inserts |
 |-----------|-----------------|
-| **Page Grid Layout** | 1–4 equal-width responsive columns, 1–4 rows deep, in a responsive container |
-| **Heading** | H1–H6 with typed text |
-| **Card Group** | 2–4 equal-width Bootstrap cards, each with an image, title, and body |
-| **Image with Zoom Modal** | A thumbnail that opens a full-size Bootstrap 5 modal with an optional caption and a left/centre/right alignment choice |
-| **Jumbotron** | A hero/banner section with title, lead text, and a call-to-action button |
-| **Ad Banner** | An event-style promotional banner — title and speaker (photo and name) on one side, logo, date and time on the other, and a call-to-action button on an accent strip |
-| **Carousel** | A Bootstrap 5 image slideshow/carousel of 2–6 slides (one slide at a time) |
-| **Card Row** | A horizontally scrolling row of cards — several visible at once (≈3 on desktop, fewer on mobile) with prev/next arrows and swipe; each card has a heading, body, optional image and optional button |
-| **Accordion** | A collapsible accordion with a configurable number of sections |
-| **Responsive Table** | A Bootstrap-wrapped table with optional header row and caption |
-| **Image and Text** | A zoomable image beside a heading and body text — image left/text right or image right/text left, with an optional **Hide image name** for quizzes |
-| **Video and Text** | A video (YouTube, Vimeo or file) that plays in place, with an **Open in a larger view** button, beside a heading and body text — video left/text right or video right/text left |
-| **Dropdown** | A Bootstrap 5 dropdown button with a configurable colour, alignment, optional split caret, and 2–5 linked menu items |
-| **Cheatsheet** | A reference block of common Bootstrap 5 snippets (buttons, alerts, badges, list groups, progress, breadcrumb, pagination) to insert and trim down |
+| **Page Grid Layout** | 1–4 equal-width responsive columns, 1–4 rows deep |
+| **Heading** | H1–H6 with your text, in your site's heading colours (see [Branding](#branding-admin)) |
+| **Card Group** | 2–4 equal-width cards, each with an image, title and body |
+| **Card Row** | A horizontally scrolling row of cards with prev/next arrows and swipe; each card has a heading, body, optional image and optional button |
+| **Image with Zoom Modal** | A thumbnail that opens a full-size view with an optional caption, aligned left, centre or right |
+| **Image and Text** | A zoomable image beside a heading and body text, image on either side |
+| **Video and Text** | A YouTube, Vimeo or uploaded video that plays in place, with an **Open in a larger view** button, beside a heading and body text |
+| **Jumbotron** | A hero section with title, lead text, call-to-action button and optional background image or video |
+| **Ad Banner** | An event-style banner: title and speaker (photo and name) on one side; logo, date and time on the other; and a call-to-action button |
+| **Carousel** | A slideshow of 2–6 slides, with image or content-card slides and optional buttons |
+| **Accordion** | Collapsible sections, as many as you need |
+| **Responsive Table** | A table with optional header row, caption, colours and striped, bordered, hover or compact styles |
+| **Dropdown** | A dropdown button with colour, alignment, optional split caret and 2–5 menu links |
+| **Cheatsheet** | Common Bootstrap 5 snippets (buttons, alerts, badges, list groups, progress, breadcrumb, pagination) to insert and trim down |
 
 ### Per-component options
 
 - **Image with Zoom Modal** — type an optional **Modal title** to show above the enlarged image (left blank, the title is the alt text, or "Image" when **Hide image name** is ticked). Choose an **alignment**: centred (default), left or right. Left/right float the image so surrounding text wraps alongside it, with a max-width that keeps a large image from overflowing a narrow content area (such as a quiz answer box). Choose an **image size** — Small (200px), Medium (300px, default), Large (450px) or Full width; the image keeps its proportions and shrinks to fit narrow areas. In a quiz, the question box grows to contain a left/right-aligned image. Tick **Hide image name** in quiz questions so the file name is not shown as the alt text or enlarged-view title.
 - **Card Group** — choose the **spacing between cards**, toggle **Include images** off for text-only cards, and tick **Hide image name** in quiz questions so file names aren't used as the images' alt text.
 - **Card Row** — a **Card styling** section sets a uniform **Card size** (Small/Medium/Large — every card the same width and height, with images cropped to a fixed band), a per-card **background colour**, optional **text colour** and **border colour**, **corner rounding** and a **drop shadow**.
-- **Jumbotron** — the call-to-action button now takes a **link (URL)**, and the background image/video field has a working **Browse repositories…** button.
-- **Ad Banner** — choose a **Layout**: title and speaker left with the details right (default), or details left with the title and speaker right; on a phone both sides stack, title first. Set the **background**, **accent** (bottom strip and button text), **speaker box** and **text** colours. The speaker photo, speaker name, logo, date, time and button are all optional and left out when blank.
+- **Jumbotron** — the call-to-action button takes a **link (URL)**, the background image/video field has a working **Browse repositories…** button, and a **Padding** choice (Standard, None, Small, Medium or Large) sets the space inside the box.
+- **Ad Banner** — choose a **Layout**: title and speaker left with the details right (default), or details left with the title and speaker right; on a phone both sides stack, title first. Set the **background**, **accent** (bottom strip and button text), **speaker box** and **text** colours (they start with the site's default colours — see [Branding](#branding-admin)), and the **Padding** (Standard, None, Small, Medium or Large). The speaker photo, speaker name, logo, date, time and button are all optional and left out when blank.
 - **Carousel** — choose the **number of slides** (2–6; anything already typed is kept when you change it), an **aspect ratio** (16:9, 4:3, 1:1, 21:9 or natural) so mismatched images line up, set a **caption background colour** with an opacity so overlaid text stays readable, add an optional **call-to-action button** (text, link and colour) per slide, and use the modernised prev/next controls. Leave a slide's image blank to get a **content card** slide whose height fits its content (e.g. a pasted "course intake" card) — useful for a compact card carousel with no background image. In **natural** ratio a small image keeps its own size instead of being stretched to full width.
 - **Responsive Table** — pick a **table colour** and **header colour** (Bootstrap contextual variants) and toggle **striped**, **bordered**, **hover** and **compact** styles.
 
@@ -48,35 +49,33 @@ Body, description, caption and lead fields (card body, accordion body, image/vid
 
 ## Branding (admin)
 
-All branding settings are under
-**Site administration → Plugins → Text editors → TinyMCE editor → Bootstrap Scaffolding**.
+Set your organisation's look once under
+**Site administration → Plugins → Text editors → TinyMCE editor → Bootstrap Scaffolding**:
 
 - **Heading colours** — a colour for each heading level (H1–H6). They apply to
   headings inserted with the Heading component, both in the editor and on the
-  page, and override the theme's heading colour on those headings only. Leave a
-  level blank to keep the theme colour. Headings inserted before version 1.7.0
-  keep the theme colour until they are inserted again.
-- **Default component colours** — the colours the Ad Banner (background, accent,
-  speaker box, text) and Card Row (card background) dialogs start with. They
-  start as neutral Bootstrap colours; set your organisation's colours once here
-  instead of in every dialog. Authors can still change them per component, and
-  changing them does not alter components already inserted.
-- **Ad Banner and Jumbotron padding** — the padding (space between the edge of
-  the box and its content) those dialogs start with: Standard (each component's
-  built-in padding), None, Small, Medium or Large. Authors can change it per
-  component in the dialog's **Padding** choice.
-
-Site administrators can also add custom CSS that applies to every page — both inside
-the editor and on pages where the components render — under
-**Site administration → Plugins → Text editors → TinyMCE editor → Bootstrap Scaffolding**.
-Use it to override button, card or jumbotron colours so the inserted components
-match your organisation's branding. Leave it blank to use the theme defaults.
+  page, and override the theme's heading colour on those headings only. Other
+  headings on your site are not changed. Leave a level blank to keep the theme
+  colour. Headings inserted before version 1.7.0 keep the theme colour until
+  they are inserted again.
+- **Component defaults** — the colours the Ad Banner (background, accent,
+  speaker box, text) and Card Row (card background) start with, and the padding
+  the Ad Banner and Jumbotron start with (Standard keeps each component's
+  built-in padding). Out of the box they use neutral Bootstrap colours. Authors
+  can still change them on each component, and changing them does not alter
+  components already inserted.
+- **Custom CSS** — your own CSS, applied on every page and inside the editor, so
+  authors see your branding while they edit. Use it to override button, card or
+  jumbotron colours, for example. Leave it blank to use the theme defaults.
 
 ## Requirements
 
-- Moodle 5.1, 5.2 or 5.3 (TinyMCE editor)
-- A Bootstrap 5 theme (e.g. Boost or any child theme)
-- PHP 8.2+ (Moodle 5.2 and 5.3 need PHP 8.3+)
+- Moodle 5.1, 5.2 or 5.3 (5.3 LTS supported), with the TinyMCE editor
+- A Bootstrap 5 theme, such as Boost or a child theme
+- PHP 8.2 or later (Moodle 5.2 and 5.3 need PHP 8.3 or later)
+
+Moodle 5.0 is no longer supported from version 1.6.0. Sites still on Moodle 5.0
+should stay on version 1.4.x until they upgrade.
 
 ## Installation
 
@@ -88,7 +87,8 @@ match your organisation's branding. Leave it blank to use the theme defaults.
 
 ### Via filesystem
 
-1. Copy the `tiny_bootstrap` folder into `<moodleroot>/lib/editor/tiny/plugins/`.
+1. Copy the plugin into `<moodleroot>/public/lib/editor/tiny/plugins/bootstrap`
+   (the folder must be named `bootstrap`).
 2. Go to **Site administration → Notifications** and run the upgrade.
 
 ## Enabling the button
@@ -129,15 +129,15 @@ composer create-project moodlehq/moodle-plugin-ci ../moodle-plugin-ci ^4
 # Auto-fix formatting
 ../moodle-plugin-ci/vendor/bin/phpcbf .
 
-# Compile AMD modules (run from Moodle root)
-grunt amd --root=lib/editor/tiny/plugins/bootstrap
+# Compile AMD modules (run from the root of a MOODLE_501_STABLE checkout)
+npx grunt amd --root=public/lib/editor/tiny/plugins/bootstrap
 ```
 
 CI runs automatically on push via GitHub Actions (see `.github/workflows/moodle-ci.yml`).
 
 ## Licence
 
-This plugin is released under the **GNU General Public License v3 or later** —
+Free and open source under the **GNU General Public License v3 or later** —
 see [LICENSE](LICENSE) for the full text.
 
 ### Bootstrap 5 (third-party)
