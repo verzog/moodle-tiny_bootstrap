@@ -72,6 +72,13 @@ const SVG = {
         + '<path d="M6 10h12"/><path d="M6 13h8"/>'
         + '<rect x="6" y="15.5" width="5" height="2" rx="0.5"/>'
         + '</svg>',
+    adbanner: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" '
+        + 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
+        + 'stroke-linejoin="round" aria-hidden="true">'
+        + '<rect x="2" y="6" width="20" height="12" rx="1.5"/>'
+        + '<path d="M2 15h20"/><path d="M5 9.5h7"/><path d="M15 9.5h4"/><path d="M15 12h3"/>'
+        + '<rect x="14.5" y="13.8" width="5" height="2.4" rx="0.5"/>'
+        + '</svg>',
     carousel: '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" '
         + 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
         + 'stroke-linejoin="round" aria-hidden="true">'
@@ -183,6 +190,7 @@ const STRING_KEYS = [
     'cardrow_text_colour', 'cardrow_border', 'cardrow_border_colour',
     'cardrow_radius', 'cardrow_radius_none', 'cardrow_shadow',
     'btn_behaviour', 'btn_samewindow', 'btn_newwindow', 'image_hide_name',
+    'adbanner_default_title', 'adbanner_date_sr', 'adbanner_time_sr',
 ];
 
 // Structural and formatting tags allowed in the rich-text fields, with any
@@ -712,6 +720,91 @@ const buildJumbotron = (title, lead, buttonText, buttonUrl, buttonTarget, bgType
     <h1 class="display-5 fw-bold">${titleSafe}</h1>
     <div class="col-md-9 fs-5">${leadSafe}</div>${btn}
   </div>
+</div>`;
+};
+
+// Return the colour when it is a #rrggbb value, otherwise the fallback, so a
+// stray value can never break out of the inline style attribute.
+const safeColour = (value, fallback) => (/^#[0-9a-f]{6}$/i.test((value || '').trim()) ? value.trim() : fallback);
+
+// Event-style advertising banner: a coloured band with the title and an
+// optional speaker box (photo + name) on one side, and an optional logo, date,
+// time on the other, above an accent strip that the call-to-action button
+// overlaps. Opts.layout 'details-left' swaps the two sides on medium and wider
+// screens; on a phone both sides stack (title first). Colours are inline so the
+// banner keeps its look under any theme; layout uses Bootstrap utilities.
+const buildAdBanner = (opts) => {
+    const bg = safeColour(opts.bg, '#46287f');
+    const accent = safeColour(opts.accent, '#ff7a2f');
+    const speakerBg = safeColour(opts.speakerBg, '#9b87c7');
+    const text = safeColour(opts.textColour, '#ffffff');
+    const detailsLeft = opts.layout === 'details-left';
+    const titleSafe = escapeHtml(opts.title) || escapeHtml(str.adbanner_default_title);
+
+    const photoUrl = (opts.photoUrl || '').trim();
+    const name = (opts.speakerName || '').trim();
+    // The speaker's name sits beside the photo, so the photo is decorative (empty alt).
+    const photoHtml = photoUrl
+        ? `\n      <img src="${escapeHtml(photoUrl)}" alt="" class="flex-shrink-0 object-fit-cover"`
+            + ` style="width:6rem;height:6rem;">`
+        : '';
+    const nameHtml = name
+        ? `\n      <div class="d-flex align-items-center px-3 py-2 fw-bold text-center"`
+            + ` style="font-size:1.15rem;">${escapeHtml(name)}</div>`
+        : '';
+    const speaker = (photoHtml || nameHtml)
+        ? `\n    <div class="d-inline-flex align-items-stretch rounded-3 overflow-hidden mw-100"`
+            + ` style="background:${speakerBg};">${photoHtml}${nameHtml}\n    </div>`
+        : '';
+
+    const logoUrl = (opts.logoUrl || '').trim();
+    const logo = logoUrl
+        ? `\n    <img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(opts.logoAlt)}" class="img-fluid mb-3"`
+            + ` style="max-height:4.5rem;width:auto;">`
+        : '';
+    // Each detail row has an emoji icon (an empty icon element would be dropped on
+    // save) plus a visually-hidden label so screen readers announce what it is.
+    const detailRow = (glyph, label, value) => ((value || '').trim()
+        ? `\n    <p class="d-flex align-items-center gap-2 mb-2 fs-5">`
+            + `<span aria-hidden="true">${glyph}</span>`
+            + `<span><span class="visually-hidden">${escapeHtml(label)}: </span>${escapeHtml(value.trim())}</span></p>`
+        : '');
+    const details = logo
+        + detailRow('&#128197;', str.adbanner_date_sr, opts.date)
+        + detailRow('&#128339;', str.adbanner_time_sr, opts.time);
+
+    const btnText = (opts.btnText || '').trim();
+    const href = escapeHtml((opts.btnUrl || '').trim()) || '#';
+    const target = opts.btnTarget === '_blank' ? ' target="_blank" rel="noopener noreferrer"' : '';
+    // The button sits in the accent strip under the details column and is pulled
+    // up by a negative top margin so it overlaps the band above it.
+    const strip = btnText
+        ? `\n  <div class="px-4" style="background:${accent};">
+    <div class="row gx-4">
+      <div class="col-12 col-md-4${detailsLeft ? '' : ' offset-md-8'}">
+        <a class="btn btn-lg fw-bold text-uppercase position-relative shadow" href="${href}" role="button"${target}`
+            + ` style="margin-top:-1.5rem;margin-bottom:0.75rem;background:#fff;color:${accent};`
+            + `letter-spacing:0.1em;border:0;">${escapeHtml(btnText)}</a>
+      </div>
+    </div>
+  </div>`
+        : `\n  <div style="background:${accent};height:1.25rem;"></div>`;
+
+    const textCol = `  <div class="col-12 col-md-8">
+    <h2 class="fw-bold mb-3" style="color:${text};line-height:1.15;">${titleSafe}</h2>${speaker}
+  </div>`;
+    const detailsCol = details
+        ? `\n  <div class="col-12 col-md-4">${details}\n  </div>`
+        : '';
+    // The overflow-hidden wrapper clips the rows' negative gutters and rounds
+    // the strip's corners.
+    return `<!-- Bootstrap 5 ad banner, details ${detailsLeft ? 'left' : 'right'} -->
+<div class="tiny-bs-adbanner overflow-hidden rounded-3 my-3" style="background:${bg};color:${text};">
+  <div class="px-4 pt-4 ${btnText ? 'pb-5' : 'pb-4'}">
+<div class="row g-4 align-items-center${detailsLeft ? ' flex-md-row-reverse' : ''}">
+${textCol}${detailsCol}
+</div>
+  </div>${strip}
 </div>`;
 };
 
@@ -1542,7 +1635,7 @@ const openPicker = async(editor) => {
     const [
         dialogTitle, gridLabel, headingLabel, cardsLabel, imageLabel,
         jumbotronLabel, carouselLabel, cardrowLabel, accordionLabel, tableLabel,
-        imagetextLabel, videotextLabel, dropdownLabel, cheatsheetLabel,
+        imagetextLabel, videotextLabel, dropdownLabel, cheatsheetLabel, adbannerLabel,
     ] = await Promise.all([
         getString('dialog_title', component),
         getString('component_grid', component),
@@ -1558,6 +1651,7 @@ const openPicker = async(editor) => {
         getString('component_videotext', component),
         getString('component_dropdown', component),
         getString('component_cheatsheet', component),
+        getString('component_adbanner', component),
     ]);
 
     const body = `<div class="row g-3">
@@ -1566,6 +1660,7 @@ const openPicker = async(editor) => {
         ${componentTile('cards', cardsLabel, SVG.cards)}
         ${componentTile('image', imageLabel, SVG.image)}
         ${componentTile('jumbotron', jumbotronLabel, SVG.jumbotron)}
+        ${componentTile('adbanner', adbannerLabel, SVG.adbanner)}
         ${componentTile('carousel', carouselLabel, SVG.carousel)}
         ${componentTile('cardrow', cardrowLabel, SVG.cardrow)}
         ${componentTile('accordion', accordionLabel, SVG.accordion)}
@@ -1594,6 +1689,7 @@ const openPicker = async(editor) => {
                 case 'cards': openCardDialog(editor); break;
                 case 'image': openImageDialog(editor); break;
                 case 'jumbotron': openJumbotronDialog(editor); break;
+                case 'adbanner': openAdBannerDialog(editor); break;
                 case 'carousel': openCarouselDialog(editor); break;
                 case 'cardrow': openCardRowDialog(editor); break;
                 case 'accordion': openAccordionDialog(editor); break;
@@ -1980,6 +2076,86 @@ const openJumbotronDialog = async(editor) => {
             root.querySelector('[name="jt_bg_alt"]').value,
             root.querySelector('[name="jt_overlay"]').checked,
         ));
+    });
+};
+
+const openAdBannerDialog = async(editor) => {
+    const [
+        title, insertLabel, browseLabel, layoutLabel, layoutDetailsRight, layoutDetailsLeft,
+        titleLabel, photoLabel, nameLabel, namePlaceholder, logoLabel, logoAltLabel, logoAltPlaceholder,
+        dateLabel, datePlaceholder, timeLabel, timePlaceholder, buttonLabel, buttonUrlLabel,
+        bgLabel, accentLabel, speakerBgLabel, textLabel,
+    ] = await Promise.all([
+        getString('dialog_adbanner_title', component),
+        getString('insert', component),
+        getString('browse', component),
+        getString('adbanner_layout', component),
+        getString('adbanner_layout_detailsright', component),
+        getString('adbanner_layout_detailsleft', component),
+        getString('adbanner_title', component),
+        getString('adbanner_speaker_photo', component),
+        getString('adbanner_speaker_name', component),
+        getString('adbanner_speaker_name_placeholder', component),
+        getString('adbanner_logo', component),
+        getString('adbanner_logo_alt', component),
+        getString('adbanner_logo_alt_placeholder', component),
+        getString('adbanner_date', component),
+        getString('adbanner_date_placeholder', component),
+        getString('adbanner_time', component),
+        getString('adbanner_time_placeholder', component),
+        getString('jumbotron_button', component),
+        getString('jumbotron_button_url', component),
+        getString('adbanner_bg_colour', component),
+        getString('adbanner_accent_colour', component),
+        getString('adbanner_speaker_colour', component),
+        getString('adbanner_text_colour', component),
+    ]);
+
+    const body =
+        selectField('ab_layout', layoutLabel, [
+            {value: 'details-right', text: layoutDetailsRight},
+            {value: 'details-left', text: layoutDetailsLeft},
+        ], 'details-right') +
+        textField('ab_title', titleLabel, str.adbanner_default_title) +
+        urlField('ab_photo', photoLabel, browseLabel, 'https://placehold.co/200x200?text=Photo') +
+        textField('ab_name', nameLabel, namePlaceholder) +
+        urlField('ab_logo', logoLabel, browseLabel, 'https://placehold.co/360x120?text=Logo') +
+        textField('ab_logo_alt', logoAltLabel, logoAltPlaceholder) +
+        textField('ab_date', dateLabel, datePlaceholder) +
+        textField('ab_time', timeLabel, timePlaceholder) +
+        textField('ab_button', buttonLabel, str.jumbotron_button_placeholder) +
+        textField('ab_button_url', buttonUrlLabel, str.jumbotron_button_url_placeholder) +
+        selectField('ab_button_target', str.btn_behaviour, [
+            {value: '', text: str.btn_samewindow},
+            {value: '_blank', text: str.btn_newwindow},
+        ], '') +
+        colourField('ab_bg', bgLabel, '#46287f') +
+        colourField('ab_accent', accentLabel, '#ff7a2f') +
+        colourField('ab_speaker_bg', speakerBgLabel, '#9b87c7') +
+        colourField('ab_text', textLabel, '#ffffff');
+
+    const modal = await openModal(title, body, insertLabel);
+    const root = modal.getRoot()[0];
+    wireBrowseButtons(editor, root);
+    modal.getRoot().on(ModalEvents.save, () => {
+        const val = (name) => root.querySelector(`[name="${name}"]`).value;
+        editor.insertContent(buildAdBanner({
+            layout: val('ab_layout'),
+            title: val('ab_title'),
+            photoUrl: val('ab_photo'),
+            speakerName: val('ab_name'),
+            logoUrl: val('ab_logo'),
+            logoAlt: val('ab_logo_alt'),
+            date: val('ab_date'),
+            time: val('ab_time'),
+            btnText: val('ab_button'),
+            btnUrl: val('ab_button_url'),
+            btnTarget: val('ab_button_target'),
+            bg: val('ab_bg'),
+            accent: val('ab_accent'),
+            speakerBg: val('ab_speaker_bg'),
+            textColour: val('ab_text'),
+        }));
     });
 };
 

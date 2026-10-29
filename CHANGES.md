@@ -7,6 +7,18 @@ All notable changes to the **Bootstrap Scaffolding** TinyMCE plugin
 Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
 `requires = 2025041400`). Requires **PHP 8.2+** and a Bootstrap 5 theme.
 
+## 1.5.0
+
+### Features
+- **New Ad Banner component** — an event-style promotional banner: a coloured
+  band with a large title and an optional speaker box (photo and name) on one
+  side, and an optional logo, date and time on the other, above an accent strip
+  that the call-to-action button overlaps. A **Layout** choice puts the title
+  and speaker on the left with the details on the right (default), or the other
+  way round. The background, accent, speaker box and text colours can each be
+  changed. Blank optional fields are left out. On a phone the two sides stack,
+  title first.
+
 ## 1.4.13
 
 ### Maintenance
