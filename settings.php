@@ -41,8 +41,9 @@ if ($ADMIN->fulltree) {
         ));
     }
 
-    // Default component colours: the colours the Ad Banner and Card Row dialogs
-    // start with. Authors can still change them for each component.
+    // Component defaults: the colours the Ad Banner and Card Row dialogs and the
+    // padding the Ad Banner and Jumbotron dialogs start with. Authors can still
+    // change them for each component.
     $settings->add(new admin_setting_heading(
         'tiny_bootstrap/defaultcolours',
         get_string('defaultcolours', 'tiny_bootstrap'),
@@ -56,6 +57,18 @@ if ($ADMIN->fulltree) {
             $default
         ));
     }
+
+    $paddingchoices = [];
+    foreach (\tiny_bootstrap\local\styles::PADDING_CHOICES as $choice) {
+        $paddingchoices[$choice] = get_string('padding_' . $choice, 'tiny_bootstrap');
+    }
+    $settings->add(new admin_setting_configselect(
+        'tiny_bootstrap/default_padding',
+        get_string('default_padding', 'tiny_bootstrap'),
+        get_string('default_padding_desc', 'tiny_bootstrap'),
+        'standard',
+        $paddingchoices
+    ));
 
     $settings->add(new admin_setting_heading(
         'tiny_bootstrap/customcssheading',

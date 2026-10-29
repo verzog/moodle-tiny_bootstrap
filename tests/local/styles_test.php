@@ -75,6 +75,21 @@ final class styles_test extends \advanced_testcase {
     }
 
     /**
+     * The default padding is 'standard' unless a known choice is set.
+     */
+    public function test_default_padding(): void {
+        $this->resetAfterTest();
+
+        $this->assertSame('standard', styles::default_padding());
+
+        set_config('default_padding', 'large', 'tiny_bootstrap');
+        $this->assertSame('large', styles::default_padding());
+
+        set_config('default_padding', 'huge', 'tiny_bootstrap');
+        $this->assertSame('standard', styles::default_padding());
+    }
+
+    /**
      * Only heading levels with a colour get a rule, scoped to the plugin's heading class.
      */
     public function test_heading_css(): void {

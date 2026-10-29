@@ -61,6 +61,10 @@ All branding settings are under
   start as neutral Bootstrap colours; set your organisation's colours once here
   instead of in every dialog. Authors can still change them per component, and
   changing them does not alter components already inserted.
+- **Ad Banner and Jumbotron padding** — the padding (space between the edge of
+  the box and its content) those dialogs start with: Standard (each component's
+  built-in padding), None, Small, Medium or Large. Authors can change it per
+  component in the dialog's **Padding** choice.
 
 Site administrators can also add custom CSS that applies to every page — both inside
 the editor and on pages where the components render — under

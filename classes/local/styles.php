@@ -37,6 +37,9 @@ class styles {
         'default_cardrow_bg' => '#f8f9fa',
     ];
 
+    /** @var string[] Padding choices for the Ad Banner and Jumbotron; 'standard' keeps each component's own padding. */
+    public const PADDING_CHOICES = ['standard', 'none', 'small', 'medium', 'large'];
+
     /** @var string Class added to headings inserted with the Heading component. */
     public const HEADING_CLASS = 'tiny-bs-heading';
 
@@ -70,6 +73,16 @@ class styles {
             $colours[$name] = self::normalise_hex((string) get_config('tiny_bootstrap', $name)) ?? $fallback;
         }
         return $colours;
+    }
+
+    /**
+     * The padding the Ad Banner and Jumbotron dialogs start with.
+     *
+     * @return string One of PADDING_CHOICES; 'standard' when the setting is unset or unknown.
+     */
+    public static function default_padding(): string {
+        $padding = (string) get_config('tiny_bootstrap', 'default_padding');
+        return in_array($padding, self::PADDING_CHOICES, true) ? $padding : 'standard';
     }
 
     /**

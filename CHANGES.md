@@ -19,6 +19,11 @@ and a Bootstrap 5 theme.
 - **Default component colours** — new admin settings set the colours the Ad
   Banner and Card Row dialogs start with, so an organisation can set its brand
   once. Authors can still change them per component.
+- **Ad Banner and Jumbotron padding** — the Ad Banner and Jumbotron dialogs have
+  a new **Padding** choice (Standard, None, Small, Medium or Large) for the space
+  inside the box, and a new admin setting sets the choice they start with.
+  Standard keeps each component's built-in padding, so nothing changes until a
+  different choice is made.
 
 ### Changes
 - The Ad Banner and Card Row dialogs no longer start with purple and orange.

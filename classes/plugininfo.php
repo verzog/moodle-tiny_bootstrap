@@ -75,7 +75,7 @@ class plugininfo extends plugin implements plugin_with_buttons, plugin_with_conf
     }
 
     /**
-     * Pass the admin-set default component colours and heading CSS to the editor.
+     * Pass the admin-set default component colours, default padding and heading CSS to the editor.
      *
      * @param context $context
      * @param array $options
@@ -91,6 +91,7 @@ class plugininfo extends plugin implements plugin_with_buttons, plugin_with_conf
     ): array {
         return [
             'colourdefaults' => local\styles::colour_defaults(),
+            'defaultpadding' => local\styles::default_padding(),
             'headingcss' => local\styles::heading_css(),
         ];
     }

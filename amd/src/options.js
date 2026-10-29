@@ -14,8 +14,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Editor options for tiny_bootstrap: the admin-set default component colours
- * and heading CSS passed from plugininfo::get_plugin_configuration_for_context().
+ * Editor options for tiny_bootstrap: the admin-set default component colours,
+ * default padding and heading CSS passed from plugininfo::get_plugin_configuration_for_context().
  *
  * @module     tiny_bootstrap/options
  * @copyright  2026 Vernon Spain
@@ -26,6 +26,7 @@ import {getPluginOptionName} from 'editor_tiny/options';
 import {pluginName} from './common';
 
 const colourDefaultsName = getPluginOptionName(pluginName, 'colourdefaults');
+const defaultPaddingName = getPluginOptionName(pluginName, 'defaultpadding');
 const headingCssName = getPluginOptionName(pluginName, 'headingcss');
 
 /**
@@ -38,6 +39,10 @@ export const register = (editor) => {
     registerOption(colourDefaultsName, {
         processor: 'object',
         "default": {},
+    });
+    registerOption(defaultPaddingName, {
+        processor: 'string',
+        "default": 'standard',
     });
     registerOption(headingCssName, {
         processor: 'string',
@@ -52,6 +57,14 @@ export const register = (editor) => {
  * @returns {Object} #rrggbb colours keyed by setting name.
  */
 export const getColourDefaults = (editor) => editor.options.get(colourDefaultsName) || {};
+
+/**
+ * Get the admin-set padding the Ad Banner and Jumbotron dialogs start with.
+ *
+ * @param {TinyMCE} editor
+ * @returns {string} 'standard', 'none', 'small', 'medium' or 'large'.
+ */
+export const getDefaultPadding = (editor) => editor.options.get(defaultPaddingName) || 'standard';
 
 /**
  * Get the CSS that colours headings inserted with the Heading component.
