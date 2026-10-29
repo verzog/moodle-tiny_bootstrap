@@ -16,6 +16,12 @@ and a Bootstrap 5 theme.
   install or upgrade to this release. CI now tests 5.1, 5.2, 5.3 and Moodle
   `main`, and checks the AMD build against Moodle 5.1.
 
+## 1.5.2
+
+### Maintenance
+- **Version bump** — `$plugin->version` is now `2026102902` so Moodle sees
+  an upgrade on sites that already installed 1.5.1.
+
 ## 1.5.1
 
 ### Maintenance
