@@ -19,6 +19,13 @@ Supported Moodle: **5.0 to 5.2** (`$plugin->supported = [500, 502]`,
   changed. Blank optional fields are left out. On a phone the two sides stack,
   title first.
 
+### Maintenance
+- **Licence and copyright** — the plugin stays under the GNU GPL v3 or later,
+  and the copyright holder is now Vernon Spain in every file header, the README
+  and the notices. The full GPLv3 text is now included as `LICENSE`. The short
+  copyright and third-party (Bootstrap) notices moved from `LICENCE.md` to
+  `NOTICE.md`.
+
 ## 1.4.13
 
 ### Maintenance
