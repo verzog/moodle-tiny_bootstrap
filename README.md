@@ -1,6 +1,6 @@
 # moodle-tiny_bootstrap — Bootstrap 5 Scaffolding for TinyMCE
 
-A TinyMCE plugin for Moodle 5.0+ that lets content authors insert
+A TinyMCE plugin for Moodle 5.1+ that lets content authors insert
 ready-made Bootstrap 5 HTML components without writing any code.
 
 ## Components
@@ -56,9 +56,9 @@ match your organisation's branding. Leave it blank to use the theme defaults.
 
 ## Requirements
 
-- Moodle 5.0 or higher (TinyMCE editor)
+- Moodle 5.1, 5.2 or 5.3 (TinyMCE editor)
 - A Bootstrap 5 theme (e.g. Boost or any child theme)
-- PHP 8.2+
+- PHP 8.2+ (Moodle 5.2 and 5.3 need PHP 8.3+)
 
 ## Installation
 
@@ -96,7 +96,7 @@ HTML source view and paste it inside the same `.container-fluid`.
 ### Image modal tip
 
 The inserted modal uses Bootstrap 5's `data-bs-toggle` attributes, so it works
-automatically on any Moodle 5.0+ Boost-based page without any additional
+automatically on any Moodle 5.1+ Boost-based page without any additional
 JavaScript.
 
 ## Development
