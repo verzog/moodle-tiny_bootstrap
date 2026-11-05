@@ -241,6 +241,20 @@ const richUrlScheme = (value) => {
     return m ? m[1].toLowerCase() : null;
 };
 
+// Escape a button or menu link URL for an href attribute, allowing only the
+// schemes rich-text links allow (http, https, mailto, tel) or a relative or
+// anchor link. Anything else, such as javascript:, becomes "#" so it can never
+// run. Control characters are stripped first, as browsers ignore them when
+// navigating ("java\tscript:" would otherwise pass as a relative link).
+const safeHref = (value) => {
+    const url = stripControlChars(value || '').trim();
+    const scheme = richUrlScheme(url);
+    if (!url || (scheme && ['https', 'http', 'mailto', 'tel'].indexOf(scheme) === -1)) {
+        return '#';
+    }
+    return escapeHtml(url);
+};
+
 // Sanitise rich-text field HTML. Dangerous elements are dropped with their
 // contents; unknown-but-harmless elements are unwrapped (their text/children
 // survive); event-handler attributes, the editor's reserved data-rich* hooks,
@@ -692,7 +706,7 @@ const buildJumbotronBackground = (bgType, bgUrl, bgAlt) => {
 const buildJumbotron = (title, lead, buttonText, buttonUrl, buttonTarget, bgType, bgUrl, bgAlt, overlay, padding = 5) => {
     const titleSafe = escapeHtml(title) || escapeHtml(str.jumbotron_default_title);
     const leadSafe = sanitizeRich(lead) || escapeHtml(str.jumbotron_default_lead);
-    const href = escapeHtml((buttonUrl || '').trim()) || '#';
+    const href = safeHref(buttonUrl);
     // Open the button in a new tab when the author chose that behaviour.
     // rel="noopener noreferrer" stops the new tab reaching the opener window
     // and keeps the referrer from leaking.
@@ -797,7 +811,7 @@ const buildAdBanner = (opts) => {
         + detailRow('&#128339;', str.adbanner_time_sr, opts.time);
 
     const btnText = (opts.btnText || '').trim();
-    const href = escapeHtml((opts.btnUrl || '').trim()) || '#';
+    const href = safeHref(opts.btnUrl);
     const target = opts.btnTarget === '_blank' ? ' target="_blank" rel="noopener noreferrer"' : '';
     // The button sits in the accent strip under the details column and is pulled
     // up by a negative top margin so it overlaps the band above it.
@@ -919,7 +933,7 @@ const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null, hid
         const caption = escapeHtml(s.captionTitle);
         const text = sanitizeRich(s.captionText);
         const btnText = escapeHtml(s.btnText);
-        const btnHref = escapeHtml((s.btnUrl || '').trim()) || '#';
+        const btnHref = safeHref(s.btnUrl);
         const btnVariant = escapeHtml(s.btnVariant) || 'primary';
         // Open the button in a new tab when the author chose that behaviour.
         // rel="noopener noreferrer" stops the new tab reaching the opener window
@@ -1035,7 +1049,7 @@ const buildCardRow = (cards, opts = {}) => {
         const title = escapeHtml(c.title);
         const body = sanitizeRich(c.body);
         const btnText = escapeHtml(c.btnText);
-        const btnHref = escapeHtml((c.btnUrl || '').trim()) || '#';
+        const btnHref = safeHref(c.btnUrl);
         const btnVariant = escapeHtml(c.btnVariant) || 'primary';
         // Open the button in a new tab when the author chose that behaviour.
         // rel="noopener noreferrer" keeps the new tab from reaching back to the
@@ -1229,7 +1243,7 @@ const buildDropdown = (label, variant, alignEnd, split, items) => {
         if (!text) {
             return '';
         }
-        const href = escapeHtml((it.url || '').trim()) || '#';
+        const href = safeHref(it.url);
         return `    <li><a class="dropdown-item" href="${href}">${text}</a></li>`;
     }).filter(Boolean).join('\n')
         || `    <li><a class="dropdown-item" href="#">${escapeHtml(str.dropdown_default_action)}</a></li>`;
@@ -1879,7 +1893,7 @@ const openCardDialog = async(editor) => {
         Object.entries(snapshot.rich).forEach(([name, html]) => {
             const el = cardsRegion.querySelector(`[data-rich="${name}"]`);
             if (el) {
-                el.innerHTML = html;
+                el.innerHTML = sanitizeRich(html);
             }
         });
     };
@@ -2510,7 +2524,7 @@ const openAccordionDialog = async(editor) => {
         Object.entries(data.rich).forEach(([name, html]) => {
             const el = region.querySelector(`[data-rich="${name}"]`);
             if (el) {
-                el.innerHTML = html;
+                el.innerHTML = sanitizeRich(html);
             }
         });
     };

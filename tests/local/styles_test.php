@@ -117,18 +117,42 @@ final class styles_test extends \advanced_testcase {
     }
 
     /**
-     * Custom CSS keeps legitimate content but loses any closing style tag.
+     * Custom CSS is kept as typed, except that every "<" is CSS-escaped.
      */
     public function test_custom_css(): void {
         $this->resetAfterTest();
 
         $this->assertSame('', styles::custom_css());
 
-        set_config('customcss', "  .btn { color: red; }\n.x::after { content: \"</styles\"; }  ", 'tiny_bootstrap');
-        $this->assertSame(".btn { color: red; }\n.x::after { content: \"</styles\"; }", styles::custom_css());
+        set_config('customcss', "  .btn > a { color: red; }\n.x::after { content: \"<\"; }  ", 'tiny_bootstrap');
+        $this->assertSame(".btn > a { color: red; }\n.x::after { content: \"\\3c \"; }", styles::custom_css());
+    }
 
-        set_config('customcss', 'a {}</style><script>x</script></STYLE >', 'tiny_bootstrap');
-        $this->assertSame('a {}><script>x</script> >', styles::custom_css());
+    /**
+     * Input that would close the style element, including the single-pass bypass, never contains "<".
+     *
+     * @param string $css
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('custom_css_breakout_provider')]
+    public function test_custom_css_cannot_close_style(string $css): void {
+        $this->resetAfterTest();
+
+        set_config('customcss', $css, 'tiny_bootstrap');
+        $this->assertStringNotContainsString('<', styles::custom_css());
+    }
+
+    /**
+     * Ways to try to close the style element from inside the custom CSS.
+     *
+     * @return array
+     */
+    public static function custom_css_breakout_provider(): array {
+        return [
+            'closing tag' => ['a {}</style><script>alert(1)</script>'],
+            'upper case with space' => ['a {}</STYLE ><script>alert(1)</script>'],
+            'nested single-pass bypass' => ['<</style/style><script>alert(1)</script>'],
+            'self closing' => ['a {}</style/><script>alert(1)</script>'],
+        ];
     }
 
     /**
