@@ -14,10 +14,10 @@ and a Bootstrap 5 theme.
 These fixes follow an automated audit by the Catalyst Moodle Audit Service.
 - **Custom CSS can no longer close its style element.** The Custom CSS setting
   removed `</style` once, which input such as `<</style/style>` could get round,
-  letting a site administrator's custom CSS add script to every page. Every `<`
-  in the custom CSS is now written as the CSS escape `\3c `, so no tag can form.
-  CSS never needs a raw `<` outside a string, and inside a string it shows the
-  same character.
+  letting a site administrator's custom CSS add script to every page. Every `</`
+  in the custom CSS is now written as the CSS escape `\3c /`, so no end tag can
+  form. `</` only appears in CSS inside strings or comments, where the escape
+  shows the same characters; a lone `<`, as in `@media (width < 600px)`, is kept.
 - **Button and menu links only allow safe link types.** Jumbotron, Ad Banner,
   Carousel and Card Row button links and Dropdown menu links now accept only
   http, https, mailto, tel, or relative and anchor links, the same as links in

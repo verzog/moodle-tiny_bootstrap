@@ -117,19 +117,32 @@ final class styles_test extends \advanced_testcase {
     }
 
     /**
-     * Custom CSS is kept as typed, except that every "<" is CSS-escaped.
+     * Custom CSS is kept as typed, except that every "</" is CSS-escaped.
      */
     public function test_custom_css(): void {
         $this->resetAfterTest();
 
         $this->assertSame('', styles::custom_css());
 
-        set_config('customcss', "  .btn > a { color: red; }\n.x::after { content: \"<\"; }  ", 'tiny_bootstrap');
-        $this->assertSame(".btn > a { color: red; }\n.x::after { content: \"\\3c \"; }", styles::custom_css());
+        set_config('customcss', "  .btn > a { color: red; }\n.x::after { content: \"</x\"; }  ", 'tiny_bootstrap');
+        $this->assertSame(".btn > a { color: red; }\n.x::after { content: \"\\3c /x\"; }", styles::custom_css());
     }
 
     /**
-     * Input that would close the style element, including the single-pass bypass, never contains "<".
+     * Range media and container queries keep their less-than operators.
+     */
+    public function test_custom_css_keeps_range_queries(): void {
+        $this->resetAfterTest();
+
+        $css = "@media (width < 600px) { .a { color: red; } }\n"
+            . "@media (400px <= width <= 700px) { .b { color: red; } }\n"
+            . "@container (inline-size<30em) { .c { color: red; } }";
+        set_config('customcss', $css, 'tiny_bootstrap');
+        $this->assertSame($css, styles::custom_css());
+    }
+
+    /**
+     * Input that would close the style element, including the single-pass bypass, never contains "</".
      *
      * @param string $css
      */
@@ -138,7 +151,7 @@ final class styles_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         set_config('customcss', $css, 'tiny_bootstrap');
-        $this->assertStringNotContainsString('<', styles::custom_css());
+        $this->assertStringNotContainsString('</', styles::custom_css());
     }
 
     /**
@@ -152,6 +165,7 @@ final class styles_test extends \advanced_testcase {
             'upper case with space' => ['a {}</STYLE ><script>alert(1)</script>'],
             'nested single-pass bypass' => ['<</style/style><script>alert(1)</script>'],
             'self closing' => ['a {}</style/><script>alert(1)</script>'],
+            'stacked less-than' => ['<<<</style>'],
         ];
     }
 
