@@ -8,6 +8,17 @@ Supported Moodle: **5.1 to 5.3** (`$plugin->supported = [501, 503]`,
 `requires = 2025100600`). Requires **PHP 8.2+** (8.3+ on Moodle 5.2 and 5.3)
 and a Bootstrap 5 theme.
 
+## 1.7.2
+
+### Changes
+- **Buttons are no longer lost when only a link is filled in.** On the
+  Jumbotron, Ad Banner, Carousel and Card Row, a button with a link but no
+  button text now gets the text "Learn more". Before, leaving the text blank
+  meant no button at all, even with a link. Both blank still means no button.
+- **Clearer button text hint.** The button text field's grey hint now reads
+  "Leave blank for no button (or "Learn more" if you add a link)". The old hint,
+  "Learn more (leave blank for no button)", looked like a value already filled in.
+
 ## 1.7.1
 
 ### Security
