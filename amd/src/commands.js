@@ -162,7 +162,7 @@ const STRING_KEYS = [
     'heading_text_placeholder', 'cards_n', 'describe_image_sr',
     'image_caption_placeholder', 'imagetext_caption_placeholder',
     'videotext_url_placeholder',
-    'jumbotron_button_placeholder', 'jumbotron_button_url_placeholder',
+    'jumbotron_button_placeholder', 'jumbotron_button_url_placeholder', 'button_default',
     'describe_bg_sr', 'caption_title', 'caption_text', 'caption_text_placeholder',
     'section_title', 'section_body', 'sections_n', 'rows_n', 'columns_n',
     'table_caption_placeholder', 'item_text', 'item_default', 'item_link',
@@ -254,6 +254,11 @@ const safeHref = (value) => {
     }
     return escapeHtml(url);
 };
+
+// The text for a call-to-action button: what the author typed, or "Learn more"
+// when they added a link but left the text blank, so the link is never lost.
+// Returns '' (no button) when both are blank.
+const buttonLabel = (text, url) => (text || '').trim() || ((url || '').trim() ? str.button_default : '');
 
 // Sanitise rich-text field HTML. Dangerous elements are dropped with their
 // contents; unknown-but-harmless elements are unwrapped (their text/children
@@ -711,9 +716,10 @@ const buildJumbotron = (title, lead, buttonText, buttonUrl, buttonTarget, bgType
     // rel="noopener noreferrer" stops the new tab reaching the opener window
     // and keeps the referrer from leaking.
     const target = buttonTarget === '_blank' ? ' target="_blank" rel="noopener noreferrer"' : '';
-    const btn = buttonText
+    const btnLabel = buttonLabel(buttonText, buttonUrl);
+    const btn = btnLabel
         ? `\n    <hr class="my-4">\n    <a class="btn btn-primary btn-lg" href="${href}" role="button"${target}>`
-            + `${escapeHtml(buttonText)}</a>`
+            + `${escapeHtml(btnLabel)}</a>`
         : '';
     const bg = buildJumbotronBackground(bgType, bgUrl, bgAlt);
     const hasBg = bg !== '';
@@ -810,7 +816,7 @@ const buildAdBanner = (opts) => {
         + detailRow('&#128197;', str.adbanner_date_sr, opts.date)
         + detailRow('&#128339;', str.adbanner_time_sr, opts.time);
 
-    const btnText = (opts.btnText || '').trim();
+    const btnText = buttonLabel(opts.btnText, opts.btnUrl);
     const href = safeHref(opts.btnUrl);
     const target = opts.btnTarget === '_blank' ? ' target="_blank" rel="noopener noreferrer"' : '';
     // The button sits in the accent strip under the details column and is pulled
@@ -932,7 +938,7 @@ const buildCarousel = (slides, ratio = '', autoslide = '', captionBg = null, hid
         const active = i === 0 ? ' active' : '';
         const caption = escapeHtml(s.captionTitle);
         const text = sanitizeRich(s.captionText);
-        const btnText = escapeHtml(s.btnText);
+        const btnText = escapeHtml(buttonLabel(s.btnText, s.btnUrl));
         const btnHref = safeHref(s.btnUrl);
         const btnVariant = escapeHtml(s.btnVariant) || 'primary';
         // Open the button in a new tab when the author chose that behaviour.
@@ -1048,7 +1054,7 @@ const buildCardRow = (cards, opts = {}) => {
     const renderCard = (c, i, scrollable) => {
         const title = escapeHtml(c.title);
         const body = sanitizeRich(c.body);
-        const btnText = escapeHtml(c.btnText);
+        const btnText = escapeHtml(buttonLabel(c.btnText, c.btnUrl));
         const btnHref = safeHref(c.btnUrl);
         const btnVariant = escapeHtml(c.btnVariant) || 'primary';
         // Open the button in a new tab when the author chose that behaviour.
@@ -2457,7 +2463,7 @@ const openCardRowDialog = async(editor) => {
         // Keep only cards the author actually filled in. Trim each field on its
         // own so whitespace in one (e.g. a stray space in the title) does not
         // mask real content in another.
-        })).filter((c) => [c.title, c.body, c.imageUrl, c.btnText].some((v) => (v || '').trim()));
+        })).filter((c) => [c.title, c.body, c.imageUrl, c.btnText, c.btnUrl].some((v) => (v || '').trim()));
         const size = CARDROW_SIZES[root.querySelector('[name="cr_size"]').value] || CARDROW_SIZES.medium;
         const opts = {
             width: size.width,
