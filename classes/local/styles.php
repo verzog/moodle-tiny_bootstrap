@@ -110,17 +110,20 @@ class styles {
     /**
      * The admin's custom CSS, made safe to place inside a style element.
      *
-     * Any closing style tag is removed so the CSS cannot break out of the element
-     * it is placed in. Only "</style" followed by whitespace, "/" or ">" (or the
-     * end of input) is a real end tag to the HTML parser, so match exactly those
-     * cases. This blocks the breakout variants without corrupting legitimate CSS
-     * such as content: "</styles".
+     * A style element can only be closed by an end tag, which always starts with
+     * "</", so every "</" is written with the CSS escape "\3c /". The replacement
+     * contains no "<", so the result can never contain "</", whatever the input.
+     * Removing "</style" instead is not enough: a single pass can be bypassed by
+     * input such as "<</style/style>", which leaves a new "</style>" behind.
+     * A lone "<" is kept, as range media queries such as (width < 600px) need it.
+     * "</" only appears in CSS inside strings or comments, where the escape
+     * renders the same characters.
      *
      * @return string The CSS, or '' when none is set.
      */
     public static function custom_css(): string {
         $css = trim((string) get_config('tiny_bootstrap', 'customcss'));
-        return preg_replace('#</style(?=[\s/>]|$)#i', '', $css);
+        return str_replace('</', '\\3c /', $css);
     }
 
     /**

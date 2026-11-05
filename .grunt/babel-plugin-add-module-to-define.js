@@ -6,7 +6,6 @@
 // and injects it as the first argument to define().
 
 module.exports = ({template, types}) => {
-    const path = require('path');
 
     function getModuleNameFromFileName(filename) {
         const rel = filename.replace(/\\/g, '/');

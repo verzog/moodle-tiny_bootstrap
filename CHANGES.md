@@ -8,6 +8,28 @@ Supported Moodle: **5.1 to 5.3** (`$plugin->supported = [501, 503]`,
 `requires = 2025100600`). Requires **PHP 8.2+** (8.3+ on Moodle 5.2 and 5.3)
 and a Bootstrap 5 theme.
 
+## 1.7.1
+
+### Security
+These fixes follow an automated audit by the Catalyst Moodle Audit Service.
+- **Custom CSS can no longer close its style element.** The Custom CSS setting
+  removed `</style` once, which input such as `<</style/style>` could get round,
+  letting a site administrator's custom CSS add script to every page. Every `</`
+  in the custom CSS is now written as the CSS escape `\3c /`, so no end tag can
+  form. `</` only appears in CSS inside strings or comments, where the escape
+  shows the same characters; a lone `<`, as in `@media (width < 600px)`, is kept.
+- **Button and menu links only allow safe link types.** Jumbotron, Ad Banner,
+  Carousel and Card Row button links and Dropdown menu links now accept only
+  http, https, mailto, tel, or relative and anchor links, the same as links in
+  rich-text fields. Anything else, such as `javascript:`, becomes `#`.
+- **Rich-text fields are cleaned when a dialog redraws.** Changing the number of
+  cards or accordion sections redraws the dialog; the rich-text fields are now
+  put back through the plugin's HTML sanitiser, as the Carousel dialog already
+  did.
+
+### Maintenance
+- Removed an unused `require('path')` from the AMD build helper.
+
 ## 1.7.0
 
 ### Features
